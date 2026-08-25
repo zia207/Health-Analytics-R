@@ -1,0 +1,419 @@
+---
+title: "NB-02 · Descriptive Statistics & Health Metrics"
+subtitle: "Module 01 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+***
+**Learning objectives**
+- Compute prevalence and incidence rates with proper denominators
+- Produce stratified summaries by age group, sex, and payer
+- Interpret skewed distributions for LOS and hospital charges
+- Apply age-standardisation (direct method) to compare populations
+- Build a publication-ready descriptive "Table 1"
+
+**Estimated time:** 1.5 hours  
+**Level:** Beginner → Intermediate  
+**Libraries:** `dplyr` / tibble, `stats`, `gtsummary`
+
+## 1. Setup & Data Reconstruction
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+# Rebuild the same synthetic dataset from NB-01 (identical seed)
+set.seed(42)
+N <- 500
+
+ages  <- as.integer(pmin(pmax(rnorm(N, 62, 16), 18), 95))
+sexes <- sample(c("M", "F"), N, replace = TRUE, prob = c(0.48, 0.52))
+payers <- sample(
+  c("Medicare", "Medicaid", "Private", "Self-pay", "Other"),
+  N, replace = TRUE, prob = c(0.40, 0.22, 0.28, 0.07, 0.03)
+)
+drg_codes <- sample(c(470, 291, 392, 690, 871, 193, 247, 603), N, replace = TRUE)
+drg_labels_map <- c(
+  `470` = "Major joint replacement", `291` = "Heart failure & shock",
+  `392` = "Esophagitis/misc GI",     `690` = "Kidney/UTI",
+  `871` = "Septicemia",              `193` = "Simple pneumonia",
+  `247` = "Perc cardiovasc w stent", `603` = "Cellulitis"
+)
+los_days <- as.integer(pmin(pmax(rgamma(N, shape = 2.5, scale = 1.8), 1), 30))
+charges  <- round(los_days * runif(N, 1800, 4200), 2)
+charges[runif(N) < 0.08] <- NA_real_
+primary_dx <- sample(
+  c("E11.9", "I10", "N18.3", "I50.9", "J18.9", "A41.9", "M16.11", "N39.0"),
+  N, replace = TRUE
+)
+admit_type <- sample(
+  c("Emergency", "Elective", "Urgent", "Newborn"),
+  N, replace = TRUE, prob = c(0.52, 0.30, 0.16, 0.02)
+)
+
+# Add comorbidities
+set.seed(99)
+df <- tibble(
+  patient_id    = sprintf("PT-%05d", seq_len(N)),
+  age           = ages,
+  sex           = sexes,
+  payer         = payers,
+  drg_code      = drg_codes,
+  drg_label     = unname(drg_labels_map[as.character(drg_codes)]),
+  primary_dx    = primary_dx,
+  admit_type    = admit_type,
+  los_days      = los_days,
+  total_charge  = charges,
+  diabetes      = rbinom(N, 1, 0.32),
+  hypertension  = rbinom(N, 1, 0.45),
+  ckd           = rbinom(N, 1, 0.15),
+  heart_failure = rbinom(N, 1, 0.18),
+  readmitted_30 = rbinom(N, 1, 0.14)
+)
+
+# Age groups (standard epidemiological groupings)
+df$age_group <- cut(
+  df$age,
+  breaks = c(17, 44, 64, 74, 95),
+  labels = c("18-44", "45-64", "65-74", "75+")
+)
+
+cat(sprintf("Dataset ready: %d discharges, %d variables\n", nrow(df), ncol(df)))
+head(df, 4)
+```
+
+## 2. Prevalence & Incidence — Core Epidemiological Measures
+
+| Measure | Formula | When to use |
+|---------|---------|-------------|
+| **Prevalence** | Cases / Total population | Existing conditions at a point in time |
+| **Incidence proportion** | New cases / At-risk population | New events over a defined period |
+| **Rate per N** | (Cases / Population) × N | Standardised comparisons across cohorts |
+
+```{r}
+# --- 2.1  Crude prevalence of comorbidities ---
+comorbidities <- c("diabetes", "hypertension", "ckd", "heart_failure")
+prev_table <- tibble(
+  condition       = comorbidities,
+  `N cases`       = colSums(df[comorbidities]),
+  `Prevalence (%)`= round(colMeans(df[comorbidities]) * 100, 1)
+)
+cat("Crude prevalence in discharge cohort (N=500):\n")
+print(prev_table)
+```
+
+```{r}
+# --- 2.2  Readmission rate per 100 discharges ---
+total_discharges <- nrow(df)
+readmissions     <- sum(df$readmitted_30)
+rate_per_100     <- readmissions / total_discharges * 100
+
+cat(sprintf("30-day readmissions : %d\n", readmissions))
+cat(sprintf("Total discharges    : %d\n", total_discharges))
+cat(sprintf("Readmission rate    : %.1f per 100 discharges\n", rate_per_100))
+```
+
+```{r}
+# --- 2.3  95% confidence interval for a proportion (Wilson method) ---
+wilson_ci <- function(k, n, alpha = 0.05) {
+  # Wilson score interval — preferred for proportions near 0 or 1.
+  z         <- qnorm(1 - alpha / 2)
+  p_hat     <- k / n
+  denom     <- 1 + z^2 / n
+  centre    <- (p_hat + z^2 / (2 * n)) / denom
+  half_width <- (z * sqrt(p_hat * (1 - p_hat) / n + z^2 / (4 * n^2))) / denom
+  c(
+    lo = round((centre - half_width) * 100, 1),
+    hi = round((centre + half_width) * 100, 1)
+  )
+}
+
+ci <- wilson_ci(readmissions, total_discharges)
+cat(sprintf("Readmission rate: %.1f%% (95%% CI: %s%% – %s%%)\n",
+            rate_per_100, ci["lo"], ci["hi"]))
+```
+
+## 3. Stratified Summaries
+
+```{r}
+# --- 3.1  Readmission rate by payer ---
+strat_payer <- df %>%
+  group_by(payer) %>%
+  summarise(
+    N                 = n(),
+    Readmissions      = sum(readmitted_30),
+    `Mean LOS (days)` = round(mean(los_days), 1),
+    `Mean Charge ($)` = round(mean(total_charge, na.rm = TRUE), 0),
+    .groups = "drop"
+  ) %>%
+  mutate(`Readmit rate (%)` = round(Readmissions / N * 100, 1)) %>%
+  arrange(desc(`Readmit rate (%)`))
+cat("Stratified by payer:\n")
+print(strat_payer)
+```
+
+```{r}
+# --- 3.2  Stratified by age group and sex (2×4 pivot) ---
+pivot <- df %>%
+  group_by(age_group, sex) %>%
+  summarise(
+    n    = n(),
+    rate = mean(readmitted_30) * 100,
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from  = sex,
+    values_from = c(n, rate),
+    names_glue  = "{.value}_{sex}"
+  ) %>%
+  mutate(
+    across(starts_with("rate_"), ~ round(.x, 1))
+  ) %>%
+  rename(
+    `N (F)`    = n_F,
+    `N (M)`    = n_M,
+    `Rate (F)` = rate_F,
+    `Rate (M)` = rate_M
+  )
+cat("Readmission rate (%) by age group and sex:\n")
+print(pivot)
+```
+
+```{r}
+# --- 3.3  LOS summary by admission type ---
+pct <- function(x, p) quantile(x, p, na.rm = TRUE)
+
+los_summary <- df %>%
+  group_by(admit_type) %>%
+  summarise(
+    n    = n(),
+    mean = mean(los_days),
+    sd   = sd(los_days),
+    min  = min(los_days),
+    p25  = pct(los_days, 0.25),
+    p50  = pct(los_days, 0.50),
+    p75  = pct(los_days, 0.75),
+    p90  = pct(los_days, 0.90),
+    max  = max(los_days),
+    .groups = "drop"
+  ) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 1)))
+cat("LOS distribution by admission type:\n")
+print(los_summary)
+```
+
+## 4. Interpreting Skewed Clinical Distributions
+
+```{r}
+# --- 4.1  LOS skewness and kurtosis ---
+skewness <- function(x) {
+  x <- x[!is.na(x)]
+  m <- mean(x)
+  s <- sd(x)
+  mean((x - m)^3) / (s^3)
+}
+kurtosis_ex <- function(x) {
+  x <- x[!is.na(x)]
+  m <- mean(x)
+  s <- sd(x)
+  mean((x - m)^4) / (s^4) - 3
+}
+
+los <- df$los_days[!is.na(df$los_days)]
+chg <- df$total_charge[!is.na(df$total_charge)]
+
+for (pair in list(list("LOS (days)", los), list("Total charge ($)", chg))) {
+  name   <- pair[[1]]
+  series <- pair[[2]]
+  sk     <- skewness(series)
+  cat(name, "\n", sep = "")
+  cat(sprintf("  Mean   : %.2f\n", mean(series)))
+  cat(sprintf("  Median : %.2f\n", median(series)))
+  cat(sprintf("  Std    : %.2f\n", sd(series)))
+  cat(sprintf("  Skew   : %.3f  %s\n", sk,
+              if (sk > 0.5) "(right-skewed — median is preferred)" else ""))
+  cat(sprintf("  Kurtosis: %.3f\n\n", kurtosis_ex(series)))
+}
+```
+
+```{r}
+# --- 4.2  Log-transformation for skewed charge data ---
+df$log_charge <- log1p(df$total_charge)
+
+cat("Before log-transform — charge skewness:", round(skewness(chg), 3), "\n")
+cat("After  log-transform — skewness        :",
+    round(skewness(df$log_charge), 3), "\n\n")
+cat("When to log-transform in health data:\n")
+cat("  - Cost/charge data (always right-skewed)\n")
+cat("  - LOS when tail is very long (e.g. >30-day stays)\n")
+cat("  - Lab values that span orders of magnitude (creatinine, troponin)\n")
+cat("  - Report back-transformed geometric mean for interpretation\n")
+```
+
+## 5. Age-Standardisation (Direct Method)
+
+```{r}
+# Direct age-standardisation: applies study rates to a standard population
+# to remove confounding by age structure differences between groups.
+
+# US 2000 Standard Population weights by age group
+std_pop <- tibble(
+  age_group  = factor(c("18-44", "45-64", "65-74", "75+"),
+                      levels = c("18-44", "45-64", "65-74", "75+")),
+  std_weight = c(0.3761, 0.3399, 0.1267, 0.0573)   # proportions sum to ~1
+)
+
+# Crude rates by age group × payer (Medicare vs Private as example)
+for (pay in c("Medicare", "Private")) {
+  sub <- df %>% filter(payer == pay)
+  rates <- sub %>%
+    group_by(age_group) %>%
+    summarise(
+      crude_rate = mean(readmitted_30),
+      n          = n(),
+      .groups    = "drop"
+    ) %>%
+    left_join(std_pop, by = "age_group") %>%
+    mutate(weighted_rate = crude_rate * std_weight)
+  age_adj_rate  <- sum(rates$weighted_rate, na.rm = TRUE) * 100
+  crude_overall <- mean(sub$readmitted_30) * 100
+  cat(sprintf("%-10s — Crude: %.1f%%  |  Age-adjusted: %.1f%%\n",
+              pay, crude_overall, age_adj_rate))
+}
+```
+
+## 6. Table 1 — Publication-Ready Descriptive Table
+
+A "Table 1" in clinical research summarises the baseline characteristics of a cohort, often stratified by a key variable (e.g. readmitted vs not).
+
+```{r}
+table1 <- function(df, stratify_col, continuous_cols, categorical_cols) {
+  # Build a basic Table 1.
+  # Continuous: mean ± SD (or median [IQR] if skewed)
+  # Categorical: N (%)
+  groups <- sort(unique(df[[stratify_col]]))
+  group_label <- function(g) {
+    n <- sum(df[[stratify_col]] == g, na.rm = TRUE)
+    pretty <- if (identical(g, 0) || identical(g, 0L)) {
+      "Not readmitted"
+    } else if (identical(g, 1) || identical(g, 1L)) {
+      "Readmitted"
+    } else {
+      as.character(g)
+    }
+    sprintf("%s (N=%d)", pretty, n)
+  }
+
+  rows <- list()
+  header <- c(Variable = "Variable")
+  for (g in groups) header[[as.character(g)]] <- group_label(g)
+  rows[[length(rows) + 1]] <- header
+
+  for (col in continuous_cols) {
+    sk  <- abs(skewness(df[[col]]))
+    row <- c(Variable = paste0(col, if (sk > 1) " [median, IQR]" else " [mean ± SD]"))
+    for (g in groups) {
+      vals <- df[[col]][df[[stratify_col]] == g]
+      vals <- vals[!is.na(vals)]
+      row[[as.character(g)]] <- if (sk > 1) {
+        sprintf("%.1f [%.1f–%.1f]", median(vals), quantile(vals, 0.25), quantile(vals, 0.75))
+      } else {
+        sprintf("%.1f ± %.1f", mean(vals), sd(vals))
+      }
+    }
+    rows[[length(rows) + 1]] <- row
+  }
+
+  for (col in categorical_cols) {
+    row <- c(Variable = col)
+    for (g in groups) row[[as.character(g)]] <- ""
+    rows[[length(rows) + 1]] <- row
+    cats <- unique(df[[col]][!is.na(df[[col]])])
+    for (cat in cats) {
+      row <- c(Variable = paste0("  ", as.character(cat)))
+      for (g in groups) {
+        sub   <- df[df[[stratify_col]] == g, ]
+        n_cat <- sum(sub[[col]] == cat, na.rm = TRUE)
+        pct   <- n_cat / nrow(sub) * 100
+        row[[as.character(g)]] <- sprintf("%d (%.1f%%)", n_cat, pct)
+      }
+      rows[[length(rows) + 1]] <- row
+    }
+  }
+
+  bind_rows(lapply(rows, function(r) as_tibble(as.list(r))))
+}
+
+t1 <- table1(
+  df,
+  stratify_col     = "readmitted_30",
+  continuous_cols  = c("age", "los_days", "total_charge"),
+  categorical_cols = c("sex", "payer", "admit_type", "age_group")
+)
+cat("Table 1 — Baseline characteristics by 30-day readmission status:\n")
+print(t1, n = Inf)
+```
+
+## 7. Statistical Tests for Group Comparisons
+
+```{r}
+cat("Statistical tests: readmitted vs not readmitted\n\n")
+
+# --- Continuous: LOS (skewed → Mann-Whitney U) ---
+g0 <- df$los_days[df$readmitted_30 == 0]
+g1 <- df$los_days[df$readmitted_30 == 1]
+mw <- wilcox.test(g0, g1, alternative = "two.sided", exact = FALSE)
+cat(sprintf("LOS — Mann-Whitney U: U=%.0f, p=%.4f\n", mw$statistic, mw$p.value))
+
+# --- Continuous: Age (normal → t-test) ---
+g0a <- df$age[df$readmitted_30 == 0]
+g1a <- df$age[df$readmitted_30 == 1]
+tt  <- t.test(g0a, g1a, var.equal = TRUE)
+cat(sprintf("Age — Student t-test: t=%.3f, p=%.4f\n", tt$statistic, tt$p.value))
+
+# --- Categorical: Sex × Readmission (chi-square) ---
+ct   <- table(df$sex, df$readmitted_30)
+chi  <- chisq.test(ct)
+cat(sprintf("Sex — Chi-square: χ²=%.3f, df=%d, p=%.4f\n",
+            unname(chi$statistic), chi$parameter, chi$p.value))
+
+# --- Categorical: Payer × Readmission ---
+ct2  <- table(df$payer, df$readmitted_30)
+chi2 <- chisq.test(ct2)
+cat(sprintf("Payer — Chi-square: χ²=%.3f, p=%.4f\n",
+            unname(chi2$statistic), chi2$p.value))
+
+cat("\n(p < 0.05 suggests significant difference between groups)\n")
+```
+
+## 8. Knowledge Check
+
+1. Why is the median preferred over the mean for LOS and charge data?
+2. What does a readmission rate of 14 per 100 discharges mean clinically?
+3. When would you use age-standardisation instead of crude rates?
+4. In a chi-square test, what does a p-value of 0.03 for payer × readmission tell you?
+5. Re-calculate Table 1 stratified by `sex` instead of `readmitted_30`.
+
+```{r}
+# --- Exercise: Table 1 stratified by sex ---
+t1_sex <- table1(
+  df,
+  stratify_col     = "sex",
+  continuous_cols  = c("age", "los_days", "total_charge"),
+  categorical_cols = c("payer", "admit_type", "age_group", "readmitted_30")
+)
+print(t1_sex, n = Inf)
+```
+
+***
+## Summary
+
+In this notebook you:
+- Calculated crude prevalence, readmission rates, and Wilson 95% CIs
+- Built stratified summaries across payer, age group, and sex
+- Diagnosed and handled right-skewed distributions (log-transform)
+- Applied direct age-standardisation to remove age confounding
+- Constructed a publication-style Table 1
+- Ran appropriate statistical tests for continuous and categorical variables
+
+**Next:** `NB-03 · Health Data Ecosystem & Codes` — ICD-10, CPT, LOINC, FHIR parsing, and HIPAA safe-harbour.

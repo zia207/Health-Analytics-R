@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>NB-02 · Descriptive Statistics &amp; Health Metrics – Health Analytics with R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./MOD01_NB03_Health_Data_Ecosystem_Codes.html" rel="next">
+<link href="./MOD01_NB01_R_Foundations_Health_Data.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-d08f89fd7971d2ef16bab3908983d253.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Health Analytics with R</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-with-Python"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/zia-ahmed207"> <i class="bi bi-linkedin" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="mailto:zia207@gmail.com"> 
+<span class="menu-text">zia207@gmail.com</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD01_NB01_R_Foundations_Health_Data.html"><strong>Module 01 - R Foundations</strong> (Track A)</a></li><li class="breadcrumb-item"><a href="./MOD01_NB02_Descriptive_Statistics_Health_Metrics.html">NB-02 · Descriptive Statistics &amp; Health Metrics</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD01_NB01_R_Foundations_Health_Data.html"><strong>Module 01 - R Foundations</strong> (Track A)</a></li><li class="breadcrumb-item"><a href="./MOD01_NB02_Descriptive_Statistics_Health_Metrics.html">NB-02 · Descriptive Statistics &amp; Health Metrics</a></li></ol></nav>
+      <h1 class="title">NB-02 · Descriptive Statistics &amp; Health Metrics</h1>
+            <p class="subtitle lead">Module 01 — Health Analytics with R</p>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="./index.html" class="sidebar-logo-link">
+      <img src="./Images/chapter_logo_health_analytics_R.png" alt="" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="./Images/chapter_logo_health_analytics_R.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Health Analytics with R</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Health Analytics with R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD00_NTRO_HealthR_Tutorial_Series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Series Overview</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text"><strong>Module 01 - R Foundations</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD01_NB01_R_Foundations_Health_Data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">NB-01 · R Foundations for Health Data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD01_NB02_Descriptive_Statistics_Health_Metrics.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">NB-02 · Descriptive Statistics &amp; Health Metrics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD01_NB03_Health_Data_Ecosystem_Codes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">NB-03 · Health Data Ecosystem &amp; Codes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 02 - Exploratory Data Analysis</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB01_Data_Loading_Profiling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Loading &amp; Automated Profiling</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB02_Descriptive_Statistics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Descriptive Statistics for Clinical Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB03_Clinical_Visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visualising Clinical Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB04_TimeSeries_Admissions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Time-Series of Admissions &amp; Clinical Events</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB05_Missingness_Imputation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missingness Analysis &amp; Imputation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB06_Comorbidity_Heatmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comorbidity Co-occurrence Heatmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB07_Geospatial_Disparities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Geospatial Health Disparities Map</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB08_Capstone_Readmission_EDA.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · End-to-End EDA on Readmission Risk</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 03 - Statistical Inference</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB01_Hypothesis_Testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hypothesis Testing for Health Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB02_RR_OR_CI.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB03_Survival_Analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB04_Linear_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Regression for Continuous Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB05_Logistic_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Logistic Regression for Binary Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB06_Count_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Poisson &amp; Negative Binomial Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB07_Confounding_EffectModification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Confounding &amp; Effect Modification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB08_Capstone_Inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · Multivariable Inference Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 04 - Machine Learning</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB01_Pipeline_Splits.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ML Pipeline Setup &amp; Train/Test Splits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB02_DecisionTree_RandomForest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Decision Trees &amp; Random Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB03_XGBoost_LightGBM.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">XGBoost &amp; LightGBM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB04_Clinical_Model_Evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical Model Evaluation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB05_Hyperparameter_Tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hyperparameter Tuning &amp; Cross-Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB06_SHAP_Explainability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SHAP Explainability</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB07_Clinical_Prediction_Models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Three Clinical Prediction Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB08_Capstone_ML_Pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · End-to-End Clinical ML Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 05 - NLP for Clinical Text</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB01_Clinical_Text_Preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical Text Preprocessing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB02_Clinical_NER.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical Named Entity Recognition</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB03_TF_IDF_Classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TF-IDF &amp; Clinical Text Classification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB04_Word_Embeddings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Word Embeddings &amp; Word2Vec</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB05_Clinical_BERT.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB06_ICD_Coding_Medications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ICD Coding &amp; Medication Extraction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB07_Summarisation_ZeroShot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summarisation &amp; Zero-Shot NLP</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB08_Capstone_Clinical_NLP.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · End-to-End Clinical NLP Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 06 - Causal Inference</strong> (Track B)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB01_DAGs_Confounding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGs, Confounding &amp; Identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB02_Propensity_Scores.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Propensity Score Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB03_DiD_EventStudy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Difference-in-Differences &amp; Event Studies</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB04_ITS_SyntheticControl.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interrupted Time Series &amp; Synthetic Control</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB05_IV_RDD.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Variables &amp; RDD</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB06_GComp_TMLE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">G-Computation, TMLE &amp; Mediation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB07_Sensitivity_Reporting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sensitivity Analysis &amp; Reporting</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · Causal Inference Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB01_Spatial_Data_Choropleth.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Data &amp; Choropleth Mapping</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Autocorrelation &amp; Moran's I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB03_Spatial_Regression_GWR.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Regression: Lag, Error &amp; GWR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Disease Mapping &amp; Bayesian Smoothing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB05_Cluster_Detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Cluster Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB06_Environmental_Epidemiology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Environmental Epidemiology</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB07_Health_Service_Access.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Health Service Area &amp; Access Metrics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone - Spatial Health Inequity Atlas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial ML - LBC Mortality (Northeast)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Geostatistical Risk Analysis</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 08 - Reproducible Research &amp; Deployment</strong> (Track B)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB01_Reproducible_Foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Reproducible Research Foundations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB02_Quarto_Reports.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quarto Documents for Health Reports</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB03_Shiny_Dashboards.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Shiny Dashboards</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB04_MLflow_Tracking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MLflow Model Tracking &amp; Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB05_Plumber_Serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plumber for Clinical Model Serving</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB06_Testing_CICD.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing, CI/CD &amp; Code Quality</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB07_ModelCards_Governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Model Cards &amp; Clinical AI Governance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB08_Capstone_Deployment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · Full Deployment Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#setup-data-reconstruction" id="toc-setup-data-reconstruction" class="nav-link active" data-scroll-target="#setup-data-reconstruction">1. Setup &amp; Data Reconstruction</a></li>
+  <li><a href="#prevalence-incidence-core-epidemiological-measures" id="toc-prevalence-incidence-core-epidemiological-measures" class="nav-link" data-scroll-target="#prevalence-incidence-core-epidemiological-measures">2. Prevalence &amp; Incidence — Core Epidemiological Measures</a></li>
+  <li><a href="#stratified-summaries" id="toc-stratified-summaries" class="nav-link" data-scroll-target="#stratified-summaries">3. Stratified Summaries</a></li>
+  <li><a href="#interpreting-skewed-clinical-distributions" id="toc-interpreting-skewed-clinical-distributions" class="nav-link" data-scroll-target="#interpreting-skewed-clinical-distributions">4. Interpreting Skewed Clinical Distributions</a></li>
+  <li><a href="#age-standardisation-direct-method" id="toc-age-standardisation-direct-method" class="nav-link" data-scroll-target="#age-standardisation-direct-method">5. Age-Standardisation (Direct Method)</a></li>
+  <li><a href="#table-1-publication-ready-descriptive-table" id="toc-table-1-publication-ready-descriptive-table" class="nav-link" data-scroll-target="#table-1-publication-ready-descriptive-table">6. Table 1 — Publication-Ready Descriptive Table</a></li>
+  <li><a href="#statistical-tests-for-group-comparisons" id="toc-statistical-tests-for-group-comparisons" class="nav-link" data-scroll-target="#statistical-tests-for-group-comparisons">7. Statistical Tests for Group Comparisons</a></li>
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">8. Knowledge Check</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD01_NB02_Descriptive_Statistics_Health_Metrics.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Images/banner_health_analytics.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+<hr>
+<p><strong>Learning objectives</strong> - Compute prevalence and incidence rates with proper denominators - Produce stratified summaries by age group, sex, and payer - Interpret skewed distributions for LOS and hospital charges - Apply age-standardisation (direct method) to compare populations - Build a publication-ready descriptive “Table 1”</p>
+<p><strong>Estimated time:</strong> 1.5 hours<br>
+<strong>Level:</strong> Beginner → Intermediate<br>
+<strong>Libraries:</strong> <code>dplyr</code> / tibble, <code>stats</code>, <code>gtsummary</code></p>
+<section id="setup-data-reconstruction" class="level2">
+<h2 class="anchored" data-anchor-id="setup-data-reconstruction">1. Setup &amp; Data Reconstruction</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Rebuild the same synthetic dataset from NB-01 (identical seed)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>ages  <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">rnorm</span>(N, <span class="dv">62</span>, <span class="dv">16</span>), <span class="dv">18</span>), <span class="dv">95</span>))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>sexes <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="st">"M"</span>, <span class="st">"F"</span>), N, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.48</span>, <span class="fl">0.52</span>))</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>payers <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">"Medicare"</span>, <span class="st">"Medicaid"</span>, <span class="st">"Private"</span>, <span class="st">"Self-pay"</span>, <span class="st">"Other"</span>),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  N, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.40</span>, <span class="fl">0.22</span>, <span class="fl">0.28</span>, <span class="fl">0.07</span>, <span class="fl">0.03</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>drg_codes <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">c</span>(<span class="dv">470</span>, <span class="dv">291</span>, <span class="dv">392</span>, <span class="dv">690</span>, <span class="dv">871</span>, <span class="dv">193</span>, <span class="dv">247</span>, <span class="dv">603</span>), N, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>drg_labels_map <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">470</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Major joint replacement"</span>, <span class="st">`</span><span class="at">291</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Heart failure &amp; shock"</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">392</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Esophagitis/misc GI"</span>,     <span class="st">`</span><span class="at">690</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Kidney/UTI"</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">871</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Septicemia"</span>,              <span class="st">`</span><span class="at">193</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Simple pneumonia"</span>,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">247</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Perc cardiovasc w stent"</span>, <span class="st">`</span><span class="at">603</span><span class="st">`</span> <span class="ot">=</span> <span class="st">"Cellulitis"</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>los_days <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">rgamma</span>(N, <span class="at">shape =</span> <span class="fl">2.5</span>, <span class="at">scale =</span> <span class="fl">1.8</span>), <span class="dv">1</span>), <span class="dv">30</span>))</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>charges  <span class="ot">&lt;-</span> <span class="fu">round</span>(los_days <span class="sc">*</span> <span class="fu">runif</span>(N, <span class="dv">1800</span>, <span class="dv">4200</span>), <span class="dv">2</span>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>charges[<span class="fu">runif</span>(N) <span class="sc">&lt;</span> <span class="fl">0.08</span>] <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>primary_dx <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">"E11.9"</span>, <span class="st">"I10"</span>, <span class="st">"N18.3"</span>, <span class="st">"I50.9"</span>, <span class="st">"J18.9"</span>, <span class="st">"A41.9"</span>, <span class="st">"M16.11"</span>, <span class="st">"N39.0"</span>),</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  N, <span class="at">replace =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>admit_type <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">"Emergency"</span>, <span class="st">"Elective"</span>, <span class="st">"Urgent"</span>, <span class="st">"Newborn"</span>),</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  N, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="fu">c</span>(<span class="fl">0.52</span>, <span class="fl">0.30</span>, <span class="fl">0.16</span>, <span class="fl">0.02</span>)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Add comorbidities</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">patient_id    =</span> <span class="fu">sprintf</span>(<span class="st">"PT-%05d"</span>, <span class="fu">seq_len</span>(N)),</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">age           =</span> ages,</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">sex           =</span> sexes,</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">payer         =</span> payers,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">drg_code      =</span> drg_codes,</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">drg_label     =</span> <span class="fu">unname</span>(drg_labels_map[<span class="fu">as.character</span>(drg_codes)]),</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">primary_dx    =</span> primary_dx,</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">admit_type    =</span> admit_type,</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">los_days      =</span> los_days,</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">total_charge  =</span> charges,</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">diabetes      =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.32</span>),</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypertension  =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.45</span>),</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">ckd           =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.15</span>),</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">heart_failure =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.18</span>),</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">readmitted_30 =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.14</span>)</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Age groups (standard epidemiological groupings)</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>age_group <span class="ot">&lt;-</span> <span class="fu">cut</span>(</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  df<span class="sc">$</span>age,</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">17</span>, <span class="dv">44</span>, <span class="dv">64</span>, <span class="dv">74</span>, <span class="dv">95</span>),</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"18-44"</span>, <span class="st">"45-64"</span>, <span class="st">"65-74"</span>, <span class="st">"75+"</span>)</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Dataset ready: %d discharges, %d variables</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">nrow</span>(df), <span class="fu">ncol</span>(df)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Dataset ready: 500 discharges, 16 variables</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df, <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 16
+  patient_id   age sex   payer drg_code drg_label primary_dx admit_type los_days
+  &lt;chr&gt;      &lt;int&gt; &lt;chr&gt; &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;      &lt;chr&gt;         &lt;int&gt;
+1 PT-00001      83 M     Medi…      247 Perc car… I50.9      Emergency         1
+2 PT-00002      52 F     Self…      291 Heart fa… I50.9      Elective          3
+3 PT-00003      67 M     Medi…      871 Septicem… M16.11     Urgent            2
+4 PT-00004      72 M     Self…      392 Esophagi… J18.9      Urgent            7
+# ℹ 7 more variables: total_charge &lt;dbl&gt;, diabetes &lt;int&gt;, hypertension &lt;int&gt;,
+#   ckd &lt;int&gt;, heart_failure &lt;int&gt;, readmitted_30 &lt;int&gt;, age_group &lt;fct&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="prevalence-incidence-core-epidemiological-measures" class="level2">
+<h2 class="anchored" data-anchor-id="prevalence-incidence-core-epidemiological-measures">2. Prevalence &amp; Incidence — Core Epidemiological Measures</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 29%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Measure</th>
+<th>Formula</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Prevalence</strong></td>
+<td>Cases / Total population</td>
+<td>Existing conditions at a point in time</td>
+</tr>
+<tr class="even">
+<td><strong>Incidence proportion</strong></td>
+<td>New cases / At-risk population</td>
+<td>New events over a defined period</td>
+</tr>
+<tr class="odd">
+<td><strong>Rate per N</strong></td>
+<td>(Cases / Population) × N</td>
+<td>Standardised comparisons across cohorts</td>
+</tr>
+</tbody>
+</table>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 2.1  Crude prevalence of comorbidities ---</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>comorbidities <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"diabetes"</span>, <span class="st">"hypertension"</span>, <span class="st">"ckd"</span>, <span class="st">"heart_failure"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>prev_table <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">condition       =</span> comorbidities,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">N cases</span><span class="st">`</span>       <span class="ot">=</span> <span class="fu">colSums</span>(df[comorbidities]),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Prevalence (%)</span><span class="st">`</span><span class="ot">=</span> <span class="fu">round</span>(<span class="fu">colMeans</span>(df[comorbidities]) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Crude prevalence in discharge cohort (N=500):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Crude prevalence in discharge cohort (N=500):</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(prev_table)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 3
+  condition     `N cases` `Prevalence (%)`
+  &lt;chr&gt;             &lt;dbl&gt;            &lt;dbl&gt;
+1 diabetes            165             33  
+2 hypertension        213             42.6
+3 ckd                  69             13.8
+4 heart_failure       101             20.2</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 2.2  Readmission rate per 100 discharges ---</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>total_discharges <span class="ot">&lt;-</span> <span class="fu">nrow</span>(df)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>readmissions     <span class="ot">&lt;-</span> <span class="fu">sum</span>(df<span class="sc">$</span>readmitted_30)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>rate_per_100     <span class="ot">&lt;-</span> readmissions <span class="sc">/</span> total_discharges <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"30-day readmissions : %d</span><span class="sc">\n</span><span class="st">"</span>, readmissions))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>30-day readmissions : 69</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Total discharges    : %d</span><span class="sc">\n</span><span class="st">"</span>, total_discharges))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total discharges    : 500</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Readmission rate    : %.1f per 100 discharges</span><span class="sc">\n</span><span class="st">"</span>, rate_per_100))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Readmission rate    : 13.8 per 100 discharges</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 2.3  95% confidence interval for a proportion (Wilson method) ---</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>wilson_ci <span class="ot">&lt;-</span> <span class="cf">function</span>(k, n, <span class="at">alpha =</span> <span class="fl">0.05</span>) {</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Wilson score interval — preferred for proportions near 0 or 1.</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  z         <span class="ot">&lt;-</span> <span class="fu">qnorm</span>(<span class="dv">1</span> <span class="sc">-</span> alpha <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  p_hat     <span class="ot">&lt;-</span> k <span class="sc">/</span> n</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  denom     <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">+</span> z<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> n</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  centre    <span class="ot">&lt;-</span> (p_hat <span class="sc">+</span> z<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> n)) <span class="sc">/</span> denom</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  half_width <span class="ot">&lt;-</span> (z <span class="sc">*</span> <span class="fu">sqrt</span>(p_hat <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> p_hat) <span class="sc">/</span> n <span class="sc">+</span> z<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="dv">4</span> <span class="sc">*</span> n<span class="sc">^</span><span class="dv">2</span>))) <span class="sc">/</span> denom</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">lo =</span> <span class="fu">round</span>((centre <span class="sc">-</span> half_width) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>),</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">hi =</span> <span class="fu">round</span>((centre <span class="sc">+</span> half_width) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>ci <span class="ot">&lt;-</span> <span class="fu">wilson_ci</span>(readmissions, total_discharges)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Readmission rate: %.1f%% (95%% CI: %s%% – %s%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>            rate_per_100, ci[<span class="st">"lo"</span>], ci[<span class="st">"hi"</span>]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Readmission rate: 13.8% (95% CI: 11.1% – 17.1%)</code></pre>
+</div>
+</div>
+</section>
+<section id="stratified-summaries" class="level2">
+<h2 class="anchored" data-anchor-id="stratified-summaries">3. Stratified Summaries</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 3.1  Readmission rate by payer ---</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>strat_payer <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(payer) <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">N                 =</span> <span class="fu">n</span>(),</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">Readmissions      =</span> <span class="fu">sum</span>(readmitted_30),</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Mean LOS (days)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">mean</span>(los_days), <span class="dv">1</span>),</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Mean Charge ($)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">mean</span>(total_charge, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">0</span>),</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">Readmit rate (%)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(Readmissions <span class="sc">/</span> N <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="st">`</span><span class="at">Readmit rate (%)</span><span class="st">`</span>))</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Stratified by payer:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Stratified by payer:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(strat_payer)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 6
+  payer        N Readmissions `Mean LOS (days)` `Mean Charge ($)`
+  &lt;chr&gt;    &lt;int&gt;        &lt;int&gt;             &lt;dbl&gt;             &lt;dbl&gt;
+1 Self-pay    39            9               3.7             12000
+2 Medicare   201           31               4.3             13042
+3 Medicaid   119           16               3.8             11330
+4 Other       19            2               3.9             11342
+5 Private    122           11               4               11909
+# ℹ 1 more variable: `Readmit rate (%)` &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 3.2  Stratified by age group and sex (2×4 pivot) ---</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>pivot <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(age_group, sex) <span class="sc">%&gt;%</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n    =</span> <span class="fu">n</span>(),</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">rate =</span> <span class="fu">mean</span>(readmitted_30) <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_from  =</span> sex,</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_from =</span> <span class="fu">c</span>(n, rate),</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_glue  =</span> <span class="st">"{.value}_{sex}"</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(<span class="fu">starts_with</span>(<span class="st">"rate_"</span>), <span class="sc">~</span> <span class="fu">round</span>(.x, <span class="dv">1</span>))</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">N (F)</span><span class="st">`</span>    <span class="ot">=</span> n_F,</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">N (M)</span><span class="st">`</span>    <span class="ot">=</span> n_M,</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Rate (F)</span><span class="st">`</span> <span class="ot">=</span> rate_F,</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Rate (M)</span><span class="st">`</span> <span class="ot">=</span> rate_M</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Readmission rate (%) by age group and sex:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Readmission rate (%) by age group and sex:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(pivot)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 5
+  age_group `N (F)` `N (M)` `Rate (F)` `Rate (M)`
+  &lt;fct&gt;       &lt;int&gt;   &lt;int&gt;      &lt;dbl&gt;      &lt;dbl&gt;
+1 18-44          41      33       12.2       12.1
+2 45-64         119     115       13.4       11.3
+3 65-74          56      39       17.9       10.3
+4 75+            50      47       18         17  </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 3.3  LOS summary by admission type ---</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>pct <span class="ot">&lt;-</span> <span class="cf">function</span>(x, p) <span class="fu">quantile</span>(x, p, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>los_summary <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(admit_type) <span class="sc">%&gt;%</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">n    =</span> <span class="fu">n</span>(),</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean =</span> <span class="fu">mean</span>(los_days),</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd   =</span> <span class="fu">sd</span>(los_days),</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">min  =</span> <span class="fu">min</span>(los_days),</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">p25  =</span> <span class="fu">pct</span>(los_days, <span class="fl">0.25</span>),</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">p50  =</span> <span class="fu">pct</span>(los_days, <span class="fl">0.50</span>),</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">p75  =</span> <span class="fu">pct</span>(los_days, <span class="fl">0.75</span>),</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">p90  =</span> <span class="fu">pct</span>(los_days, <span class="fl">0.90</span>),</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">max  =</span> <span class="fu">max</span>(los_days),</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">round</span>(.x, <span class="dv">1</span>)))</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"LOS distribution by admission type:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>LOS distribution by admission type:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(los_summary)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 10
+  admit_type     n  mean    sd   min   p25   p50   p75   p90   max
+  &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Elective     142   3.9   2.7     1     2     3     5   7      18
+2 Emergency    270   4.1   2.9     1     2     3     6   7.1    21
+3 Newborn       19   3.7   2.5     1     2     3     5   7.2    10
+4 Urgent        69   4.2   3.1     1     2     3     6   8.2    12</code></pre>
+</div>
+</div>
+</section>
+<section id="interpreting-skewed-clinical-distributions" class="level2">
+<h2 class="anchored" data-anchor-id="interpreting-skewed-clinical-distributions">4. Interpreting Skewed Clinical Distributions</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 4.1  LOS skewness and kurtosis ---</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>skewness <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> x[<span class="sc">!</span><span class="fu">is.na</span>(x)]</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">mean</span>(x)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">sd</span>(x)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>((x <span class="sc">-</span> m)<span class="sc">^</span><span class="dv">3</span>) <span class="sc">/</span> (s<span class="sc">^</span><span class="dv">3</span>)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>kurtosis_ex <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> x[<span class="sc">!</span><span class="fu">is.na</span>(x)]</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">mean</span>(x)</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">sd</span>(x)</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>((x <span class="sc">-</span> m)<span class="sc">^</span><span class="dv">4</span>) <span class="sc">/</span> (s<span class="sc">^</span><span class="dv">4</span>) <span class="sc">-</span> <span class="dv">3</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>los <span class="ot">&lt;-</span> df<span class="sc">$</span>los_days[<span class="sc">!</span><span class="fu">is.na</span>(df<span class="sc">$</span>los_days)]</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>chg <span class="ot">&lt;-</span> df<span class="sc">$</span>total_charge[<span class="sc">!</span><span class="fu">is.na</span>(df<span class="sc">$</span>total_charge)]</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (pair <span class="cf">in</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="st">"LOS (days)"</span>, los), <span class="fu">list</span>(<span class="st">"Total charge ($)"</span>, chg))) {</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>  name   <span class="ot">&lt;-</span> pair[[<span class="dv">1</span>]]</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>  series <span class="ot">&lt;-</span> pair[[<span class="dv">2</span>]]</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>  sk     <span class="ot">&lt;-</span> <span class="fu">skewness</span>(series)</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(name, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>, <span class="at">sep =</span> <span class="st">""</span>)</span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Mean   : %.2f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">mean</span>(series)))</span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Median : %.2f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">median</span>(series)))</span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Std    : %.2f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">sd</span>(series)))</span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Skew   : %.3f  %s</span><span class="sc">\n</span><span class="st">"</span>, sk,</span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> (sk <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="st">"(right-skewed — median is preferred)"</span> <span class="cf">else</span> <span class="st">""</span>))</span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Kurtosis: %.3f</span><span class="sc">\n\n</span><span class="st">"</span>, <span class="fu">kurtosis_ex</span>(series)))</span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>LOS (days)
+  Mean   : 4.06
+  Median : 3.00
+  Std    : 2.85
+  Skew   : 1.596  (right-skewed — median is preferred)
+  Kurtosis: 4.467
+
+Total charge ($)
+  Mean   : 12218.58
+  Median : 9732.95
+  Std    : 9491.76
+  Skew   : 1.716  (right-skewed — median is preferred)
+  Kurtosis: 4.359</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 4.2  Log-transformation for skewed charge data ---</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>log_charge <span class="ot">&lt;-</span> <span class="fu">log1p</span>(df<span class="sc">$</span>total_charge)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Before log-transform — charge skewness:"</span>, <span class="fu">round</span>(<span class="fu">skewness</span>(chg), <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Before log-transform — charge skewness: 1.716 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"After  log-transform — skewness        :"</span>,</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(<span class="fu">skewness</span>(df<span class="sc">$</span>log_charge), <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>After  log-transform — skewness        : -0.079 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"When to log-transform in health data:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>When to log-transform in health data:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  - Cost/charge data (always right-skewed)</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  - Cost/charge data (always right-skewed)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  - LOS when tail is very long (e.g. &gt;30-day stays)</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  - LOS when tail is very long (e.g. &gt;30-day stays)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  - Lab values that span orders of magnitude (creatinine, troponin)</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  - Lab values that span orders of magnitude (creatinine, troponin)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"  - Report back-transformed geometric mean for interpretation</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  - Report back-transformed geometric mean for interpretation</code></pre>
+</div>
+</div>
+</section>
+<section id="age-standardisation-direct-method" class="level2">
+<h2 class="anchored" data-anchor-id="age-standardisation-direct-method">5. Age-Standardisation (Direct Method)</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Direct age-standardisation: applies study rates to a standard population</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="co"># to remove confounding by age structure differences between groups.</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co"># US 2000 Standard Population weights by age group</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>std_pop <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">age_group  =</span> <span class="fu">factor</span>(<span class="fu">c</span>(<span class="st">"18-44"</span>, <span class="st">"45-64"</span>, <span class="st">"65-74"</span>, <span class="st">"75+"</span>),</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>                      <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"18-44"</span>, <span class="st">"45-64"</span>, <span class="st">"65-74"</span>, <span class="st">"75+"</span>)),</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">std_weight =</span> <span class="fu">c</span>(<span class="fl">0.3761</span>, <span class="fl">0.3399</span>, <span class="fl">0.1267</span>, <span class="fl">0.0573</span>)   <span class="co"># proportions sum to ~1</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Crude rates by age group × payer (Medicare vs Private as example)</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (pay <span class="cf">in</span> <span class="fu">c</span>(<span class="st">"Medicare"</span>, <span class="st">"Private"</span>)) {</span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>  sub <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(payer <span class="sc">==</span> pay)</span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>  rates <span class="ot">&lt;-</span> sub <span class="sc">%&gt;%</span></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(age_group) <span class="sc">%&gt;%</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">crude_rate =</span> <span class="fu">mean</span>(readmitted_30),</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">n          =</span> <span class="fu">n</span>(),</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">.groups    =</span> <span class="st">"drop"</span></span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(std_pop, <span class="at">by =</span> <span class="st">"age_group"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">weighted_rate =</span> crude_rate <span class="sc">*</span> std_weight)</span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a>  age_adj_rate  <span class="ot">&lt;-</span> <span class="fu">sum</span>(rates<span class="sc">$</span>weighted_rate, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>  crude_overall <span class="ot">&lt;-</span> <span class="fu">mean</span>(sub<span class="sc">$</span>readmitted_30) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"%-10s — Crude: %.1f%%  |  Age-adjusted: %.1f%%</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb45-26"><a href="#cb45-26" aria-hidden="true" tabindex="-1"></a>              pay, crude_overall, age_adj_rate))</span>
+<span id="cb45-27"><a href="#cb45-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Medicare   — Crude: 15.4%  |  Age-adjusted: 11.8%
+Private    — Crude: 9.0%  |  Age-adjusted: 8.8%</code></pre>
+</div>
+</div>
+</section>
+<section id="table-1-publication-ready-descriptive-table" class="level2">
+<h2 class="anchored" data-anchor-id="table-1-publication-ready-descriptive-table">6. Table 1 — Publication-Ready Descriptive Table</h2>
+<p>A “Table 1” in clinical research summarises the baseline characteristics of a cohort, often stratified by a key variable (e.g.&nbsp;readmitted vs not).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>table1 <span class="ot">&lt;-</span> <span class="cf">function</span>(df, stratify_col, continuous_cols, categorical_cols) {</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Build a basic Table 1.</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Continuous: mean ± SD (or median [IQR] if skewed)</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Categorical: N (%)</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>  groups <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(df[[stratify_col]]))</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  group_label <span class="ot">&lt;-</span> <span class="cf">function</span>(g) {</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    n <span class="ot">&lt;-</span> <span class="fu">sum</span>(df[[stratify_col]] <span class="sc">==</span> g, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    pretty <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">identical</span>(g, <span class="dv">0</span>) <span class="sc">||</span> <span class="fu">identical</span>(g, <span class="dv">0</span>L)) {</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Not readmitted"</span></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">identical</span>(g, <span class="dv">1</span>) <span class="sc">||</span> <span class="fu">identical</span>(g, <span class="dv">1</span>L)) {</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Readmitted"</span></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">as.character</span>(g)</span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%s (N=%d)"</span>, pretty, n)</span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>  rows <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>  header <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">Variable =</span> <span class="st">"Variable"</span>)</span>
+<span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (g <span class="cf">in</span> groups) header[[<span class="fu">as.character</span>(g)]] <span class="ot">&lt;-</span> <span class="fu">group_label</span>(g)</span>
+<span id="cb47-21"><a href="#cb47-21" aria-hidden="true" tabindex="-1"></a>  rows[[<span class="fu">length</span>(rows) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> header</span>
+<span id="cb47-22"><a href="#cb47-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-23"><a href="#cb47-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> continuous_cols) {</span>
+<span id="cb47-24"><a href="#cb47-24" aria-hidden="true" tabindex="-1"></a>    sk  <span class="ot">&lt;-</span> <span class="fu">abs</span>(<span class="fu">skewness</span>(df[[col]]))</span>
+<span id="cb47-25"><a href="#cb47-25" aria-hidden="true" tabindex="-1"></a>    row <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">Variable =</span> <span class="fu">paste0</span>(col, <span class="cf">if</span> (sk <span class="sc">&gt;</span> <span class="dv">1</span>) <span class="st">" [median, IQR]"</span> <span class="cf">else</span> <span class="st">" [mean ± SD]"</span>))</span>
+<span id="cb47-26"><a href="#cb47-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (g <span class="cf">in</span> groups) {</span>
+<span id="cb47-27"><a href="#cb47-27" aria-hidden="true" tabindex="-1"></a>      vals <span class="ot">&lt;-</span> df[[col]][df[[stratify_col]] <span class="sc">==</span> g]</span>
+<span id="cb47-28"><a href="#cb47-28" aria-hidden="true" tabindex="-1"></a>      vals <span class="ot">&lt;-</span> vals[<span class="sc">!</span><span class="fu">is.na</span>(vals)]</span>
+<span id="cb47-29"><a href="#cb47-29" aria-hidden="true" tabindex="-1"></a>      row[[<span class="fu">as.character</span>(g)]] <span class="ot">&lt;-</span> <span class="cf">if</span> (sk <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
+<span id="cb47-30"><a href="#cb47-30" aria-hidden="true" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">"%.1f [%.1f–%.1f]"</span>, <span class="fu">median</span>(vals), <span class="fu">quantile</span>(vals, <span class="fl">0.25</span>), <span class="fu">quantile</span>(vals, <span class="fl">0.75</span>))</span>
+<span id="cb47-31"><a href="#cb47-31" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb47-32"><a href="#cb47-32" aria-hidden="true" tabindex="-1"></a>        <span class="fu">sprintf</span>(<span class="st">"%.1f ± %.1f"</span>, <span class="fu">mean</span>(vals), <span class="fu">sd</span>(vals))</span>
+<span id="cb47-33"><a href="#cb47-33" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb47-34"><a href="#cb47-34" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb47-35"><a href="#cb47-35" aria-hidden="true" tabindex="-1"></a>    rows[[<span class="fu">length</span>(rows) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> row</span>
+<span id="cb47-36"><a href="#cb47-36" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb47-37"><a href="#cb47-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-38"><a href="#cb47-38" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (col <span class="cf">in</span> categorical_cols) {</span>
+<span id="cb47-39"><a href="#cb47-39" aria-hidden="true" tabindex="-1"></a>    row <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">Variable =</span> col)</span>
+<span id="cb47-40"><a href="#cb47-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (g <span class="cf">in</span> groups) row[[<span class="fu">as.character</span>(g)]] <span class="ot">&lt;-</span> <span class="st">""</span></span>
+<span id="cb47-41"><a href="#cb47-41" aria-hidden="true" tabindex="-1"></a>    rows[[<span class="fu">length</span>(rows) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> row</span>
+<span id="cb47-42"><a href="#cb47-42" aria-hidden="true" tabindex="-1"></a>    cats <span class="ot">&lt;-</span> <span class="fu">unique</span>(df[[col]][<span class="sc">!</span><span class="fu">is.na</span>(df[[col]])])</span>
+<span id="cb47-43"><a href="#cb47-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (cat <span class="cf">in</span> cats) {</span>
+<span id="cb47-44"><a href="#cb47-44" aria-hidden="true" tabindex="-1"></a>      row <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">Variable =</span> <span class="fu">paste0</span>(<span class="st">"  "</span>, <span class="fu">as.character</span>(cat)))</span>
+<span id="cb47-45"><a href="#cb47-45" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (g <span class="cf">in</span> groups) {</span>
+<span id="cb47-46"><a href="#cb47-46" aria-hidden="true" tabindex="-1"></a>        sub   <span class="ot">&lt;-</span> df[df[[stratify_col]] <span class="sc">==</span> g, ]</span>
+<span id="cb47-47"><a href="#cb47-47" aria-hidden="true" tabindex="-1"></a>        n_cat <span class="ot">&lt;-</span> <span class="fu">sum</span>(sub[[col]] <span class="sc">==</span> cat, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb47-48"><a href="#cb47-48" aria-hidden="true" tabindex="-1"></a>        pct   <span class="ot">&lt;-</span> n_cat <span class="sc">/</span> <span class="fu">nrow</span>(sub) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb47-49"><a href="#cb47-49" aria-hidden="true" tabindex="-1"></a>        row[[<span class="fu">as.character</span>(g)]] <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">"%d (%.1f%%)"</span>, n_cat, pct)</span>
+<span id="cb47-50"><a href="#cb47-50" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb47-51"><a href="#cb47-51" aria-hidden="true" tabindex="-1"></a>      rows[[<span class="fu">length</span>(rows) <span class="sc">+</span> <span class="dv">1</span>]] <span class="ot">&lt;-</span> row</span>
+<span id="cb47-52"><a href="#cb47-52" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb47-53"><a href="#cb47-53" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb47-54"><a href="#cb47-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-55"><a href="#cb47-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">lapply</span>(rows, <span class="cf">function</span>(r) <span class="fu">as_tibble</span>(<span class="fu">as.list</span>(r))))</span>
+<span id="cb47-56"><a href="#cb47-56" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb47-57"><a href="#cb47-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-58"><a href="#cb47-58" aria-hidden="true" tabindex="-1"></a>t1 <span class="ot">&lt;-</span> <span class="fu">table1</span>(</span>
+<span id="cb47-59"><a href="#cb47-59" aria-hidden="true" tabindex="-1"></a>  df,</span>
+<span id="cb47-60"><a href="#cb47-60" aria-hidden="true" tabindex="-1"></a>  <span class="at">stratify_col     =</span> <span class="st">"readmitted_30"</span>,</span>
+<span id="cb47-61"><a href="#cb47-61" aria-hidden="true" tabindex="-1"></a>  <span class="at">continuous_cols  =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"los_days"</span>, <span class="st">"total_charge"</span>),</span>
+<span id="cb47-62"><a href="#cb47-62" aria-hidden="true" tabindex="-1"></a>  <span class="at">categorical_cols =</span> <span class="fu">c</span>(<span class="st">"sex"</span>, <span class="st">"payer"</span>, <span class="st">"admit_type"</span>, <span class="st">"age_group"</span>)</span>
+<span id="cb47-63"><a href="#cb47-63" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb47-64"><a href="#cb47-64" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Table 1 — Baseline characteristics by 30-day readmission status:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Table 1 — Baseline characteristics by 30-day readmission status:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t1, <span class="at">n =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 23 × 3
+   Variable                     `0`                       `1`                   
+   &lt;chr&gt;                        &lt;chr&gt;                     &lt;chr&gt;                 
+ 1 "Variable"                   "Not readmitted (N=431)"  "Readmitted (N=69)"   
+ 2 "age [mean ± SD]"            "60.6 ± 15.0"             "63.2 ± 17.1"         
+ 3 "los_days [median, IQR]"     "3.0 [2.0–6.0]"           "3.0 [2.0–6.0]"       
+ 4 "total_charge [median, IQR]" "9319.9 [4825.1–17052.2]" "11495.3 [6977.6–1575…
+ 5 "sex"                        ""                        ""                    
+ 6 "  M"                        "205 (47.6%)"             "29 (42.0%)"          
+ 7 "  F"                        "226 (52.4%)"             "40 (58.0%)"          
+ 8 "payer"                      ""                        ""                    
+ 9 "  Medicare"                 "170 (39.4%)"             "31 (44.9%)"          
+10 "  Self-pay"                 "30 (7.0%)"               "9 (13.0%)"           
+11 "  Medicaid"                 "103 (23.9%)"             "16 (23.2%)"          
+12 "  Private"                  "111 (25.8%)"             "11 (15.9%)"          
+13 "  Other"                    "17 (3.9%)"               "2 (2.9%)"            
+14 "admit_type"                 ""                        ""                    
+15 "  Emergency"                "229 (53.1%)"             "41 (59.4%)"          
+16 "  Elective"                 "126 (29.2%)"             "16 (23.2%)"          
+17 "  Urgent"                   "60 (13.9%)"              "9 (13.0%)"           
+18 "  Newborn"                  "16 (3.7%)"               "3 (4.3%)"            
+19 "age_group"                  ""                        ""                    
+20 "  75+"                      "80 (18.6%)"              "17 (24.6%)"          
+21 "  45-64"                    "205 (47.6%)"             "29 (42.0%)"          
+22 "  65-74"                    "81 (18.8%)"              "14 (20.3%)"          
+23 "  18-44"                    "65 (15.1%)"              "9 (13.0%)"           </code></pre>
+</div>
+</div>
+</section>
+<section id="statistical-tests-for-group-comparisons" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-tests-for-group-comparisons">7. Statistical Tests for Group Comparisons</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Statistical tests: readmitted vs not readmitted</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Statistical tests: readmitted vs not readmitted</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Continuous: LOS (skewed → Mann-Whitney U) ---</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>g0 <span class="ot">&lt;-</span> df<span class="sc">$</span>los_days[df<span class="sc">$</span>readmitted_30 <span class="sc">==</span> <span class="dv">0</span>]</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>g1 <span class="ot">&lt;-</span> df<span class="sc">$</span>los_days[df<span class="sc">$</span>readmitted_30 <span class="sc">==</span> <span class="dv">1</span>]</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>mw <span class="ot">&lt;-</span> <span class="fu">wilcox.test</span>(g0, g1, <span class="at">alternative =</span> <span class="st">"two.sided"</span>, <span class="at">exact =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"LOS — Mann-Whitney U: U=%.0f, p=%.4f</span><span class="sc">\n</span><span class="st">"</span>, mw<span class="sc">$</span>statistic, mw<span class="sc">$</span>p.value))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>LOS — Mann-Whitney U: U=13498, p=0.2142</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Continuous: Age (normal → t-test) ---</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>g0a <span class="ot">&lt;-</span> df<span class="sc">$</span>age[df<span class="sc">$</span>readmitted_30 <span class="sc">==</span> <span class="dv">0</span>]</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>g1a <span class="ot">&lt;-</span> df<span class="sc">$</span>age[df<span class="sc">$</span>readmitted_30 <span class="sc">==</span> <span class="dv">1</span>]</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>tt  <span class="ot">&lt;-</span> <span class="fu">t.test</span>(g0a, g1a, <span class="at">var.equal =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Age — Student t-test: t=%.3f, p=%.4f</span><span class="sc">\n</span><span class="st">"</span>, tt<span class="sc">$</span>statistic, tt<span class="sc">$</span>p.value))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Age — Student t-test: t=-1.337, p=0.1817</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Categorical: Sex × Readmission (chi-square) ---</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>ct   <span class="ot">&lt;-</span> <span class="fu">table</span>(df<span class="sc">$</span>sex, df<span class="sc">$</span>readmitted_30)</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>chi  <span class="ot">&lt;-</span> <span class="fu">chisq.test</span>(ct)</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Sex — Chi-square: χ²=%.3f, df=%d, p=%.4f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">unname</span>(chi<span class="sc">$</span>statistic), chi<span class="sc">$</span>parameter, chi<span class="sc">$</span>p.value))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sex — Chi-square: χ²=0.526, df=1, p=0.4681</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Categorical: Payer × Readmission ---</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>ct2  <span class="ot">&lt;-</span> <span class="fu">table</span>(df<span class="sc">$</span>payer, df<span class="sc">$</span>readmitted_30)</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>chi2 <span class="ot">&lt;-</span> <span class="fu">chisq.test</span>(ct2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in chisq.test(ct2): Chi-squared approximation may be incorrect</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Payer — Chi-square: χ²=%.3f, p=%.4f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">unname</span>(chi2<span class="sc">$</span>statistic), chi2<span class="sc">$</span>p.value))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Payer — Chi-square: χ²=5.797, p=0.2148</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">(p &lt; 0.05 suggests significant difference between groups)</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+(p &lt; 0.05 suggests significant difference between groups)</code></pre>
+</div>
+</div>
+</section>
+<section id="knowledge-check" class="level2">
+<h2 class="anchored" data-anchor-id="knowledge-check">8. Knowledge Check</h2>
+<ol type="1">
+<li>Why is the median preferred over the mean for LOS and charge data?</li>
+<li>What does a readmission rate of 14 per 100 discharges mean clinically?</li>
+<li>When would you use age-standardisation instead of crude rates?</li>
+<li>In a chi-square test, what does a p-value of 0.03 for payer × readmission tell you?</li>
+<li>Re-calculate Table 1 stratified by <code>sex</code> instead of <code>readmitted_30</code>.</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Exercise: Table 1 stratified by sex ---</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>t1_sex <span class="ot">&lt;-</span> <span class="fu">table1</span>(</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  df,</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">stratify_col     =</span> <span class="st">"sex"</span>,</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">continuous_cols  =</span> <span class="fu">c</span>(<span class="st">"age"</span>, <span class="st">"los_days"</span>, <span class="st">"total_charge"</span>),</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">categorical_cols =</span> <span class="fu">c</span>(<span class="st">"payer"</span>, <span class="st">"admit_type"</span>, <span class="st">"age_group"</span>, <span class="st">"readmitted_30"</span>)</span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t1_sex, <span class="at">n =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 23 × 3
+   Variable                     F                         M                     
+   &lt;chr&gt;                        &lt;chr&gt;                     &lt;chr&gt;                 
+ 1 "Variable"                   "F (N=266)"               "M (N=234)"           
+ 2 "age [mean ± SD]"            "60.6 ± 15.6"             "61.3 ± 15.1"         
+ 3 "los_days [median, IQR]"     "3.0 [2.0–5.0]"           "3.0 [2.0–6.0]"       
+ 4 "total_charge [median, IQR]" "9411.7 [5485.3–15799.5]" "10201.5 [4374.6–1767…
+ 5 "payer"                      ""                        ""                    
+ 6 "  Medicare"                 "105 (39.5%)"             "96 (41.0%)"          
+ 7 "  Self-pay"                 "19 (7.1%)"               "20 (8.5%)"           
+ 8 "  Medicaid"                 "68 (25.6%)"              "51 (21.8%)"          
+ 9 "  Private"                  "63 (23.7%)"              "59 (25.2%)"          
+10 "  Other"                    "11 (4.1%)"               "8 (3.4%)"            
+11 "admit_type"                 ""                        ""                    
+12 "  Emergency"                "142 (53.4%)"             "128 (54.7%)"         
+13 "  Elective"                 "77 (28.9%)"              "65 (27.8%)"          
+14 "  Urgent"                   "34 (12.8%)"              "35 (15.0%)"          
+15 "  Newborn"                  "13 (4.9%)"               "6 (2.6%)"            
+16 "age_group"                  ""                        ""                    
+17 "  75+"                      "50 (18.8%)"              "47 (20.1%)"          
+18 "  45-64"                    "119 (44.7%)"             "115 (49.1%)"         
+19 "  65-74"                    "56 (21.1%)"              "39 (16.7%)"          
+20 "  18-44"                    "41 (15.4%)"              "33 (14.1%)"          
+21 "readmitted_30"              ""                        ""                    
+22 "  0"                        "226 (85.0%)"             "205 (87.6%)"         
+23 "  1"                        "40 (15.0%)"              "29 (12.4%)"          </code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<p>In this notebook you: - Calculated crude prevalence, readmission rates, and Wilson 95% CIs - Built stratified summaries across payer, age group, and sex - Diagnosed and handled right-skewed distributions (log-transform) - Applied direct age-standardisation to remove age confounding - Constructed a publication-style Table 1 - Ran appropriate statistical tests for continuous and categorical variables</p>
+<p><strong>Next:</strong> <code>NB-03 · Health Data Ecosystem &amp; Codes</code> — ICD-10, CPT, LOINC, FHIR parsing, and HIPAA safe-harbour.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-with-Python\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./MOD01_NB01_R_Foundations_Health_Data.html" class="pagination-link" aria-label="NB-01 · R Foundations for Health Data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">NB-01 · R Foundations for Health Data</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./MOD01_NB03_Health_Data_Ecosystem_Codes.html" class="pagination-link" aria-label="NB-03 · Health Data Ecosystem &amp; Codes">
+        <span class="nav-page-text">NB-03 · Health Data Ecosystem &amp; Codes</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© CC-By Zia Ahmed, Upatta Analytics, 2026</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD01_NB02_Descriptive_Statistics_Health_Metrics.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

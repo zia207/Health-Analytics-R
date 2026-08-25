@@ -1,0 +1,696 @@
+---
+title: "Health Analytics with R"
+subtitle: "A Comprehensive Tutorial Series"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+# Health Analytics with R
+## A Comprehensive Tutorial Series
+
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 12px; padding: 36px 40px; margin-bottom: 28px; color: white;">
+
+<h2 style="margin:0 0 6px 0; font-size:2.2em; letter-spacing:1px;">
+  🏥 Health Analytics with R
+</h2>
+<p style="margin:0 0 20px 0; font-size:1.15em; color:#a0c4ff; font-style:italic;">
+  From Raw EHR Data to Production-Ready Clinical Models
+</p>
+<hr style="border:none; border-top:1px solid rgba(255,255,255,0.2); margin-bottom:20px;">
+<table style="width:100%; color:white; font-size:0.97em; border-collapse:collapse;">
+  <tr>
+    <td style="padding:4px 16px 4px 0;"><b>Modules</b></td>
+    <td style="padding:4px 0;">8 modules · 62 notebooks · ~450 code cells</td>
+  </tr>
+  <tr>
+    <td style="padding:4px 16px 4px 0;"><b>Level</b></td>
+    <td style="padding:4px 0;">Intermediate to Advanced · Healthcare data science background assumed</td>
+  </tr>
+  <tr>
+    <td style="padding:4px 16px 4px 0;"><b>Language</b></td>
+    <td style="padding:4px 0;">R 4.3+ · Quarto-compatible</td>
+  </tr>
+  <tr>
+    <td style="padding:4px 16px 4px 0;"><b>Dataset</b></td>
+    <td style="padding:4px 0;">Synthetic (MIMIC-III inspired) · seed = 42 throughout</td>
+  </tr>
+  <tr>
+    <td style="padding:4px 16px 4px 0;"><b>Author</b></td>
+    <td style="padding:4px 0;">Dr. Zia U. Ahmed · Upatta Analytics · zia207 @ GitHub</td>
+  </tr>
+</table>
+</div>
+
+***
+
+## 1. Why Health Analytics with R?
+
+Healthcare generates more data per person than almost any other industry — electronic health records, claims databases, imaging, genomics, wearables, and administrative files — yet much of it remains under-analysed.  R has become the language of choice for many epidemiologists and health data scientists because of its rich ecosystem spanning statistics, machine learning, natural language processing, geospatial analysis, and production deployment.
+
+**This series bridges three gaps that most textbooks leave open:**
+
+1. **Clinically meaningful examples** — every dataset, model, and metric is grounded in real healthcare problems: readmission prediction, drug optimisation, spatial health inequities, causal effects of treatment.
+2. **End-to-end thinking** — notebooks do not stop at model accuracy. They continue through calibration, fairness, explainability, API serving, monitoring, and clinical governance.
+3. **Reproducibility by design** — code is written as it would be in a health system data science team: version-pinned environments, SHA-256 data manifests, logged pipelines, and CI/CD-ready test suites.
+
+> **Who is this for?** Health informatics professionals, clinical data scientists, epidemiologists, public health researchers, and graduate students who know R basics and want to apply it rigorously to healthcare problems.
+
+## 2. Series Architecture
+
+The eight modules form two learning tracks that can be taken independently or sequentially.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│           TRACK A: PHARMACY & CLINICAL ANALYTICS                                │
+│                                                                                 │
+│  MOD-01          MOD-02          MOD-03          MOD-04          MOD-05         │
+│  R               Exploratory     Statistical     Machine         NLP for        │
+│  Foundations  →  Data Analysis →  Inference   →  Learning    →  Clinical Text  │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│           TRACK B: POPULATION HEALTH & DEPLOYMENT                               │
+│                                                                                 │
+│  MOD-06          MOD-07          MOD-08                                         │
+│  Causal       →  Geospatial  →  Reproducible                                   │
+│  Inference       Epidemiology   Research &                                      │
+│                                 Deployment                                      │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+All modules share: seed=42 · MIMIC-III-inspired synthetic data · 300 dpi figures
+```
+
+Each module contains **8 notebooks** following a consistent arc:  
+`Concepts → Core method → Case study → Extension → Capstone`
+
+## 3. Module Guide
+
+| # | Module | Clinical Focus | Key Libraries | Notebooks |
+|---|--------|---------------|---------------|-----------|
+| 01 | **R Foundations** | EHR data structures, HIPAA-safe workflows | `dplyr`, `tibble`, `readr` | 3 |
+| 02 | **Exploratory Data Analysis** | Readmission cohort, missingness, comorbidity heatmaps | `ggplot2`, `naniar`, `skimr` | 8 |
+| 03 | **Statistical Inference** | RR/OR/CI, survival analysis, confounding | `stats`, `survival`, `broom` | 8 |
+| 04 | **Machine Learning** | Clinical prediction, SHAP, calibration, DCA | `tidymodels`, `xgboost`, `lightgbm`, `DALEX` | 8 |
+| 05 | **NLP for Clinical Text** | De-identification, ICD coding, BERT, summarisation | `quanteda`, `tidytext`, `text2vec` | 8 |
+| 06 | **Causal Inference** | DAGs, PS matching, DiD, ITS, TMLE, mediation | `dagitty`, `MatchIt`, `broom` | 8 |
+| 07 | **Geospatial Epidemiology** | Cluster detection, BYM smoothing, 2SFCA access | `sf`, `spdep`, `GWmodel` | 10 |
+| 08 | **Reproducible Research** | Quarto reports, Shiny, MLflow, plumber, CI/CD | `plumber`, `mlflow`, `shiny` | 8 |
+
+**Total: 62 notebooks · ~450 executable code cells · 8 capstone analyses**
+
+## Setup: Check Your Environment
+
+```{r setup, message=FALSE, warning=FALSE}
+# Run once from the Health-Analytics-R directory to install missing packages:
+# source("packages.R")
+
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
+
+print(strrep("=", 60))
+cat("  Health Analytics with R — Environment Check\n")
+print(strrep("=", 60))
+cat(sprintf("  R version      : %s\n", paste(R.version$major, R.version$minor, sep = ".")))
+cat(sprintf("  Check date     : %s\n", format(Sys.Date(), "%Y-%m-%d")))
+cat("\n")
+
+REQUIRED <- c(
+  tidyverse  = "2.0",
+  ggplot2    = "3.4",
+  dplyr      = "1.1",
+  survival   = "3.5",
+  tidymodels = "1.1",
+  broom      = "1.0",
+  patchwork  = "1.2"
+)
+
+OPTIONAL <- c(
+  quanteda = "3.3",
+  dagitty  = "0.3",
+  sf       = "1.0",
+  shiny    = "1.8",
+  plumber  = "1.2",
+  xgboost  = "1.7",
+  lightgbm = "4.0",
+  mlflow   = "2.8",
+  DALEX    = "2.4"
+)
+
+check_pkg <- function(name, min_ver) {
+  if (requireNamespace(name, quietly = TRUE)) {
+    ver <- as.character(utils::packageVersion(name))
+    ok  <- utils::compareVersion(ver, min_ver) >= 0
+    list(ver = ver, status = if (ok) "OK" else "UPGRADE")
+  } else {
+    list(ver = "not installed", status = "MISSING")
+  }
+}
+
+cat(sprintf("  %-15s %-12s %-10s %s\n", "Package", "Installed", "Required", "Status"))
+cat("  ", strrep("-", 52), "\n", sep = "")
+
+all_core_ok <- TRUE
+for (pkg in names(REQUIRED)) {
+  res    <- check_pkg(pkg, REQUIRED[[pkg]])
+  icon   <- if (res$status == "OK") "✓" else "✗"
+  cat(sprintf("  %s %-14s %-12s >=%-8s %s\n",
+              icon, pkg, res$ver, REQUIRED[[pkg]], res$status))
+  if (res$status != "OK") all_core_ok <- FALSE
+}
+
+cat("\n  Optional packages:\n")
+for (pkg in names(OPTIONAL)) {
+  res  <- check_pkg(pkg, OPTIONAL[[pkg]])
+  icon <- if (res$status == "OK") "✓" else "○"
+  cat(sprintf("  %s %-14s %-12s >=%s\n",
+              icon, pkg, res$ver, OPTIONAL[[pkg]]))
+}
+
+cat("\n")
+if (all_core_ok) {
+  cat("  ✓ All core packages ready. You are good to go!\n")
+} else {
+  cat("  Run: source(\"packages.R\")\n")
+}
+print(strrep("=", 60))
+```
+
+## Preview: A Taste of Every Module
+
+```{r}
+# ── Quick-start: a taste of what each module delivers ──────────────────────────
+set.seed(42)
+N <- 1800
+
+sigmoid <- function(x) 1 / (1 + exp(-x))
+
+# ── Shared synthetic cohort ──────────────────────────────────────────────────
+age  <- as.integer(pmin(pmax(rnorm(N, 63, 14), 18), 90))
+los  <- as.integer(pmin(pmax(rgamma(N, shape = 2.5, scale = 1.8), 1), 28))
+hf   <- rbinom(N, 1, 0.22)
+dm   <- rbinom(N, 1, 0.35)
+copd <- rbinom(N, 1, 0.18)
+payer <- sample(
+  c("Medicare", "Medicaid", "Private", "Self-pay"),
+  N, replace = TRUE, prob = c(0.40, 0.22, 0.28, 0.10)
+)
+logit   <- -3.2 + 0.6 * hf + 0.5 * dm + 0.3 * copd + 0.02 * (age - 63) + 0.2 * (los > 7)
+readmit <- rbinom(N, 1, sigmoid(logit))
+cvd_rate <- 180 + 1.4 * rnorm(N, 10, 5) + 12 * rnorm(N, 0, 1)
+
+df <- tibble(
+  age      = age,
+  los      = los,
+  hf       = hf,
+  dm       = dm,
+  copd     = copd,
+  payer    = payer,
+  readmit  = readmit,
+  cvd_rate = cvd_rate
+)
+
+cat(sprintf("Cohort: N=%s | Readmission rate: %.1f%%\n",
+            format(N, big.mark = ","), mean(readmit) * 100))
+cat("Building preview figure ...\n")
+```
+
+```{r, fig.width=22, fig.height=14}
+# ── 8-panel preview figure — one panel per module ───────────────────────────
+BLUE   <- "#2563EB"; RED    <- "#DC2626"; GREEN  <- "#16A34A"
+GOLD   <- "#D97706"; PURPLE <- "#7C3AED"; TEAL   <- "#0D9488"
+GRAY   <- "#6B7280"; PINK   <- "#DB2777"
+
+theme_preview <- function(base_size = 9) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      plot.background   = element_rect(fill = "white", colour = NA),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      legend.background = element_rect(fill = "white", colour = NA),
+      panel.grid.minor  = element_blank(),
+      plot.title        = element_text(face = "bold", size = 9, lineheight = 1.1)
+    )
+}
+
+# Stratified 80/20 split (matches tidymodels/rsample strata, seed = 42)
+set.seed(42)
+df <- df %>% mutate(.row = dplyr::row_number())
+train <- df %>%
+  group_by(readmit) %>%
+  slice_sample(prop = 0.8) %>%
+  ungroup()
+test <- dplyr::anti_join(df, train, by = ".row")
+
+n_tr <- nrow(train)
+n1   <- sum(train$readmit == 1)
+n0   <- n_tr - n1
+train$w <- ifelse(train$readmit == 1, n_tr / (2 * n1), n_tr / (2 * n0))
+
+model <- glm(
+  readmit ~ age + los + hf + dm + copd,
+  family  = quasibinomial(),
+  data    = train,
+  weights = w
+)
+prob <- as.numeric(predict(model, newdata = test, type = "response"))
+y_te <- test$readmit
+
+roc_curve_df <- function(y, p) {
+  y <- as.integer(y)
+  o <- order(p, decreasing = TRUE)
+  y <- y[o]
+  tp <- cumsum(y)
+  fp <- cumsum(1L - y)
+  tibble(
+    fpr = c(0, fp / max(fp[length(fp)], 1), 1),
+    tpr = c(0, tp / max(tp[length(tp)], 1), 1)
+  )
+}
+auc_trap <- function(fpr, tpr) {
+  o   <- order(fpr)
+  fpr <- fpr[o]
+  tpr <- tpr[o]
+  sum(diff(fpr) * (utils::head(tpr, -1) + utils::tail(tpr, -1)) / 2)
+}
+roc_df <- roc_curve_df(y_te, prob)
+auc    <- auc_trap(roc_df$fpr, roc_df$tpr)
+
+# ── Panel 1: MOD-02 · EDA — readmission by payer ─────────────────────────────
+overall_rate <- mean(df$readmit) * 100
+payer_r <- df %>%
+  group_by(payer) %>%
+  summarise(rate = mean(readmit) * 100, .groups = "drop") %>%
+  arrange(desc(rate)) %>%
+  mutate(
+    payer = factor(payer, levels = payer),
+    fill  = ifelse(rate > overall_rate + 2, RED, BLUE)
+  )
+
+p1 <- ggplot(payer_r, aes(payer, rate, fill = fill)) +
+  geom_col(width = 0.6, colour = "white", alpha = 0.88) +
+  geom_hline(yintercept = overall_rate, colour = GRAY, linetype = "dashed", linewidth = 0.6) +
+  geom_text(aes(label = sprintf("%.1f%%", rate)), vjust = -0.4, size = 2.6) +
+  scale_fill_identity() +
+  labs(
+    y = "30-day readmission rate (%)",
+    x = NULL,
+    title = "MOD-02 · EDA\nReadmission Rate by Payer"
+  ) +
+  theme_preview() +
+  theme(axis.text.x = element_text(angle = 18, hjust = 1, size = 8))
+
+# ── Panel 2: MOD-03 · Statistics — survival curve ─────────────────────────────
+t_max <- 30
+times <- seq(0, t_max, length.out = 200)
+surv_df <- bind_rows(
+  tibble(
+    days  = times,
+    surv  = vapply(times, function(t) mean(pmin(los[hf == 1], t_max) >= t), numeric(1)),
+    group = "Heart Failure"
+  ),
+  tibble(
+    days  = times,
+    surv  = vapply(times, function(t) mean(pmin(los[hf == 0], t_max) >= t), numeric(1)),
+    group = "No HF"
+  )
+)
+
+p2 <- ggplot(surv_df, aes(days, surv, colour = group, fill = group)) +
+  geom_ribbon(aes(ymin = 0, ymax = surv), alpha = 0.08, colour = NA) +
+  geom_step(linewidth = 0.9) +
+  scale_colour_manual(values = c("Heart Failure" = RED, "No HF" = BLUE)) +
+  scale_fill_manual(values   = c("Heart Failure" = RED, "No HF" = BLUE)) +
+  coord_cartesian(ylim = c(0, 1.05)) +
+  labs(
+    x = "Days", y = "Survival (in-hospital)", colour = NULL, fill = NULL,
+    title = "MOD-03 · Statistics\nKaplan-Meier by HF Status"
+  ) +
+  theme_preview() +
+  theme(legend.position = c(0.72, 0.88), legend.text = element_text(size = 7.5))
+
+# ── Panel 3: MOD-04 · ML — ROC curve ─────────────────────────────────────────
+p3 <- ggplot(roc_df, aes(fpr, tpr)) +
+  geom_ribbon(aes(ymin = 0, ymax = tpr), fill = RED, alpha = 0.10) +
+  geom_line(colour = RED, linewidth = 1.1) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "black", linewidth = 0.4) +
+  annotate("text", x = 0.65, y = 0.18, label = sprintf("AUC = %.3f", auc),
+           colour = RED, size = 3.2, fontface = "bold") +
+  labs(
+    x = "1 − Specificity", y = "Sensitivity",
+    title = "MOD-04 · Machine Learning\nROC Curve — Readmission Model"
+  ) +
+  theme_preview()
+
+# ── Panel 4: MOD-05 · NLP — entity frequency bar ─────────────────────────────
+entities <- c("MEDICATION", "DIAGNOSIS", "PROCEDURE", "LAB_VALUE",
+              "VITAL_SIGN", "DATE", "PROVIDER")
+counts <- c(340, 285, 198, 423, 312, 510, 87) + sample(-15:15, 7, replace = TRUE)
+ner_df <- tibble(
+  entity = factor(entities, levels = rev(entities)),
+  count  = counts,
+  fill   = c(BLUE, RED, GREEN, GOLD, PURPLE, TEAL, PINK)
+)
+
+p4 <- ggplot(ner_df, aes(count, entity, fill = fill)) +
+  geom_col(colour = "white", alpha = 0.88) +
+  geom_text(aes(label = count), hjust = -0.15, size = 2.6) +
+  scale_fill_identity() +
+  coord_cartesian(xlim = c(0, max(ner_df$count) * 1.12)) +
+  labs(
+    x = "Entity count (synthetic discharge notes)", y = NULL,
+    title = "MOD-05 · Clinical NLP\nclinicalBERT Named Entity Recognition"
+  ) +
+  theme_preview()
+
+# ── Panel 5: MOD-06 · Causal — Love plot (balance) ───────────────────────────
+love_df <- tibble(
+  covariate = factor(c("Age", "LOS", "HF", "DM", "COPD"),
+                     levels = rev(c("Age", "LOS", "HF", "DM", "COPD"))),
+  Unadjusted      = c(0.38, 0.27, 0.45, 0.31, 0.22),
+  `IPTW weighted` = c(0.04, 0.03, 0.06, 0.04, 0.02)
+) %>%
+  pivot_longer(-covariate, names_to = "method", values_to = "smd")
+
+p5 <- ggplot(love_df, aes(smd, covariate, fill = method)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.32, colour = "white", alpha = 0.80) +
+  geom_vline(xintercept = 0.10, linetype = "dashed", colour = "black", linewidth = 0.5) +
+  scale_fill_manual(values = c("Unadjusted" = RED, "IPTW weighted" = BLUE)) +
+  labs(
+    x = "Absolute SMD", y = NULL, fill = NULL,
+    title = "MOD-06 · Causal Inference\nLove Plot — IPTW Balance"
+  ) +
+  theme_preview() +
+  theme(legend.position = c(0.72, 0.22), legend.text = element_text(size = 7.5))
+
+# ── Panel 6: MOD-07 · Geospatial — synthetic scatter map ─────────────────────
+set.seed(7)
+N_c <- 200
+geo <- tibble(
+  lon = runif(N_c, -120, -70),
+  lat = runif(N_c, 28, 48)
+) %>%
+  mutate(cvd = 180 + 1.4 * (lon + 95) + 12 * rnorm(N_c, 0, 1))
+tt   <- seq(0, 2 * pi, length.out = 120)
+circ <- tibble(x = -100 + 8 * cos(tt), y = 33 + 8 * sin(tt))
+
+p6 <- ggplot(geo, aes(lon, lat, colour = cvd)) +
+  geom_point(size = 2.4, alpha = 0.80) +
+  geom_path(data = circ, aes(x, y), colour = "black", linetype = "dashed",
+            linewidth = 0.8, inherit.aes = FALSE) +
+  annotate("text", x = -100, y = 24.5, label = "Hot spot\n(scan stat)",
+           size = 2.6, fontface = "italic") +
+  scale_colour_gradientn(colours = c("#1A9850", "#FDE725", "#D73027"),
+                         name = "CVD rate/100k") +
+  labs(
+    x = "Longitude", y = "Latitude",
+    title = "MOD-07 · Spatial Epi\nCVD Mortality + Cluster Detection"
+  ) +
+  theme_preview() +
+  theme(legend.position = "right", legend.title = element_text(size = 7),
+        legend.text = element_text(size = 6.5))
+
+# ── Panel 7: MOD-08 · Deployment — drift monitoring ──────────────────────────
+quarters <- c("23-Q1", "23-Q2", "23-Q3", "23-Q4", "24-Q1", "24-Q2")
+drift <- tibble(
+  quarter    = factor(quarters, levels = quarters),
+  Overall    = c(0.789, 0.784, 0.780, 0.771, 0.758, 0.745),
+  `Black/AA` = c(0.775, 0.769, 0.764, 0.751, 0.735, 0.718)
+) %>%
+  pivot_longer(-quarter, names_to = "group", values_to = "auc")
+
+p7 <- ggplot(drift, aes(quarter, auc, colour = group, group = group)) +
+  annotate("rect", xmin = -Inf, xmax = Inf,
+           ymin = 0.789 - 0.05, ymax = 0.789 - 0.03,
+           fill = "orange", alpha = 0.10) +
+  geom_hline(yintercept = 0.789 - 0.03, colour = "orange", linetype = "dotted", linewidth = 0.6) +
+  geom_hline(yintercept = 0.789 - 0.05, colour = RED,      linetype = "dotted", linewidth = 0.6) +
+  geom_line(aes(linetype = group), linewidth = 0.9) +
+  geom_point(size = 2.2) +
+  scale_colour_manual(values = c("Overall" = BLUE, "Black/AA" = RED)) +
+  scale_linetype_manual(values = c("Overall" = "solid", "Black/AA" = "dashed")) +
+  coord_cartesian(ylim = c(0.68, 0.82)) +
+  labs(
+    x = NULL, y = "AUC-ROC", colour = NULL, linetype = NULL,
+    title = "MOD-08 · Deployment\nModel Drift & Fairness Monitoring"
+  ) +
+  theme_preview() +
+  theme(legend.position = c(0.28, 0.22), legend.text = element_text(size = 7),
+        axis.text.x = element_text(size = 8))
+
+# ── Panel 8: Series overview donut ───────────────────────────────────────────
+donut <- tibble(
+  label = c("Foundations\n& EDA", "Statistics\n& Survival", "Machine\nLearning",
+            "Clinical NLP", "Causal\nInference", "Spatial Epi", "Deployment\n& MLOps"),
+  n     = 8,
+  fill  = c(TEAL, BLUE, RED, GREEN, GOLD, PURPLE, GRAY)
+) %>%
+  mutate(label = factor(label, levels = label))
+
+p8 <- ggplot(donut, aes(x = 2, y = n, fill = fill)) +
+  geom_col(width = 1, colour = "white", linewidth = 1) +
+  geom_text(aes(x = 2.75, label = label),
+            position = position_stack(vjust = 0.5), size = 2.4, lineheight = 0.9) +
+  annotate("text", x = 0.5, y = 0, label = "62",
+           size = 8, fontface = "bold", colour = "#1F2937") +
+  annotate("text", x = 0.5, y = 0, label = "\n\nnotebooks",
+           size = 3.1, colour = GRAY) +
+  coord_polar(theta = "y", start = pi / 2) +
+  xlim(0.5, 3.3) +
+  scale_fill_identity() +
+  labs(title = "HealthR Series\nModule Distribution") +
+  theme_void() +
+  theme(
+    plot.background = element_rect(fill = "white", colour = NA),
+    plot.title      = element_text(face = "bold", size = 9, hjust = 0.5, lineheight = 1.1)
+  )
+
+preview <- (p1 | p2 | p3 | p4) / (p5 | p6 | p7 | p8) +
+  plot_annotation(
+    title = "Health Analytics with R  ·  Series Preview",
+    theme = theme(
+      plot.title      = element_text(face = "bold", size = 16, hjust = 0.5),
+      plot.background = element_rect(fill = "white", colour = NA)
+    )
+  )
+
+preview_dir  <- file.path(tempdir(), "mod00")
+dir.create(preview_dir, showWarnings = FALSE, recursive = TRUE)
+preview_path <- file.path(preview_dir, "healthr_intro_preview.png")
+ggsave(preview_path, preview, width = 22, height = 14, dpi = 180, bg = "white")
+print(preview)
+cat("Preview figure rendered.\n")
+```
+
+## 4. How to Use This Series
+
+### Option A — RStudio / Posit Cloud (Recommended for beginners)
+
+Open any `.qmd` file in RStudio or [Posit Cloud](https://posit.cloud/).
+Quarto renders HTML with a table of contents; Posit Cloud provides a free hosted R session.
+
+```r
+# Run this once per machine to install any missing packages
+source("packages.R")
+```
+
+### Option B — Local Quarto / RStudio
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/zia207/Health-Analytics-with-Python.git
+cd Health-Analytics-with-Python/Health-Analytics-R
+
+# 2. Install all dependencies
+Rscript packages.R
+
+# 3. Open the project in RStudio, or render from the command line
+quarto preview
+```
+
+### Option C — VS Code + Quarto Extension
+
+Open any `.qmd` file directly in VS Code with the Quarto extension.
+Select the R kernel created above.
+
+***
+### Running Order
+
+```
+New to health data science?    → MOD-01 → MOD-02 → MOD-03 → MOD-04
+Want ML for clinical prediction? → MOD-04 (then MOD-05 for NLP, MOD-08 for deployment)
+Interested in causal inference?  → MOD-06 (requires MOD-03 background)
+Spatial epidemiology focus?      → MOD-07 (requires MOD-02 EDA)
+Building a production pipeline?  → MOD-08 (works standalone)
+```
+
+## 5. Series Conventions
+
+**Reproducibility first**
+- All notebooks use `set.seed(42)` as the first executable cell
+- Synthetic datasets are generated in-memory; no downloads required
+- A shared helper pattern regenerates the same cohort across all notebooks in a module
+
+**Code style**
+- tidyverse style, `snake_case`, max line length 100 characters
+- Documented function signatures with argument descriptions
+- Comments on every function: purpose, args, returns
+- Tested with `testthat`; CI via GitHub Actions
+
+**Figures**
+- All publication figures saved at **300 dpi** via `ggsave(..., dpi = 300)`
+- Consistent colour palette: `#2563EB` (blue) / `#DC2626` (red) / `#16A34A` (green)
+- Colourblind-accessible palettes used throughout
+
+**Dataset conventions**
+| Symbol | Meaning |
+|--------|---------|
+| `N` | sample size |
+| `df` | primary working data frame / tibble |
+| `X_tr, X_te` | train / test feature matrices |
+| `y_tr, y_te` | train / test target vectors |
+| `FEATURES` | list of predictor column names |
+| `TRUE_EFFECT` | known simulation parameter (for validation) |
+
+**Notebook structure (every NB follows this pattern)**
+1. Title, learning objectives, estimated time
+2. `## 1. Setup` — imports, dataset generation, seed
+3. `## 2–N` — core content sections
+4. Knowledge Check — 5 questions
+5. Exercises — at least one executable cell per exercise
+6. `---  Next → NB-0X` — explicit navigation footer
+
+## 6. Datasets & Data Ethics
+
+### Synthetic data — why not real patient data?
+
+All notebooks use **synthetic data** generated with controlled random seeds. This approach:
+
+- Allows open publication without IRB restrictions or HIPAA concerns
+- Lets us embed **known ground-truth effects** so learners can verify their results
+- Reproduces identical results across operating systems and time
+
+The synthetic data are designed to mimic the statistical properties of real EHR data (MIMIC-III), with realistic covariate distributions, correlation structures, and outcome rates.
+
+### Data Ethics Principles Embedded in This Series
+
+| Module | Embedded ethics topic |
+|--------|----------------------|
+| MOD-04 | Calibration and algorithmic fairness across demographic groups |
+| MOD-05 | De-identification of PHI before NLP model training |
+| MOD-06 | Causal assumptions and the limits of observational data |
+| MOD-07 | Environmental justice and spatial health disparities |
+| MOD-08 | Model Cards, governance checklists, patient-facing explanations |
+
+> **A note on race in clinical models:** Where race/ethnicity appears in the synthetic data, it is used to *audit fairness* — never as a predictor variable. The series explicitly demonstrates how models can encode proxy-bias even when race is excluded from features.
+
+## Technology Stack
+
+```{r, fig.width=16, fig.height=7}
+# ── Full technology stack visualisation ───────────────────────────────────────
+layers <- tibble(
+  xmin  = 0.3,
+  xmax  = 15.7,
+  ymin  = c(0.3, 1.5, 2.8, 4.1, 5.4),
+  ymax  = c(0.3, 1.5, 2.8, 4.1, 5.4) + 1.1,
+  face  = c("#F8FAFC", "#FDF4FF", "#FFF7ED", "#F0FDF4", "#EFF6FF"),
+  edge  = c("#6B7280", "#7C3AED", "#D97706", "#16A34A", "#2563EB"),
+  title = c("ENVIRONMENT", "DATA LAYER", "MODELLING LAYER",
+            "ADVANCED ANALYTICS", "DEPLOYMENT & GOVERNANCE"),
+  tools = c(
+    "R 4.3  ·  Quarto / RStudio  ·  packages.R / renv  ·  Git / GitHub",
+    "tidyverse · dplyr · ggplot2 · sf · stats · naniar · digest",
+    "tidymodels · xgboost · lightgbm · DALEX · survival · broom · quanteda · text2vec",
+    "Causal Inference (dagitty / PS / DiD / ITS / IV / TMLE)  ·  Spatial Epidemiology (LISA / BYM / GWR / Scan)",
+    "plumber · shiny · MLflow · Docker · Quarto · GitHub Actions · Model Cards"
+  )
+)
+
+p_stack <- ggplot(layers) +
+  geom_rect(
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = face, colour = edge),
+    linewidth = 1.1
+  ) +
+  geom_text(
+    aes(x = xmin + 0.35, y = ymax - 0.28, label = title, colour = edge),
+    hjust = 0, vjust = 1, fontface = "bold", size = 3.3
+  ) +
+  geom_text(
+    aes(x = xmin + 0.35, y = ymin + 0.28, label = tools),
+    hjust = 0, vjust = 0, colour = "#374151", size = 3.0
+  ) +
+  scale_fill_identity() +
+  scale_colour_identity() +
+  coord_cartesian(xlim = c(0, 16), ylim = c(0, 7), expand = FALSE) +
+  labs(title = "HealthR Technology Stack") +
+  theme_void() +
+  theme(
+    plot.background = element_rect(fill = "white", colour = NA),
+    plot.title      = element_text(face = "bold", size = 13, hjust = 0.5, margin = margin(b = 10))
+  )
+
+stack_dir <- file.path(tempdir(), "mod00")
+dir.create(stack_dir, showWarnings = FALSE, recursive = TRUE)
+ggsave(file.path(stack_dir, "healthr_stack.png"), p_stack,
+       width = 16, height = 7, dpi = 150, bg = "white")
+print(p_stack)
+```
+
+## 7. Key Terms Quick Reference
+
+| Term | Module | Meaning |
+|------|--------|---------|
+| **AUC-ROC** | 04 | Area under the receiver-operating-characteristic curve; model discrimination |
+| **Brier score** | 04 | Mean squared error of probability predictions; measures calibration |
+| **DCA** | 04 | Decision Curve Analysis; net benefit of a model at a given risk threshold |
+| **SHAP** | 04 | SHapley Additive exPlanations; feature contribution scores per patient |
+| **DAG** | 06 | Directed Acyclic Graph; encodes causal assumptions about variable relationships |
+| **IPTW** | 06 | Inverse Probability of Treatment Weighting; creates a pseudo-randomised sample |
+| **TMLE** | 06 | Targeted Maximum Likelihood Estimation; doubly-robust causal effect estimator |
+| **DiD** | 06 | Difference-in-Differences; compares treated vs control groups before/after a policy |
+| **ITS** | 06 | Interrupted Time Series; evaluates policy effects using temporal trends |
+| **SMR** | 07 | Standardised Mortality Ratio; observed / expected deaths in a population |
+| **LISA** | 07 | Local Indicators of Spatial Association; identifies local spatial clusters |
+| **BYM** | 07 | Besag-York-Mollié model; Bayesian disease mapping with CAR/ICAR prior |
+| **GWR** | 07 | Geographically Weighted Regression; spatially varying coefficient model |
+| **2SFCA** | 07 | Two-Step Floating Catchment Area; healthcare access metric |
+| **E-value** | 06 | Minimum confounding effect size needed to explain away an observed association |
+| **HPSA** | 07 | Health Professional Shortage Area (federal US designation) |
+| **PHI** | 05 | Protected Health Information (HIPAA-regulated patient identifiers) |
+| **SaMD** | 08 | Software as a Medical Device (FDA classification for clinical AI) |
+| **Model Card** | 08 | Structured documentation of a model's intended use, performance, and limitations |
+
+## 8. How to Navigate the Series
+
+```
+You are here: INTRO notebook (this file)
+                │
+                ▼
+┌─────────────────────────────────────────────────────┐
+│  MOD-01  R Foundations for Health Data              │
+│  NB-01 → Data Structures  NB-02 → Descriptive Stats │
+│  NB-03 → Health Data Ecosystem & Codes              │
+└─────────────────────────────────────────────────────┘
+                │
+                ▼  (and so on through MOD-08)
+```
+
+### Getting help
+
+- **GitHub Issues** → `github.com/zia207/Health-Analytics-with-Python/issues`
+- **Discussion board** → tag your post with the module number (e.g., `MOD-04`)
+- **LinkedIn** → `linkedin.com/in/zia207` — share your work with `#HealthR`
+
+### Contributing
+
+Pull requests welcome! Before submitting:
+1. Confirm `Restart & Render All` completes without errors
+2. Verify all figures save at 300 dpi
+3. Run `testthat::test_dir("tests")` locally
+4. Update `CHANGELOG.md`
+
+***
+*Health Analytics with R · © 2026 Dr. Zia U. Ahmed · MIT License*  
+*zia207 @ GitHub · Upatta Analytics*

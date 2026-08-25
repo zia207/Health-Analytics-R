@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Reproducible Research Foundations – Health Analytics with R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./MOD08_NB02_Quarto_Reports.html" rel="next">
+<link href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-d08f89fd7971d2ef16bab3908983d253.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Health Analytics with R</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-with-Python"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/zia-ahmed207"> <i class="bi bi-linkedin" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="mailto:zia207@gmail.com"> 
+<span class="menu-text">zia207@gmail.com</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD08_NB01_Reproducible_Foundations.html">**Module 08 - Reproducible Research &amp; Deployment** (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD08_NB01_Reproducible_Foundations.html">Reproducible Research Foundations</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD08_NB01_Reproducible_Foundations.html">**Module 08 - Reproducible Research &amp; Deployment** (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD08_NB01_Reproducible_Foundations.html">Reproducible Research Foundations</a></li></ol></nav>
+      <h1 class="title">Reproducible Research Foundations</h1>
+            <p class="subtitle lead">Module 08 — Health Analytics with R</p>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="./index.html" class="sidebar-logo-link">
+      <img src="./Images/chapter_logo_health_analytics_R.png" alt="" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="./Images/chapter_logo_health_analytics_R.png" alt="" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Health Analytics with R</strong></span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Health Analytics with R</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD00_NTRO_HealthR_Tutorial_Series.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Series Overview</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 01 - R Foundations</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD01_NB01_R_Foundations_Health_Data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">NB-01 · R Foundations for Health Data</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD01_NB02_Descriptive_Statistics_Health_Metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">NB-02 · Descriptive Statistics &amp; Health Metrics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD01_NB03_Health_Data_Ecosystem_Codes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">NB-03 · Health Data Ecosystem &amp; Codes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 02 - Exploratory Data Analysis</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB01_Data_Loading_Profiling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Loading &amp; Automated Profiling</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB02_Descriptive_Statistics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Descriptive Statistics for Clinical Variables</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB03_Clinical_Visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visualising Clinical Distributions</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB04_TimeSeries_Admissions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Time-Series of Admissions &amp; Clinical Events</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB05_Missingness_Imputation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Missingness Analysis &amp; Imputation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB06_Comorbidity_Heatmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Comorbidity Co-occurrence Heatmap</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB07_Geospatial_Disparities.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Geospatial Health Disparities Map</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD02_NB08_Capstone_Readmission_EDA.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · End-to-End EDA on Readmission Risk</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 03 - Statistical Inference</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB01_Hypothesis_Testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hypothesis Testing for Health Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB02_RR_OR_CI.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB03_Survival_Analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB04_Linear_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Regression for Continuous Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB05_Logistic_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Logistic Regression for Binary Outcomes</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB06_Count_Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Poisson &amp; Negative Binomial Regression</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB07_Confounding_EffectModification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Confounding &amp; Effect Modification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD03_NB08_Capstone_Inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · Multivariable Inference Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 04 - Machine Learning</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB01_Pipeline_Splits.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ML Pipeline Setup &amp; Train/Test Splits</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB02_DecisionTree_RandomForest.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Decision Trees &amp; Random Forest</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB03_XGBoost_LightGBM.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">XGBoost &amp; LightGBM</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB04_Clinical_Model_Evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical Model Evaluation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB05_Hyperparameter_Tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Hyperparameter Tuning &amp; Cross-Validation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB06_SHAP_Explainability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">SHAP Explainability</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB07_Clinical_Prediction_Models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Three Clinical Prediction Models</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD04_NB08_Capstone_ML_Pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · End-to-End Clinical ML Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 05 - NLP for Clinical Text</strong> (Track A)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB01_Clinical_Text_Preprocessing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical Text Preprocessing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB02_Clinical_NER.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical Named Entity Recognition</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB03_TF_IDF_Classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">TF-IDF &amp; Clinical Text Classification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB04_Word_Embeddings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Word Embeddings &amp; Word2Vec</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB05_Clinical_BERT.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB06_ICD_Coding_Medications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">ICD Coding &amp; Medication Extraction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB07_Summarisation_ZeroShot.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summarisation &amp; Zero-Shot NLP</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD05_NB08_Capstone_Clinical_NLP.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · End-to-End Clinical NLP Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 06 - Causal Inference</strong> (Track B)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB01_DAGs_Confounding.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">DAGs, Confounding &amp; Identification</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB02_Propensity_Scores.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Propensity Score Methods</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB03_DiD_EventStudy.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Difference-in-Differences &amp; Event Studies</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB04_ITS_SyntheticControl.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Interrupted Time Series &amp; Synthetic Control</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB05_IV_RDD.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Instrumental Variables &amp; RDD</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB06_GComp_TMLE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">G-Computation, TMLE &amp; Mediation</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB07_Sensitivity_Reporting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Sensitivity Analysis &amp; Reporting</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · Causal Inference Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB01_Spatial_Data_Choropleth.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Data &amp; Choropleth Mapping</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Autocorrelation &amp; Moran's I</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB03_Spatial_Regression_GWR.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Regression: Lag, Error &amp; GWR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Disease Mapping &amp; Bayesian Smoothing</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB05_Cluster_Detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial Cluster Detection</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB06_Environmental_Epidemiology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Environmental Epidemiology</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB07_Health_Service_Access.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Health Service Area &amp; Access Metrics</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone - Spatial Health Inequity Atlas</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Spatial ML - LBC Mortality (Northeast)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Geostatistical Risk Analysis</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text"><strong>Module 08 - Reproducible Research &amp; Deployment</strong> (Track B)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB01_Reproducible_Foundations.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Reproducible Research Foundations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB02_Quarto_Reports.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Quarto Documents for Health Reports</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB03_Shiny_Dashboards.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Shiny Dashboards</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB04_MLflow_Tracking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">MLflow Model Tracking &amp; Registry</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB05_Plumber_Serving.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Plumber for Clinical Model Serving</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB06_Testing_CICD.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Testing, CI/CD &amp; Code Quality</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB07_ModelCards_Governance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Model Cards &amp; Clinical AI Governance</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./MOD08_NB08_Capstone_Deployment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Capstone · Full Deployment Pipeline</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#health-analytics-with-r-module-08-reproducible-research-deployment" id="toc-health-analytics-with-r-module-08-reproducible-research-deployment" class="nav-link active" data-scroll-target="#health-analytics-with-r-module-08-reproducible-research-deployment">Health Analytics with R · Module 08: Reproducible Research &amp; Deployment</a></li>
+  <li><a href="#reproducibility-threats" id="toc-reproducibility-threats" class="nav-link" data-scroll-target="#reproducibility-threats">1. Reproducibility Threats</a></li>
+  <li><a href="#project-setup-dependencies" id="toc-project-setup-dependencies" class="nav-link" data-scroll-target="#project-setup-dependencies">2. Project Setup &amp; Dependencies</a></li>
+  <li><a href="#data-provenance-checksums" id="toc-data-provenance-checksums" class="nav-link" data-scroll-target="#data-provenance-checksums">3. Data Provenance &amp; Checksums</a></li>
+  <li><a href="#reproducible-pipeline-with-logging" id="toc-reproducible-pipeline-with-logging" class="nav-link" data-scroll-target="#reproducible-pipeline-with-logging">4. Reproducible Pipeline with Logging</a></li>
+  <li><a href="#makefile-pipeline-orchestration" id="toc-makefile-pipeline-orchestration" class="nav-link" data-scroll-target="#makefile-pipeline-orchestration">5. Makefile Pipeline Orchestration</a></li>
+  <li><a href="#reproducibility-audit" id="toc-reproducibility-audit" class="nav-link" data-scroll-target="#reproducibility-audit">6. Reproducibility Audit</a></li>
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">7. Knowledge Check</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD08_NB01_Reproducible_Foundations.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Images/banner_health_analytics.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+<section id="health-analytics-with-r-module-08-reproducible-research-deployment" class="level3">
+<h3 class="anchored" data-anchor-id="health-analytics-with-r-module-08-reproducible-research-deployment">Health Analytics with R · Module 08: Reproducible Research &amp; Deployment</h3>
+<hr>
+<p><strong>Learning objectives</strong> - Understand reproducibility threats in health analytics - Build canonical project structure with dependency management - Implement data provenance with SHA-256 checksums and MANIFEST.json - Build reproducible pipelines with structured logging and wrappers - Write Makefiles for pipeline orchestration - Conduct a reproducibility audit</p>
+<p><strong>Estimated time:</strong> 2 hours | <strong>Level:</strong> Intermediate | <strong>Libraries:</strong> <code>digest</code>, <code>fs</code>, <code>here</code>, <code>jsonlite</code>, <code>renv</code></p>
+</section>
+<section id="reproducibility-threats" class="level2">
+<h2 class="anchored" data-anchor-id="reproducibility-threats">1. Reproducibility Threats</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 31%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Threat</th>
+<th>Example</th>
+<th>Prevention</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Random seeds</td>
+<td>ML results change</td>
+<td><code>set.seed(42)</code> everywhere</td>
+</tr>
+<tr class="even">
+<td>Package versions</td>
+<td>tidymodels API breaks pipelines</td>
+<td>Pin versions in packages.R / renv.lock</td>
+</tr>
+<tr class="odd">
+<td>Data drift</td>
+<td>Source updated silently</td>
+<td>Checksums + MANIFEST.json</td>
+</tr>
+<tr class="even">
+<td>Hidden notebook state</td>
+<td>Chunks run out of order</td>
+<td>Restart &amp; Render All + CI</td>
+</tr>
+<tr class="odd">
+<td>OS differences</td>
+<td>Float rounding varies</td>
+<td>Docker</td>
+</tr>
+<tr class="even">
+<td>Undocumented transforms</td>
+<td>‘I normalised this manually’</td>
+<td>Code-only pipelines</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="project-setup-dependencies" class="level2">
+<h2 class="anchored" data-anchor-id="project-setup-dependencies">2. Project Setup &amp; Dependencies</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fs)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(digest)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glue)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>mod08_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"mod08"</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(mod08_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>PROJECT_ROOT <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(mod08_dir, <span class="st">"demo_project"</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>dirs <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data/raw"</span>, <span class="st">"data/processed"</span>, <span class="st">"src/data"</span>, <span class="st">"src/models"</span>,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"models"</span>, <span class="st">"reports/figures"</span>, <span class="st">"tests"</span>, <span class="st">"notebooks"</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">walk</span>(dirs, <span class="sc">~</span> fs<span class="sc">::</span><span class="fu">dir_create</span>(fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, .x)))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Project structure created at:"</span>, <span class="fu">as.character</span>(PROJECT_ROOT), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Project structure created at: /tmp/Rtmpnup613/mod08/demo_project </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"here() project root would resolve to:"</span>, here<span class="sc">::</span><span class="fu">here</span>(), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>here() project root would resolve to: /home/zia207/Github/Health-Analytics-R </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>PACKAGES_R <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"# Health Analytics Project packages.R"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"# Pin versions with renv::snapshot() after install."</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"pkgs &lt;- list("</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  dplyr       = '&gt;= 1.1, &lt; 2.0',"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  tidyr       = '&gt;= 1.3, &lt; 2.0',"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  readr       = '&gt;= 2.1, &lt; 3.0',"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  ggplot2     = '&gt;= 3.4, &lt; 4.0',"</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  tidymodels  = '&gt;= 1.1, &lt; 2.0',"</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  ranger      = '&gt;= 0.16, &lt; 1.0',"</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  xgboost     = '&gt;= 1.7, &lt; 3.0',"</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  lightgbm    = '&gt;= 4.0, &lt; 5.0',"</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  pROC        = '&gt;= 1.18, &lt; 2.0',"</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  DALEX       = '&gt;= 2.3, &lt; 3.0',"</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  shiny       = '&gt;= 1.8, &lt; 2.0',"</span>,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  plumber     = '&gt;= 1.2, &lt; 2.0',"</span>,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  mlflow      = '&gt;= 2.8, &lt; 3.0',"</span>,</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  testthat    = '&gt;= 3.2, &lt; 4.0',"</span>,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  digest      = '&gt;= 0.6, &lt; 1.0',"</span>,</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  fs          = '&gt;= 1.6, &lt; 2.0',"</span>,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  here        = '&gt;= 1.0, &lt; 2.0',"</span>,</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  jsonlite    = '&gt;= 1.8, &lt; 2.0',"</span>,</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  renv        = '&gt;= 1.0, &lt; 2.0'"</span>,</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">")"</span>,</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"inst &lt;- rownames(installed.packages())"</span>,</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"need &lt;- setdiff(names(pkgs), inst)"</span>,</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"if (length(need)) install.packages(need)"</span>,</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"# renv::snapshot()  # write renv.lock"</span>,</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"# renv::restore()   # restore from renv.lock"</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(PACKAGES_R, fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"packages.R"</span>))</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"packages.R written with pinned version ranges:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>packages.R written with pinned version ranges:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(PACKAGES_R, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># Health Analytics Project packages.R
+# Pin versions with renv::snapshot() after install.
+pkgs &lt;- list(
+  dplyr       = '&gt;= 1.1, &lt; 2.0',
+  tidyr       = '&gt;= 1.3, &lt; 2.0',
+  readr       = '&gt;= 2.1, &lt; 3.0',
+  ggplot2     = '&gt;= 3.4, &lt; 4.0',
+  tidymodels  = '&gt;= 1.1, &lt; 2.0',
+  ranger      = '&gt;= 0.16, &lt; 1.0',
+  xgboost     = '&gt;= 1.7, &lt; 3.0',
+  lightgbm    = '&gt;= 4.0, &lt; 5.0',
+  pROC        = '&gt;= 1.18, &lt; 2.0',
+  DALEX       = '&gt;= 2.3, &lt; 3.0',
+  shiny       = '&gt;= 1.8, &lt; 2.0',
+  plumber     = '&gt;= 1.2, &lt; 2.0',
+  mlflow      = '&gt;= 2.8, &lt; 3.0',
+  testthat    = '&gt;= 3.2, &lt; 4.0',
+  digest      = '&gt;= 0.6, &lt; 1.0',
+  fs          = '&gt;= 1.6, &lt; 2.0',
+  here        = '&gt;= 1.0, &lt; 2.0',
+  jsonlite    = '&gt;= 1.8, &lt; 2.0',
+  renv        = '&gt;= 1.0, &lt; 2.0'
+)
+inst &lt;- rownames(installed.packages())
+need &lt;- setdiff(names(pkgs), inst)
+if (length(need)) install.packages(need)
+# renv::snapshot()  # write renv.lock
+# renv::restore()   # restore from renv.lock </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># renv.lock analogue: a version-pinned lockfile for restore</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>renv_lock <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">R =</span> <span class="fu">list</span>(<span class="at">Version =</span> <span class="fu">paste</span>(R.version<span class="sc">$</span>major, R.version<span class="sc">$</span>minor, <span class="at">sep =</span> <span class="st">"."</span>)),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Packages =</span> <span class="fu">list</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">dplyr =</span> <span class="fu">list</span>(<span class="at">Package =</span> <span class="st">"dplyr"</span>, <span class="at">Version =</span> <span class="st">"1.1.4"</span>, <span class="at">Source =</span> <span class="st">"CRAN"</span>),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">ggplot2 =</span> <span class="fu">list</span>(<span class="at">Package =</span> <span class="st">"ggplot2"</span>, <span class="at">Version =</span> <span class="st">"3.5.1"</span>, <span class="at">Source =</span> <span class="st">"CRAN"</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">xgboost =</span> <span class="fu">list</span>(<span class="at">Package =</span> <span class="st">"xgboost"</span>, <span class="at">Version =</span> <span class="st">"1.7.7.1"</span>, <span class="at">Source =</span> <span class="st">"CRAN"</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">write_json</span>(renv_lock, fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"renv.lock"</span>), <span class="at">pretty =</span> <span class="cn">TRUE</span>, <span class="at">auto_unbox =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">renv.lock written. Restore with renv::restore() after renv::init().</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+renv.lock written. Restore with renv::restore() after renv::init().</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"sessionInfo() — capture this in every research report:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>sessionInfo() — capture this in every research report:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">sessionInfo</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: x86_64-pc-linux-gnu
+Running under: Ubuntu 22.04.5 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.10.0 
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.10.0  LAPACK version 3.10.0
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+time zone: America/New_York
+tzcode source: system (glibc)
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] glue_1.8.1      jsonlite_2.0.0  digest_0.6.39   here_1.0.2     
+ [5] fs_2.1.0        lubridate_1.9.5 forcats_1.0.1   stringr_1.6.0  
+ [9] dplyr_1.2.1     purrr_1.2.2     readr_2.2.0     tidyr_1.3.2    
+[13] tibble_3.3.1    ggplot2_4.0.3   tidyverse_2.0.0
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.6       compiler_4.6.0     tidyselect_1.2.1   scales_1.4.0      
+ [5] yaml_2.3.12        fastmap_1.2.0      R6_2.6.1           generics_0.1.4    
+ [9] knitr_1.51         htmlwidgets_1.6.4  rprojroot_2.1.1    pillar_1.11.1     
+[13] RColorBrewer_1.1-3 tzdb_0.5.0         rlang_1.2.0        stringi_1.8.7     
+[17] xfun_0.58          S7_0.2.2           otel_0.2.0         timechange_0.4.0  
+[21] cli_3.6.6          withr_3.0.2        magrittr_2.0.5     grid_4.6.0        
+[25] hms_1.1.4          lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5    
+[29] farver_2.1.2       rmarkdown_2.31     tools_4.6.0        pkgconfig_2.0.3   
+[33] htmltools_0.5.9   </code></pre>
+</div>
+</div>
+</section>
+<section id="data-provenance-checksums" class="level2">
+<h2 class="anchored" data-anchor-id="data-provenance-checksums">3. Data Provenance &amp; Checksums</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>compute_checksum <span class="ot">&lt;-</span> <span class="cf">function</span>(filepath, <span class="at">algorithm =</span> <span class="st">"sha256"</span>) {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(filepath)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (fs<span class="sc">::</span><span class="fu">is_file</span>(p)) {</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    digest<span class="sc">::</span><span class="fu">digest</span>(<span class="at">file =</span> <span class="fu">as.character</span>(p), <span class="at">algo =</span> algorithm)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"file_not_found"</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>create_manifest <span class="ot">&lt;-</span> <span class="cf">function</span>(data_info, output_path) {</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  manifest <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">created_at  =</span> <span class="fu">format</span>(<span class="fu">Sys.time</span>(), <span class="st">"%Y-%m-%dT%H:%M:%S"</span>),</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">r_version   =</span> <span class="fu">paste</span>(R.version<span class="sc">$</span>major, R.version<span class="sc">$</span>minor, <span class="at">sep =</span> <span class="st">"."</span>),</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">files       =</span> <span class="fu">list</span>()</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (name <span class="cf">in</span> <span class="fu">names</span>(data_info)) {</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    info <span class="ot">&lt;-</span> data_info[[name]]</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    manifest<span class="sc">$</span>files[[name]] <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">path          =</span> info<span class="sc">$</span>path <span class="sc">%||%</span> <span class="st">""</span>,</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">source        =</span> info<span class="sc">$</span>source <span class="sc">%||%</span> <span class="st">""</span>,</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">download_date =</span> info<span class="sc">$</span>download_date <span class="sc">%||%</span> <span class="fu">format</span>(<span class="fu">Sys.Date</span>()),</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">sha256        =</span> <span class="fu">compute_checksum</span>(info<span class="sc">$</span>path <span class="sc">%||%</span> <span class="st">""</span>),</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">description   =</span> info<span class="sc">$</span>description <span class="sc">%||%</span> <span class="st">""</span>,</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_rows        =</span> info<span class="sc">$</span>n_rows,</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_cols        =</span> info<span class="sc">$</span>n_cols</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>  fs<span class="sc">::</span><span class="fu">dir_create</span>(fs<span class="sc">::</span><span class="fu">path_dir</span>(output_path))</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_json</span>(manifest, output_path, <span class="at">pretty =</span> <span class="cn">TRUE</span>, <span class="at">auto_unbox =</span> <span class="cn">TRUE</span>, <span class="at">null =</span> <span class="st">"null"</span>)</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>  manifest</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate synthetic dataset</span></span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">2000</span></span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>df_raw <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">patient_id =</span> <span class="fu">sprintf</span>(<span class="st">"PT-%05d"</span>, <span class="fu">seq_len</span>(N) <span class="sc">-</span> <span class="dv">1</span>),</span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">age        =</span> <span class="fu">as.integer</span>(<span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">rnorm</span>(N, <span class="dv">60</span>, <span class="dv">15</span>), <span class="dv">18</span>), <span class="dv">90</span>)),</span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">readmitted =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.18</span>),</span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">los_days   =</span> <span class="fu">as.integer</span>(<span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">rgamma</span>(N, <span class="fl">2.5</span>, <span class="at">scale =</span> <span class="fl">1.8</span>), <span class="dv">1</span>), <span class="dv">30</span>)),</span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">diabetes   =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.35</span>),</span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">hf         =</span> <span class="fu">rbinom</span>(N, <span class="dv">1</span>, <span class="fl">0.22</span>)</span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>raw_path <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"data"</span>, <span class="st">"raw"</span>, <span class="st">"readmission_cohort.csv"</span>)</span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(df_raw, raw_path)</span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>manifest <span class="ot">&lt;-</span> <span class="fu">create_manifest</span>(</span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">readmission_cohort =</span> <span class="fu">list</span>(</span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">path          =</span> <span class="fu">as.character</span>(raw_path),</span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">source        =</span> <span class="st">"Synthetic (MIMIC-III inspired), seed=42"</span>,</span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">description   =</span> <span class="st">"30-day readmission cohort"</span>,</span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_rows        =</span> <span class="fu">nrow</span>(df_raw),</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_cols        =</span> <span class="fu">ncol</span>(df_raw)</span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a>  )),</span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_path =</span> <span class="fu">as.character</span>(fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"data"</span>, <span class="st">"MANIFEST.json"</span>))</span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a>sha <span class="ot">&lt;-</span> manifest<span class="sc">$</span>files<span class="sc">$</span>readmission_cohort<span class="sc">$</span>sha256</span>
+<span id="cb15-58"><a href="#cb15-58" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">glue</span>(<span class="st">"Dataset: {nrow(df_raw)} rows | SHA-256: {substr(sha, 1, 12)}...{substr(sha, nchar(sha) - 7, nchar(sha))}</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Dataset: 2000 rows | SHA-256: f7ab81a43cdc...83e9f5bb</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"MANIFEST.json written.</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MANIFEST.json written.</code></pre>
+</div>
+</div>
+</section>
+<section id="reproducible-pipeline-with-logging" class="level2">
+<h2 class="anchored" data-anchor-id="reproducible-pipeline-with-logging">4. Reproducible Pipeline with Logging</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>log_file <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"pipeline.log"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>logger_write <span class="ot">&lt;-</span> <span class="cf">function</span>(level, message) {</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  line <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">"%s | %-7s | %s"</span>, <span class="fu">format</span>(<span class="fu">Sys.time</span>(), <span class="st">"%Y-%m-%d %H:%M:%S"</span>), level, message)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(line, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(line, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>, <span class="at">file =</span> log_file, <span class="at">append =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>log_step <span class="ot">&lt;-</span> <span class="cf">function</span>(name, fn) {</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">force</span>(name); <span class="fu">force</span>(fn)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(...) {</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">logger_write</span>(<span class="st">"INFO"</span>, <span class="fu">paste</span>(<span class="st">"START "</span>, name))</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    t0 <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">"elapsed"</span>]]</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tryCatch</span>({</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>      result <span class="ot">&lt;-</span> <span class="fu">fn</span>(...)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>      elapsed <span class="ot">&lt;-</span> <span class="fu">proc.time</span>()[[<span class="st">"elapsed"</span>]] <span class="sc">-</span> t0</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">logger_write</span>(<span class="st">"INFO"</span>, <span class="fu">sprintf</span>(<span class="st">"OK     %s | %.2fs"</span>, name, elapsed))</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>      result</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">logger_write</span>(<span class="st">"ERROR"</span>, <span class="fu">sprintf</span>(<span class="st">"FAIL   %s | %s"</span>, name, e<span class="sc">$</span>message))</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">stop</span>(e)</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>load_raw <span class="ot">&lt;-</span> <span class="fu">log_step</span>(<span class="st">"load_raw_data"</span>, <span class="cf">function</span>(path) {</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">logger_write</span>(<span class="st">"INFO"</span>, <span class="fu">sprintf</span>(<span class="st">"  Loaded %dr x %dc"</span>, <span class="fu">nrow</span>(df), <span class="fu">ncol</span>(df)))</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>  df</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>validate <span class="ot">&lt;-</span> <span class="fu">log_step</span>(<span class="st">"validate_schema"</span>, <span class="cf">function</span>(df) {</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>  checks <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">patient_id_unique =</span> <span class="fu">n_distinct</span>(df<span class="sc">$</span>patient_id) <span class="sc">==</span> <span class="fu">nrow</span>(df),</span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">age_18_90         =</span> <span class="fu">all</span>(df<span class="sc">$</span>age <span class="sc">&gt;=</span> <span class="dv">18</span> <span class="sc">&amp;</span> df<span class="sc">$</span>age <span class="sc">&lt;=</span> <span class="dv">90</span>),</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">readmitted_binary =</span> <span class="fu">all</span>(df<span class="sc">$</span>readmitted <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)),</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">los_positive      =</span> <span class="fu">all</span>(df<span class="sc">$</span>los_days <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (check <span class="cf">in</span> <span class="fu">names</span>(checks)) {</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">isTRUE</span>(checks[[check]])) <span class="fu">stop</span>(<span class="fu">glue</span>(<span class="st">"Validation FAILED: {check}"</span>))</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">logger_write</span>(<span class="st">"INFO"</span>, <span class="fu">paste</span>(<span class="st">"  PASS:"</span>, check))</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>  df</span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>engineer_features <span class="ot">&lt;-</span> <span class="fu">log_step</span>(<span class="st">"feature_engineering"</span>, <span class="cf">function</span>(df) {</span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>      <span class="at">los_gt7  =</span> <span class="fu">as.integer</span>(los_days <span class="sc">&gt;</span> <span class="dv">7</span>),</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>      <span class="at">age_std  =</span> (age <span class="sc">-</span> <span class="fu">mean</span>(age)) <span class="sc">/</span> <span class="fu">sd</span>(age),</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_comorb =</span> diabetes <span class="sc">+</span> hf</span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">logger_write</span>(<span class="st">"INFO"</span>, <span class="fu">sprintf</span>(<span class="st">"  Added 3 features | Output: %d x %d"</span>, <span class="fu">nrow</span>(df), <span class="fu">ncol</span>(df)))</span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>  df</span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a>df_loaded   <span class="ot">&lt;-</span> <span class="fu">load_raw</span>(raw_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>2026-08-23 23:55:29 | INFO    | START  load_raw_data 
+2026-08-23 23:55:29 | INFO    |   Loaded 2000r x 6c 
+2026-08-23 23:55:29 | INFO    | OK     load_raw_data | 0.07s </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>df_valid    <span class="ot">&lt;-</span> <span class="fu">validate</span>(df_loaded)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>2026-08-23 23:55:29 | INFO    | START  validate_schema 
+2026-08-23 23:55:29 | INFO    |   PASS: patient_id_unique 
+2026-08-23 23:55:29 | INFO    |   PASS: age_18_90 
+2026-08-23 23:55:29 | INFO    |   PASS: readmitted_binary 
+2026-08-23 23:55:29 | INFO    |   PASS: los_positive 
+2026-08-23 23:55:29 | INFO    | OK     validate_schema | 0.02s </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>df_features <span class="ot">&lt;-</span> <span class="fu">engineer_features</span>(df_valid)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>2026-08-23 23:55:29 | INFO    | START  feature_engineering 
+2026-08-23 23:55:29 | INFO    |   Added 3 features | Output: 2000 x 9 
+2026-08-23 23:55:29 | INFO    | OK     feature_engineering | 0.01s </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>proc_path   <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"data"</span>, <span class="st">"processed"</span>, <span class="st">"features.rds"</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(df_features, proc_path)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">glue</span>(<span class="st">"Pipeline complete | Processed: {nrow(df_features)} x {ncol(df_features)}</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Pipeline complete | Processed: 2000 x 9</code></pre>
+</div>
+</div>
+</section>
+<section id="makefile-pipeline-orchestration" class="level2">
+<h2 class="anchored" data-anchor-id="makefile-pipeline-orchestration">5. Makefile Pipeline Orchestration</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>MAKEFILE_CONTENT <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"# Health Analytics Pipeline Makefile"</span>,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">".PHONY: all clean data features train evaluate report test"</span>,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"all: data features train evaluate report"</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">@echo '[OK] Full pipeline complete'"</span>,</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data:"</span>,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">Rscript src/data/download.R --output data/raw/"</span>,</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">Rscript src/data/validate.R --manifest data/MANIFEST.json"</span>,</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"features: data"</span>,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">Rscript src/data/features.R --input data/raw/ --output data/processed/"</span>,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"train: features"</span>,</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">Rscript src/models/train.R --seed 42 --output models/readmission_v1.rds"</span>,</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"evaluate: train"</span>,</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">Rscript src/models/evaluate.R --output reports/metrics.json"</span>,</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"report: evaluate"</span>,</span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">quarto render notebooks/readmission_report.qmd --to html"</span>,</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test:"</span>,</span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">Rscript -e 'testthat::test_dir(</span><span class="sc">\"</span><span class="st">tests</span><span class="sc">\"</span><span class="st">)'"</span>,</span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"clean:"</span>,</span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">rm -rf data/processed/ models/ reports/figures/"</span>,</span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="sc">\t</span><span class="st">@echo 'Cleaned. Raw data preserved.'"</span></span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(MAKEFILE_CONTENT, fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"Makefile"</span>))</span>
+<span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Makefile written:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Makefile written:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(MAKEFILE_CONTENT, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># Health Analytics Pipeline Makefile
+.PHONY: all clean data features train evaluate report test
+
+all: data features train evaluate report
+    @echo '[OK] Full pipeline complete'
+
+data:
+    Rscript src/data/download.R --output data/raw/
+    Rscript src/data/validate.R --manifest data/MANIFEST.json
+
+features: data
+    Rscript src/data/features.R --input data/raw/ --output data/processed/
+
+train: features
+    Rscript src/models/train.R --seed 42 --output models/readmission_v1.rds
+
+evaluate: train
+    Rscript src/models/evaluate.R --output reports/metrics.json
+
+report: evaluate
+    quarto render notebooks/readmission_report.qmd --to html
+
+test:
+    Rscript -e 'testthat::test_dir("tests")'
+
+clean:
+    rm -rf data/processed/ models/ reports/figures/
+    @echo 'Cleaned. Raw data preserved.' </code></pre>
+</div>
+</div>
+</section>
+<section id="reproducibility-audit" class="level2">
+<h2 class="anchored" data-anchor-id="reproducibility-audit">6. Reproducibility Audit</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>reproducibility_audit <span class="ot">&lt;-</span> <span class="cf">function</span>(project_dir) {</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  root <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(project_dir)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  issues <span class="ot">&lt;-</span> <span class="fu">character</span>()</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  score <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  req <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(root, <span class="st">"packages.R"</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  lock <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(root, <span class="st">"renv.lock"</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>fs<span class="sc">::</span><span class="fu">file_exists</span>(req) <span class="sc">&amp;&amp;</span> <span class="sc">!</span>fs<span class="sc">::</span><span class="fu">file_exists</span>(lock)) {</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    issues <span class="ot">&lt;-</span> <span class="fu">c</span>(issues, <span class="st">"MISSING packages.R / renv.lock"</span>)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    score <span class="ot">&lt;-</span> score <span class="sc">-</span> <span class="dv">20</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (fs<span class="sc">::</span><span class="fu">file_exists</span>(req)) {</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    lines <span class="ot">&lt;-</span> <span class="fu">readLines</span>(req)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    pkg_lines <span class="ot">&lt;-</span> lines[<span class="fu">grepl</span>(<span class="st">"="</span>, lines) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">grepl</span>(<span class="st">"^</span><span class="sc">\\</span><span class="st">s*#"</span>, lines) <span class="sc">&amp;</span> <span class="fu">grepl</span>(<span class="st">"dplyr|ggplot2|xgboost"</span>, lines)]</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>    unpinned <span class="ot">&lt;-</span> pkg_lines[<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">"&gt;=|==|&lt;="</span>, pkg_lines)]</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">length</span>(unpinned)) {</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>      issues <span class="ot">&lt;-</span> <span class="fu">c</span>(issues, <span class="fu">paste</span>(<span class="st">"Unpinned packages:"</span>, <span class="fu">paste</span>(unpinned, <span class="at">collapse =</span> <span class="st">", "</span>)))</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>      score <span class="ot">&lt;-</span> score <span class="sc">-</span> <span class="dv">10</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>fs<span class="sc">::</span><span class="fu">file_exists</span>(fs<span class="sc">::</span><span class="fu">path</span>(root, <span class="st">"data"</span>, <span class="st">"MANIFEST.json"</span>))) {</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>    issues <span class="ot">&lt;-</span> <span class="fu">c</span>(issues, <span class="st">"MISSING data/MANIFEST.json"</span>)</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>    score <span class="ot">&lt;-</span> score <span class="sc">-</span> <span class="dv">20</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>  gi <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(root, <span class="st">".gitignore"</span>)</span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (fs<span class="sc">::</span><span class="fu">file_exists</span>(gi)) {</span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>    content <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="fu">readLines</span>(gi), <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (p <span class="cf">in</span> <span class="fu">c</span>(<span class="st">".Renviron"</span>, <span class="st">"data/raw/"</span>)) {</span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="sc">!</span><span class="fu">grepl</span>(p, content, <span class="at">fixed =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a>        issues <span class="ot">&lt;-</span> <span class="fu">c</span>(issues, <span class="fu">paste</span>(<span class="st">".gitignore missing:"</span>, p))</span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a>        score <span class="ot">&lt;-</span> score <span class="sc">-</span> <span class="dv">5</span></span>
+<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a>    issues <span class="ot">&lt;-</span> <span class="fu">c</span>(issues, <span class="st">"MISSING .gitignore"</span>)</span>
+<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a>    score <span class="ot">&lt;-</span> score <span class="sc">-</span> <span class="dv">15</span></span>
+<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>fs<span class="sc">::</span><span class="fu">file_exists</span>(fs<span class="sc">::</span><span class="fu">path</span>(root, <span class="st">"pipeline.log"</span>))) {</span>
+<span id="cb31-41"><a href="#cb31-41" aria-hidden="true" tabindex="-1"></a>    issues <span class="ot">&lt;-</span> <span class="fu">c</span>(issues, <span class="st">"No pipeline.log found"</span>)</span>
+<span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a>    score <span class="ot">&lt;-</span> score <span class="sc">-</span> <span class="dv">5</span></span>
+<span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb31-44"><a href="#cb31-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">score =</span> <span class="fu">max</span>(<span class="dv">0</span>, score), <span class="at">issues =</span> issues)</span>
+<span id="cb31-46"><a href="#cb31-46" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-47"><a href="#cb31-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a><span class="fu">writeLines</span>(<span class="fu">c</span>(<span class="st">".Renviron"</span>, <span class="st">"data/raw/"</span>, <span class="st">"models/"</span>, <span class="st">".Rproj.user"</span>, <span class="st">"*.Rhistory"</span>),</span>
+<span id="cb31-49"><a href="#cb31-49" aria-hidden="true" tabindex="-1"></a>           fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">".gitignore"</span>))</span>
+<span id="cb31-50"><a href="#cb31-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-51"><a href="#cb31-51" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">reproducibility_audit</span>(<span class="fu">as.character</span>(PROJECT_ROOT))</span>
+<span id="cb31-52"><a href="#cb31-52" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">glue</span>(<span class="st">"Reproducibility Score: {result$score}/100</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reproducibility Score: 100/100</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(result<span class="sc">$</span>issues)) {</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">walk</span>(result<span class="sc">$</span>issues, <span class="sc">~</span> <span class="fu">cat</span>(<span class="st">"  [WARN]"</span>, .x, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"  All checks passed!</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  All checks passed!</code></pre>
+</div>
+</div>
+</section>
+<section id="knowledge-check" class="level2">
+<h2 class="anchored" data-anchor-id="knowledge-check">7. Knowledge Check</h2>
+<ol type="1">
+<li>A colleague says ‘I ran all chunks top-to-bottom — it is reproducible.’ Why might this still fail?</li>
+<li>Your packages.R pins <code>tidymodels&gt;=1.1,&lt;2.0</code>. Six months later predictions differ. What happened?</li>
+<li>How does SHA-256 checksumming protect against silent data warehouse updates?</li>
+<li>The Makefile re-runs <code>train</code> if <code>features.rds</code> is newer. A bug in <code>train.R</code> is fixed. Does <code>make train</code> re-run?</li>
+<li>Write a testthat helper that verifies MANIFEST.json checksums before any test runs.</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exercise 5 — testthat helper for checksum validation</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>HELPER_MANIFEST <span class="ot">&lt;-</span> <span class="fu">paste</span>(</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"# tests/testthat/helper-manifest.R"</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"library(jsonlite)"</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"library(digest)"</span>,</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"library(fs)"</span>,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"verify_data_integrity &lt;- function() {"</span>,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  manifest_path &lt;- fs::path('data', 'MANIFEST.json')"</span>,</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  if (!fs::file_exists(manifest_path)) {"</span>,</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"    skip('No MANIFEST.json')"</span>,</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  }"</span>,</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  manifest &lt;- jsonlite::fromJSON(manifest_path, simplifyVector = FALSE)"</span>,</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  for (name in names(manifest$files)) {"</span>,</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"    info &lt;- manifest$files[[name]]"</span>,</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"    p &lt;- fs::path(info$path)"</span>,</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"    if (!fs::file_exists(p)) fail(paste('Missing:', p))"</span>,</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"    h &lt;- digest::digest(file = as.character(p), algo = 'sha256')"</span>,</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"    if (!is.null(info$sha256) &amp;&amp; h != info$sha256) {"</span>,</span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"      fail(paste('Checksum FAILED for', name, '-- data may have changed!'))"</span>,</span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"    }"</span>,</span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  }"</span>,</span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  cat(sprintf('[OK] %d files passed integrity check</span><span class="sc">\\</span><span class="st">n', length(manifest$files)))"</span>,</span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"}"</span>,</span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>,</span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"# Called automatically by testthat for every file in tests/testthat/"</span></span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb35-30"><a href="#cb35-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-31"><a href="#cb35-31" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(HELPER_MANIFEST, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># tests/testthat/helper-manifest.R
+library(jsonlite)
+library(digest)
+library(fs)
+
+verify_data_integrity &lt;- function() {
+  manifest_path &lt;- fs::path('data', 'MANIFEST.json')
+  if (!fs::file_exists(manifest_path)) {
+    skip('No MANIFEST.json')
+  }
+  manifest &lt;- jsonlite::fromJSON(manifest_path, simplifyVector = FALSE)
+  for (name in names(manifest$files)) {
+    info &lt;- manifest$files[[name]]
+    p &lt;- fs::path(info$path)
+    if (!fs::file_exists(p)) fail(paste('Missing:', p))
+    h &lt;- digest::digest(file = as.character(p), algo = 'sha256')
+    if (!is.null(info$sha256) &amp;&amp; h != info$sha256) {
+      fail(paste('Checksum FAILED for', name, '-- data may have changed!'))
+    }
+  }
+  cat(sprintf('[OK] %d files passed integrity check\n', length(manifest$files)))
+}
+
+# Called automatically by testthat for every file in tests/testthat/ </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the helper against this demo project</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>manifest_path <span class="ot">&lt;-</span> fs<span class="sc">::</span><span class="fu">path</span>(PROJECT_ROOT, <span class="st">"data"</span>, <span class="st">"MANIFEST.json"</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>manifest_chk <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(manifest_path, <span class="at">simplifyVector =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>n_ok <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (name <span class="cf">in</span> <span class="fu">names</span>(manifest_chk<span class="sc">$</span>files)) {</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  info <span class="ot">&lt;-</span> manifest_chk<span class="sc">$</span>files[[name]]</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  h <span class="ot">&lt;-</span> <span class="fu">compute_checksum</span>(info<span class="sc">$</span>path)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(h <span class="sc">==</span> info<span class="sc">$</span>sha256)</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>  n_ok <span class="ot">&lt;-</span> n_ok <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">glue</span>(<span class="st">"[OK] {n_ok} files passed integrity check</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[OK] 1 files passed integrity check</code></pre>
+</div>
+</div>
+<hr>
+<p><strong>Next → NB-02: Quarto Documents for Health Research Reports</strong></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-with-Python\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="pagination-link" aria-label="Geostatistical Risk Analysis">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Geostatistical Risk Analysis</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./MOD08_NB02_Quarto_Reports.html" class="pagination-link" aria-label="Quarto Documents for Health Reports">
+        <span class="nav-page-text">Quarto Documents for Health Reports</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© CC-By Zia Ahmed, Upatta Analytics, 2026</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD08_NB01_Reproducible_Foundations.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Built with <a href="https://quarto.org/">Quarto</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

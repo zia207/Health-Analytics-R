@@ -1,0 +1,353 @@
+---
+title: "Word Embeddings & Word2Vec"
+subtitle: "Module 05 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 05: NLP for Clinical Text
+***
+**Learning objectives**
+- Understand word embeddings vs sparse TF-IDF representations
+- Train clinical Word2Vec with Skip-gram and CBOW
+- Explore semantic similarity in the clinical embedding space
+- Build document vectors by averaging word embeddings
+- Visualise the clinical embedding space with t-SNE
+- Compare Skip-gram vs CBOW for rare medical terms
+
+**Estimated time:** 2.5 hours | **Level:** Intermediate → Advanced | **Libraries:** `text2vec`, `quanteda`, `glmnet`
+
+## 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(text2vec)
+library(quanteda)
+library(glmnet)
+library(nnet)
+library(rsample)
+
+set.seed(42)
+mod05_dir <- file.path(tempdir(), "mod05")
+dir.create(mod05_dir, showWarnings = FALSE, recursive = TRUE)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.ticks       = element_line(colour = "grey40")
+    )
+)
+
+cat("text2vec available — GloVe / skip-gram window embeddings\n")
+```
+
+## 2. Clinical Corpus for Embedding Training
+
+```{r}
+clinical_sentences <- c(
+  "heart failure reduced ejection fraction BNP elevated furosemide diuresis daily weights",
+  "myocardial infarction troponin elevated EKG ST elevation cath lab PCI stent coronary",
+  "atrial fibrillation rate control metoprolol digoxin anticoagulation warfarin stroke prevention",
+  "hypertension lisinopril amlodipine blood pressure end organ damage kidney function",
+  "cardiac catheterization coronary artery disease stenosis stent drug eluting stent",
+  "COPD exacerbation albuterol ipratropium bronchospasm wheezes oxygen supplementation SpO2",
+  "pneumonia consolidation fever WBC elevated ceftriaxone azithromycin blood cultures",
+  "pulmonary embolism anticoagulation rivaroxaban heparin DVT bilateral lower extremity",
+  "respiratory failure mechanical ventilation intubation PEEP FiO2 arterial blood gas",
+  "pleural effusion thoracentesis protein LDH transudative exudative Light criteria",
+  "diabetic ketoacidosis insulin drip anion gap metabolic acidosis bicarbonate potassium",
+  "type 2 diabetes metformin GLP-1 HbA1c glycemic control SGLT2 cardiovascular renal benefit",
+  "hypoglycemia glucose dextrose altered mental status glucagon diabetes education",
+  "acute kidney injury creatinine elevated BUN nephrotoxins hold contrast ACE inhibitor",
+  "hemodialysis end stage renal disease potassium hyperkalemia access fistula bicarbonate",
+  "nephrotic syndrome proteinuria edema albumin low diuretics renal biopsy immunosuppression",
+  "urinary tract infection pyuria nitrites E coli culture sensitivity trimethoprim nitrofurantoin",
+  "septic shock vasopressor norepinephrine broad spectrum antibiotics vancomycin meropenem lactate",
+  "bacteremia blood cultures Staph aureus MSSA nafcillin vancomycin echocardiogram endocarditis",
+  "neutropenic fever chemotherapy immunosuppressed filgrastim antifungal fluconazole cultures",
+  "ischemic stroke MRI DWI diffusion restriction tPA thrombolysis antiplatelet aspirin",
+  "seizure antiepileptic levetiracetam valproate EEG epilepsy status epilepticus",
+  "pain management opioid morphine acetaminophen ibuprofen NSAID multimodal analgesia",
+  "deep vein thrombosis anticoagulation enoxaparin warfarin compression ambulation prophylaxis",
+  "post-operative fever wound infection cellulitis erythema warmth drainage cultures antibiotics",
+  "malnutrition albumin pre-albumin total parenteral nutrition nasogastric tube dietitian"
+)
+
+tokenize_note <- function(text) {
+  text <- tolower(text)
+  text <- stringr::str_replace_all(text, "[^a-z0-9\\s-]", " ")
+  stringr::str_split(stringr::str_squish(text), "\\s+")[[1]]
+}
+
+# Augment corpus
+augmented <- list()
+for (sent in clinical_sentences) {
+  base <- tokenize_note(sent)
+  augmented[[length(augmented) + 1]] <- base
+  for (k in seq_len(20)) {
+    shuffled <- sample(base)
+    keep_n <- max(4L, length(shuffled) %/% 2 + sample.int(4, 1))
+    keep_n <- min(keep_n, length(shuffled))
+    augmented[[length(augmented) + 1]] <- shuffled[seq_len(keep_n)]
+  }
+}
+
+cat(sprintf("Training corpus: %d sentences\n", length(augmented)))
+cat(sprintf("Sample: %s\n", paste(augmented[[1]][1:min(10, length(augmented[[1]]))], collapse = " ")))
+```
+
+## 3. Train Clinical Word2Vec
+
+text2vec trains **GloVe** embeddings from a skip-gram co-occurrence matrix — the standard R analogue of gensim Word2Vec. Skip-gram window = 5 matches the Python demo.
+
+```{r}
+train_glove <- function(token_list, window = 5L, rank = 30L, n_iter = 15L,
+                        min_count = 2L, x_max = 100, learning_rate = 0.01) {
+  it <- text2vec::itoken(token_list, progressbar = FALSE)
+  vocab <- text2vec::create_vocabulary(it) |>
+    text2vec::prune_vocabulary(term_count_min = min_count)
+  vectorizer <- text2vec::vocab_vectorizer(vocab)
+  it2 <- text2vec::itoken(token_list, progressbar = FALSE)
+  tcm <- text2vec::create_tcm(it2, vectorizer, skip_grams_window = window)
+  rank_use <- max(2L, min(rank, nrow(tcm) - 1L))
+  tryCatch({
+    glove <- text2vec::GlobalVectors$new(rank = rank_use, x_max = x_max)
+    wv_main <- glove$fit_transform(
+      tcm, n_iter = n_iter, convergence_tol = 0.05,
+      n_threads = 1, learning_rate = learning_rate
+    )
+    wv_main + t(glove$components)
+  }, error = function(e) {
+    cat("GloVe optimiser unstable; using SVD of the co-occurrence matrix.\n")
+    mat <- as.matrix(tcm)
+    mat[!is.finite(mat)] <- 0
+    s <- svd(mat, nu = rank_use, nv = rank_use)
+    out <- s$u %*% diag(sqrt(pmax(s$d[seq_len(rank_use)], 0)), rank_use, rank_use)
+    rownames(out) <- rownames(tcm)
+    out
+  })
+}
+
+cosine_sim <- function(a, b) {
+  sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)) + 1e-12)
+}
+
+most_similar <- function(word_vectors, word, topn = 4) {
+  if (!word %in% rownames(word_vectors)) return(NULL)
+  target <- word_vectors[word, ]
+  sims <- apply(word_vectors, 1, cosine_sim, b = target)
+  sims <- sims[names(sims) != word]
+  sims <- sort(sims, decreasing = TRUE)
+  head(sims, topn)
+}
+
+wv <- train_glove(augmented, window = 5L, min_count = 2L)
+cat(sprintf("Vocabulary: %d tokens | Dim: %d\n", nrow(wv), ncol(wv)))
+
+cat("\nSemantic similarity examples:\n")
+for (word in c("diabetes", "heart", "infection", "antibiotics", "kidney", "stroke")) {
+  sims <- most_similar(wv, word, topn = 4)
+  if (!is.null(sims)) {
+    labelled <- paste0(names(sims), "(", sprintf("%.2f", sims), ")")
+    cat(sprintf("  %-15s: %s\n", word, paste(labelled, collapse = ", ")))
+  }
+}
+```
+
+## 4. Clinical Analogy Tasks
+
+```{r}
+analogy <- function(word_vectors, a, b, c, topn = 3) {
+  vec <- word_vectors[a, ] - word_vectors[b, ] + word_vectors[c, ]
+  sims <- apply(word_vectors, 1, cosine_sim, b = vec)
+  sims <- sims[!names(sims) %in% c(a, b, c)]
+  head(sort(sims, decreasing = TRUE), topn)
+}
+
+if (nrow(wv) > 50) {
+  analogy_tests <- list(
+    c("diabetes", "insulin", "infection"),
+    c("heart", "failure", "kidney"),
+    c("acute", "kidney", "heart"),
+    c("septic", "shock", "cardiogenic")
+  )
+  cat("Analogy tasks (A - B + C ≈ ?):\n\n")
+  for (triple in analogy_tests) {
+    A <- triple[1]; B <- triple[2]; C <- triple[3]
+    if (all(c(A, B, C) %in% rownames(wv))) {
+      results <- analogy(wv, A, B, C, topn = 3)
+      labelled <- paste0(names(results), "(", sprintf("%.2f", results), ")")
+      cat(sprintf("  %s - %s + %s ≈ %s\n", A, B, C, paste(labelled, collapse = ", ")))
+    } else {
+      missing <- setdiff(c(A, B, C), rownames(wv))
+      cat(sprintf("  Skipped (not in vocab: %s)\n", paste(missing, collapse = ", ")))
+    }
+  }
+}
+```
+
+## 5. Document Vectors by Averaging
+
+```{r}
+condition_templates <- list(
+  Cardiac   = c("heart failure BNP furosemide ejection fraction cardiomegaly edema",
+                "myocardial infarction troponin PCI coronary artery stent aspirin",
+                "atrial fibrillation rate control anticoagulation warfarin apixaban"),
+  Pulmonary = c("COPD bronchospasm albuterol steroids oxygen wheezes exacerbation",
+                "pneumonia consolidation fever antibiotics ceftriaxone cultures",
+                "pulmonary embolism anticoagulation heparin rivaroxaban DVT"),
+  Diabetes  = c("diabetes insulin HbA1c metformin glucose ketoacidosis anion gap",
+                "hypoglycemia dextrose glucagon blood sugar altered mental status",
+                "diabetic foot infection wound amputation vascular antibiotics"),
+  Renal     = c("acute kidney injury creatinine nephrotoxins dialysis hemodialysis",
+                "proteinuria nephrotic syndrome albumin diuretics renal biopsy",
+                "UTI pyuria culture E coli trimethoprim nitrofurantoin"),
+  Sepsis    = c("septic shock norepinephrine vasopressor lactate cultures broad spectrum",
+                "bacteremia Staph aureus vancomycin blood cultures endocarditis",
+                "neutropenic fever antifungal immunosuppressed chemotherapy")
+)
+
+doc_data <- purrr::imap_dfr(condition_templates, function(templates, cond) {
+  purrr::map_dfr(seq_len(80), function(i) {
+    base <- tokenize_note(sample(templates, 1))
+    noise <- sample(c("patient", "treatment", "management", "hospital"), 2, replace = TRUE)
+    tokens <- sample(c(base, noise))
+    tibble::tibble(tokens = list(tokens), condition = cond)
+  })
+})
+
+get_doc_vector <- function(tokens, word_vectors, dim = 100) {
+  keep <- tokens[tokens %in% rownames(word_vectors)]
+  if (length(keep) == 0) return(rep(0, dim))
+  colMeans(word_vectors[keep, , drop = FALSE])
+}
+
+X_w2v <- t(vapply(doc_data$tokens, get_doc_vector,
+                  numeric(ncol(wv)), word_vectors = wv, dim = ncol(wv)))
+colnames(X_w2v) <- paste0("e", seq_len(ncol(X_w2v)))
+y_docs <- factor(doc_data$condition)
+
+set.seed(42)
+split <- rsample::initial_split(
+  tibble::tibble(y = y_docs, id = seq_len(nrow(X_w2v))),
+  prop = 0.8, strata = y
+)
+tr_idx <- rsample::training(split)$id
+te_idx <- rsample::testing(split)$id
+
+tr_df <- data.frame(y = y_docs[tr_idx], X_w2v[tr_idx, , drop = FALSE], check.names = FALSE)
+te_df <- data.frame(X_w2v[te_idx, , drop = FALSE], check.names = FALSE)
+fit_lr <- nnet::multinom(y ~ ., data = tr_df, trace = FALSE, decay = 0.1, maxit = 200)
+pred <- predict(fit_lr, newdata = te_df)
+acc <- mean(pred == as.character(y_docs[te_idx]))
+cat(sprintf("Word2Vec doc-vec accuracy: %.4f\n", acc))
+```
+
+## 6. t-SNE Embedding Space Visualisation
+
+```{r}
+medical_terms <- list(
+  Cardiac   = c("heart", "failure", "troponin", "coronary", "ejection", "stent"),
+  Pulmonary = c("pneumonia", "bronchospasm", "oxygen", "consolidation", "wheezes"),
+  Diabetes  = c("diabetes", "insulin", "glucose", "ketoacidosis", "metformin"),
+  Renal     = c("kidney", "creatinine", "dialysis", "proteinuria", "nephrotoxins"),
+  Sepsis    = c("septic", "lactate", "vasopressor", "bacteremia", "antibiotics")
+)
+
+term_df <- purrr::imap_dfr(medical_terms, function(term_list, cond) {
+  tibble::tibble(term = term_list, label = cond)
+}) |>
+  dplyr::filter(term %in% rownames(wv))
+
+if (nrow(term_df) > 10) {
+  vectors <- wv[term_df$term, , drop = FALSE]
+  perp <- min(5, nrow(term_df) - 1)
+  if (requireNamespace("Rtsne", quietly = TRUE)) {
+    coords <- Rtsne::Rtsne(vectors, perplexity = perp, verbose = FALSE,
+                           pca = TRUE, check_duplicates = FALSE)$Y
+    xlab <- "t-SNE dim 1"; ylab <- "t-SNE dim 2"
+    plot_title <- "t-SNE: Clinical Word2Vec Embedding Space"
+  } else {
+    pca <- prcomp(vectors, scale. = TRUE)
+    coords <- pca$x[, 1:2]
+    xlab <- "PC1"; ylab <- "PC2"
+    plot_title <- "PCA (t-SNE analogue): Clinical Word2Vec Embedding Space"
+    message("Rtsne not installed — using PCA for 2-D projection")
+  }
+  plot_df <- tibble::tibble(
+    x = coords[, 1], y = coords[, 2],
+    term = term_df$term, label = term_df$label
+  )
+  cond_colors <- c(
+    Cardiac = "#DC2626", Pulmonary = "#2563EB", Diabetes = "#16A34A",
+    Renal = "#B47CC7", Sepsis = "#D4A017"
+  )
+  p_tsne <- ggplot(plot_df, aes(x = x, y = y, colour = label, label = term)) +
+    geom_point(size = 3, alpha = 0.85) +
+    ggrepel::geom_text_repel(size = 3, show.legend = FALSE) +
+    scale_colour_manual(values = cond_colors) +
+    labs(title = plot_title, x = xlab, y = ylab, colour = NULL)
+  print(p_tsne)
+  ggsave(file.path(mod05_dir, "word2vec_tsne.png"), p_tsne,
+         width = 11, height = 8, dpi = 120)
+  cat(sprintf("Plotted %d clinical terms\n", nrow(term_df)))
+}
+```
+
+## 7. Skip-gram vs CBOW Comparison
+
+Skip-gram (window = 5, predicting context from the target) vs a CBOW-like narrower window (window = 2). Both are trained as GloVe on skip-gram co-occurrence matrices — the text2vec analogue of gensim's `sg=1` vs `sg=0`.
+
+```{r}
+cbow_wv <- train_glove(augmented, window = 2L, min_count = 2L)
+
+pairs <- list(
+  c("heart", "failure"),
+  c("diabetes", "insulin"),
+  c("septic", "shock"),
+  c("kidney", "dialysis"),
+  c("antibiotics", "infection")
+)
+cat("Cosine similarity: Skip-gram vs CBOW\n\n")
+cat(sprintf("%-35s %12s %8s\n", "Pair", "Skip-gram", "CBOW"))
+cat(strrep("-", 58), "\n")
+for (pr in pairs) {
+  w1 <- pr[1]; w2 <- pr[2]
+  if (w1 %in% rownames(wv) && w2 %in% rownames(wv) &&
+      w1 %in% rownames(cbow_wv) && w2 %in% rownames(cbow_wv)) {
+    sg_s   <- cosine_sim(wv[w1, ], wv[w2, ])
+    cbow_s <- cosine_sim(cbow_wv[w1, ], cbow_wv[w2, ])
+    cat(sprintf("  %s — %-25s %12.4f %8.4f\n", w1, w2, sg_s, cbow_s))
+  }
+}
+```
+
+```{r}
+# Optional true skip-gram / CBOW via the word2vec CRAN package:
+# install.packages("word2vec")
+# library(word2vec)
+# sentences <- vapply(augmented, paste, character(1), collapse = " ")
+# sg   <- word2vec(x = sentences, type = "skip-gram", dim = 100, window = 5, iter = 40)
+# cbow <- word2vec(x = sentences, type = "cbow",      dim = 100, window = 5, iter = 40)
+```
+
+## 8. Knowledge Check
+1. Why does Skip-gram typically work better for rare medical terminology?
+2. Window size 5 was used. Would smaller (2) or larger (10) better capture clinical relationships?
+3. How would you verify that 'diabetes' and 'insulin' embeddings are closer than 'diabetes' and 'antibiotics'?
+4. Averaging word vectors discards word order. Give two clinical examples where order changes meaning.
+5. Train Word2Vec with `min_count=1` — does vocabulary grow significantly? What is the tradeoff?
+
+```{r}
+model_mc1 <- train_glove(augmented, window = 5L, min_count = 1L)
+cat(sprintf("min_count=2 vocab: %d\n", nrow(wv)))
+cat(sprintf("min_count=1 vocab: %d\n", nrow(model_mc1)))
+cat(sprintf("Growth: +%d rare tokens\n", nrow(model_mc1) - nrow(wv)))
+cat("Tradeoff: more coverage but noisy embeddings for very rare terms\n")
+```
+
+***
+**Next → NB-05: Clinical BERT Embeddings**

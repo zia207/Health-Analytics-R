@@ -1,0 +1,454 @@
+---
+title: "Clinical Named Entity Recognition"
+subtitle: "Module 05 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 05: NLP for Clinical Text
+***
+**Learning objectives**
+- Understand NER entity types in clinical NLP
+- Build a rule-based gazetteer pipeline with 180+ clinical patterns
+- Apply negation-aware NER with context windows
+- Evaluate NER quality with precision, recall, and F1
+- Visualise entity type distributions
+
+**Estimated time:** 2.5 hours | **Level:** Intermediate → Advanced | **Libraries:** `quanteda`, `stringr`, `dplyr`, `ggplot2`
+
+> **spaCyR note.** Python tutorials often use spaCy's `EntityRuler`. The same teaching goal — dictionary/gazetteer NER over medications, diagnoses, findings, and labs — is implemented here with `stringr` + a clinical lexicon. The [spaCyR](https://spacyr.quanteda.io/) package can wrap a spaCy Python process from R if you already have a trained model; it is optional for this notebook.
+
+## 1. Setup & Annotated Corpus
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(stringr)
+library(quanteda)
+library(patchwork)
+
+set.seed(42)
+mod05_dir <- file.path(tempdir(), "mod05")
+dir.create(mod05_dir, showWarnings = FALSE, recursive = TRUE)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.ticks       = element_line(colour = "grey40")
+    )
+)
+
+annotated <- list(
+  list(
+    id = "T001",
+    text = paste(
+      "The patient has type 2 diabetes mellitus managed with metformin 1000 mg twice daily",
+      "and lisinopril 10 mg for hypertension. She also takes furosemide 40 mg for heart failure.",
+      "On exam: bilateral pitting edema to the knees, S3 gallop present."
+    ),
+    gold = list(
+      c("type 2 diabetes mellitus", "DISEASE"), c("metformin", "DRUG"),
+      c("lisinopril", "DRUG"), c("hypertension", "DISEASE"), c("furosemide", "DRUG"),
+      c("heart failure", "DISEASE"), c("bilateral pitting edema", "FINDING"),
+      c("S3 gallop", "FINDING")
+    )
+  ),
+  list(
+    id = "T002",
+    text = paste(
+      "CT chest revealed a 5mm pulmonary nodule in the right lower lobe and bilateral pleural effusions.",
+      "No pulmonary embolism identified. The patient was started on rivaroxaban 20 mg for atrial fibrillation.",
+      "Echo showed mitral regurgitation and aortic stenosis."
+    ),
+    gold = list(
+      c("pulmonary nodule", "FINDING"), c("right lower lobe", "ANATOMY"),
+      c("bilateral pleural effusions", "FINDING"), c("pulmonary embolism", "DISEASE"),
+      c("rivaroxaban", "DRUG"), c("atrial fibrillation", "DISEASE"),
+      c("mitral regurgitation", "DISEASE"), c("aortic stenosis", "DISEASE")
+    )
+  ),
+  list(
+    id = "T003",
+    text = paste(
+      "Post-op day 2 following coronary artery bypass grafting. Chest pain at sternotomy site rated 6/10.",
+      "No wound infection. Warfarin 5 mg initiated for mechanical aortic valve.",
+      "Creatinine elevated at 1.8, likely acute kidney injury."
+    ),
+    gold = list(
+      c("coronary artery bypass grafting", "PROCEDURE"), c("chest pain", "SYMPTOM"),
+      c("sternotomy site", "ANATOMY"), c("wound infection", "DISEASE"),
+      c("Warfarin", "DRUG"), c("acute kidney injury", "DISEASE")
+    )
+  ),
+  list(
+    id = "T004",
+    text = paste(
+      "Impression: Community-acquired pneumonia with sepsis.",
+      "Started ceftriaxone 1g IV daily and azithromycin 500 mg IV daily. Blood cultures pending.",
+      "CBC: WBC 18.4, Hgb 9.2. CXR: right lower lobe consolidation."
+    ),
+    gold = list(
+      c("Community-acquired pneumonia", "DISEASE"), c("sepsis", "DISEASE"),
+      c("ceftriaxone", "DRUG"), c("azithromycin", "DRUG"),
+      c("right lower lobe consolidation", "FINDING")
+    )
+  )
+)
+
+cat(sprintf("Annotated corpus: %d texts\n", length(annotated)))
+cat(sprintf("Total gold entities: %d\n",
+            sum(purrr::map_int(annotated, ~ length(.x$gold)))))
+```
+
+## 2. Clinical Entity Pattern Libraries
+
+| Type | Examples | Count |
+|---|---|---|
+| **DISEASE** | diabetes, heart failure, pneumonia | 40+ |
+| **DRUG** | metformin, lisinopril, ceftriaxone | 60+ |
+| **PROCEDURE** | CABG, echocardiogram, CT chest | 25+ |
+| **ANATOMY** | right lower lobe, sternotomy site | 20+ |
+| **SYMPTOM** | chest pain, dyspnea, fever | 25+ |
+| **FINDING** | pitting edema, ST elevation, consolidation | 25+ |
+
+```{r}
+disease_patterns <- c(
+  "diabetes mellitus", "type 2 diabetes mellitus", "type 1 diabetes", "DM2",
+  "hypertension", "heart failure", "congestive heart failure", "ADHF",
+  "COPD", "chronic obstructive pulmonary disease", "asthma", "pneumonia", "CAP",
+  "atrial fibrillation", "AFib", "coronary artery disease", "CAD",
+  "myocardial infarction", "STEMI", "NSTEMI", "ACS",
+  "chronic kidney disease", "CKD", "acute kidney injury", "AKI", "ESRD",
+  "pulmonary embolism", "PE", "deep vein thrombosis", "DVT",
+  "sepsis", "severe sepsis", "septic shock", "bacteremia",
+  "stroke", "TIA", "ischemic stroke",
+  "mitral regurgitation", "aortic stenosis", "aortic regurgitation",
+  "pleural effusion", "bilateral pleural effusions", "pneumothorax",
+  "community-acquired pneumonia", "wound infection", "cellulitis"
+)
+drug_patterns <- c(
+  "metformin", "lisinopril", "furosemide", "warfarin", "rivaroxaban", "apixaban",
+  "aspirin", "clopidogrel", "ticagrelor", "heparin", "enoxaparin",
+  "ceftriaxone", "azithromycin", "vancomycin", "piperacillin-tazobactam", "meropenem",
+  "metoprolol", "carvedilol", "atorvastatin", "rosuvastatin",
+  "amiodarone", "digoxin", "diltiazem", "prednisone", "methylprednisolone", "dexamethasone",
+  "albuterol", "ipratropium", "tiotropium", "fluticasone",
+  "insulin", "empagliflozin", "liraglutide", "semaglutide",
+  "omeprazole", "pantoprazole", "ondansetron", "morphine", "oxycodone", "acetaminophen",
+  "nitroglycerin", "norepinephrine", "sacubitril", "spironolactone"
+)
+procedure_patterns <- c(
+  "coronary artery bypass grafting", "CABG", "percutaneous coronary intervention", "PCI",
+  "cardiac catheterization", "echocardiogram", "ECHO", "transesophageal echocardiogram",
+  "CT chest", "CT abdomen", "CT head", "CXR", "chest X-ray", "MRI brain",
+  "bronchoscopy", "thoracentesis", "paracentesis", "lumbar puncture",
+  "colonoscopy", "endoscopy", "mechanical ventilation", "intubation", "hemodialysis"
+)
+anatomy_patterns <- c(
+  "right lower lobe", "left lower lobe", "right upper lobe", "left upper lobe",
+  "sternotomy site", "thoracotomy site", "left ventricle", "right ventricle",
+  "mitral valve", "aortic valve", "aorta", "pulmonary artery",
+  "liver", "spleen", "kidney", "gallbladder", "pancreas", "colon"
+)
+symptom_patterns <- c(
+  "chest pain", "dyspnea", "shortness of breath", "SOB", "cough", "productive cough",
+  "fever", "chills", "nausea", "vomiting", "abdominal pain", "headache",
+  "dizziness", "syncope", "palpitations", "fatigue", "weakness", "edema",
+  "hemoptysis", "confusion", "altered mental status"
+)
+finding_patterns <- c(
+  "bilateral pitting edema", "pitting edema", "S3 gallop", "S4 gallop", "murmur",
+  "crackles", "rales", "wheezes", "rhonchi", "decreased breath sounds",
+  "consolidation", "air bronchograms", "ground glass opacity", "atelectasis",
+  "ST elevation", "ST depression", "T-wave inversion", "pulmonary nodule",
+  "right lower lobe consolidation", "bilateral pleural effusions", "cardiomegaly",
+  "right ventricular enlargement", "hepatomegaly", "splenomegaly", "jaundice"
+)
+
+entity_lists <- list(
+  DISEASE   = disease_patterns,
+  DRUG      = drug_patterns,
+  PROCEDURE = procedure_patterns,
+  ANATOMY   = anatomy_patterns,
+  SYMPTOM   = symptom_patterns,
+  FINDING   = finding_patterns
+)
+total <- sum(lengths(entity_lists))
+cat(sprintf("Total clinical patterns: %d\n", total))
+purrr::iwalk(entity_lists, function(patterns, label) {
+  cat(sprintf("  %-12s: %3d patterns\n", label, length(patterns)))
+})
+```
+
+## 3. Gazetteer EntityRuler Pipeline
+
+This gazetteer is the R analogue of spaCy's EntityRuler: the same 180+ patterns are compiled into a dictionary lookup, plus case variants, then applied left-to-right keeping the longest non-overlapping span.
+
+```{r}
+# Build a dictionary of (surface form → label), longest first
+build_gazetteer <- function(entity_lists) {
+  rows <- purrr::imap_dfr(entity_lists, function(patterns, label) {
+    tibble::tibble(
+      pattern = unique(c(patterns, tolower(patterns), stringr::str_to_title(patterns))),
+      label   = label
+    )
+  })
+  dplyr::arrange(rows, dplyr::desc(nchar(pattern)))
+}
+
+gazetteer <- build_gazetteer(entity_lists)
+cat(sprintf("Gazetteer EntityRuler: %d patterns loaded\n", nrow(gazetteer)))
+
+gazetteer_ner <- function(text, gazetteer) {
+  entities <- list()
+  for (i in seq_len(nrow(gazetteer))) {
+    pattern <- gazetteer$pattern[i]
+    label   <- gazetteer$label[i]
+    regex   <- paste0("\\b", stringr::str_replace_all(pattern, "([\\W])", "\\\\\\1"), "\\b")
+    m <- gregexpr(regex, text, perl = TRUE, ignore.case = TRUE)[[1]]
+    if (m[1] == -1) next
+    matched <- regmatches(text, list(m))[[1]]
+    ends <- as.integer(m + attr(m, "match.length"))
+    for (j in seq_along(m)) {
+      entities[[length(entities) + 1]] <- list(
+        text = matched[j], label = label,
+        start = as.integer(m[j]), end = ends[j]
+      )
+    }
+  }
+  if (length(entities) == 0) {
+    return(tibble::tibble(text = character(), label = character(),
+                          start = integer(), end = integer()))
+  }
+  ents <- dplyr::bind_rows(entities) |>
+    dplyr::arrange(start, dplyr::desc(end - start))
+  filtered <- list(); prev_end <- -1L
+  for (k in seq_len(nrow(ents))) {
+    if (ents$start[k] >= prev_end) {
+      filtered[[length(filtered) + 1]] <- ents[k, ]
+      prev_end <- ents$end[k]
+    }
+  }
+  dplyr::bind_rows(filtered)
+}
+
+doc_ents <- gazetteer_ner(annotated[[1]]$text, gazetteer)
+cat(sprintf("\nNER on T001 (%d entities):\n", nrow(doc_ents)))
+purrr::pwalk(doc_ents, function(text, label, ...) {
+  cat(sprintf("  [%-12s] '%s'\n", label, text))
+})
+```
+
+## 4. Regex Fallback NER
+
+```{r}
+regex_ner <- function(text, entity_lists) {
+  entities <- purrr::imap_dfr(entity_lists, function(patterns, label) {
+    purrr::map_dfr(patterns, function(pattern) {
+      regex <- paste0("\\b", stringr::str_replace_all(pattern, "([\\W])", "\\\\\\1"), "\\b")
+      m <- gregexpr(regex, text, perl = TRUE, ignore.case = TRUE)[[1]]
+      if (m[1] == -1) {
+        return(tibble::tibble(text = character(), label = character(),
+                              start = integer(), end = integer()))
+      }
+      tibble::tibble(
+        text  = regmatches(text, list(m))[[1]],
+        label = label,
+        start = as.integer(m),
+        end   = as.integer(m + attr(m, "match.length"))
+      )
+    })
+  })
+  if (nrow(entities) == 0) return(entities)
+  entities <- dplyr::arrange(entities, start, dplyr::desc(end - start))
+  filtered <- list(); prev_end <- -1L
+  for (k in seq_len(nrow(entities))) {
+    if (entities$start[k] >= prev_end) {
+      filtered[[length(filtered) + 1]] <- entities[k, ]
+      prev_end <- entities$end[k]
+    }
+  }
+  dplyr::bind_rows(filtered)
+}
+
+cat("Regex NER across corpus:\n\n")
+for (ann in annotated) {
+  ents <- regex_ner(ann$text, entity_lists)
+  cat(sprintf("%s: %d entities\n", ann$id, nrow(ents)))
+  show_n <- min(4, nrow(ents))
+  if (show_n > 0) {
+    purrr::pwalk(ents[seq_len(show_n), ], function(text, label, ...) {
+      cat(sprintf("  [%-12s] '%s'\n", label, text))
+    })
+  }
+  if (nrow(ents) > 4) cat(sprintf("  ... +%d more\n", nrow(ents) - 4))
+  cat("\n")
+}
+```
+
+## 5. Negation-Aware NER
+
+```{r}
+negation_triggers <- c(
+  "no ", "not ", "denies ", "denied ", "without ", "w/o ",
+  "never ", "absent ", "negative ", "no evidence of ", "rules out "
+)
+
+ner_with_negation <- function(text, entity_lists) {
+  entities <- purrr::imap_dfr(entity_lists, function(patterns, label) {
+    purrr::map_dfr(patterns, function(pattern) {
+      regex <- paste0("\\b", stringr::str_replace_all(pattern, "([\\W])", "\\\\\\1"), "\\b")
+      m <- gregexpr(regex, text, perl = TRUE, ignore.case = TRUE)[[1]]
+      if (m[1] == -1) {
+        return(tibble::tibble())
+      }
+      matched <- regmatches(text, list(m))[[1]]
+      purrr::map_dfr(seq_along(m), function(j) {
+        start <- as.integer(m[j])
+        ctx_lo <- max(1, start - 70)
+        context <- tolower(substr(text, ctx_lo, start - 1))
+        tibble::tibble(
+          text    = matched[j],
+          label   = label,
+          start   = start,
+          end     = as.integer(m[j] + attr(m, "match.length")[j]),
+          negated = any(purrr::map_lgl(negation_triggers, ~ grepl(.x, context, fixed = TRUE))),
+          context = stringr::str_squish(substr(context, max(1, nchar(context) - 39), nchar(context)))
+        )
+      })
+    })
+  })
+  if (nrow(entities) == 0) return(entities)
+  dplyr::arrange(entities, start)
+}
+
+cat("NER with negation context (T001):\n")
+cat(sprintf("%-30s %-12s %s\n", "Entity", "Type", "Negated"))
+cat(strrep("-", 60), "\n")
+ents_t001 <- ner_with_negation(annotated[[1]]$text, entity_lists)
+show_n <- min(12, nrow(ents_t001))
+purrr::pwalk(ents_t001[seq_len(show_n), ], function(text, label, negated, ...) {
+  flag <- if (isTRUE(negated)) "NEGATED" else "Affirmed"
+  cat(sprintf("  %-28s %-12s %s\n", text, label, flag))
+})
+```
+
+## 6. NER Evaluation
+
+```{r}
+evaluate_ner <- function(gold_list, pred_df) {
+  gold_text <- unique(purrr::map_chr(gold_list, ~ paste(tolower(.x[1]), .x[2], sep = "||")))
+  pred_text <- unique(paste(tolower(pred_df$text), pred_df$label, sep = "||"))
+  parse_pair <- function(x) {
+    parts <- strsplit(x, "\\|\\|", perl = TRUE)
+    tibble::tibble(
+      span  = vapply(parts, `[`, character(1), 1),
+      etype = vapply(parts, `[`, character(1), 2)
+    )
+  }
+  gold_df <- parse_pair(gold_text)
+  pred_p  <- parse_pair(pred_text)
+  all_types <- union(gold_df$etype, pred_p$etype)
+  purrr::map_dfr(all_types, function(etype) {
+    g <- gold_df$span[gold_df$etype == etype]
+    p <- pred_p$span[pred_p$etype == etype]
+    tp <- length(intersect(g, p))
+    fp <- length(setdiff(p, g))
+    fn <- length(setdiff(g, p))
+    prec <- if ((tp + fp) > 0) tp / (tp + fp) else 0
+    rec  <- if ((tp + fn) > 0) tp / (tp + fn) else 0
+    f1   <- if ((prec + rec) > 0) 2 * prec * rec / (prec + rec) else 0
+    tibble::tibble(
+      type = etype, TP = tp, FP = fp, FN = fn,
+      Precision = round(prec, 3), Recall = round(rec, 3), F1 = round(f1, 3)
+    )
+  })
+}
+
+all_gold <- purrr::flatten(purrr::map(annotated, "gold"))
+all_pred <- purrr::map_dfr(annotated, function(ann) {
+  ner_with_negation(ann$text, entity_lists)
+})
+
+eval_df <- evaluate_ner(all_gold, all_pred)
+cat("NER Evaluation (text-level match):\n")
+print(eval_df[, c("type", "Precision", "Recall", "F1", "TP", "FP", "FN")])
+cat(sprintf("\nMacro F1: %.3f\n", mean(eval_df$F1)))
+```
+
+```{r}
+# Entity distribution plot
+all_ents <- all_pred
+counts <- all_ents |>
+  dplyr::count(label, name = "n") |>
+  dplyr::arrange(dplyr::desc(n))
+
+neg_rates <- all_ents |>
+  dplyr::group_by(label) |>
+  dplyr::summarise(neg_rate = 100 * mean(negated), .groups = "drop")
+
+ent_colors <- c(
+  DISEASE = "#DC2626", DRUG = "#2563EB", PROCEDURE = "#16A34A",
+  ANATOMY = "#B47CC7", SYMPTOM = "#D4A017", FINDING = "#1F7A8C"
+)
+
+p_count <- ggplot(counts, aes(x = reorder(label, -n), y = n, fill = label)) +
+  geom_col(alpha = 0.85, colour = "white") +
+  geom_text(aes(label = n), vjust = -0.3, size = 3.2) +
+  scale_fill_manual(values = ent_colors, guide = "none") +
+  labs(title = "Entity count by type", x = NULL, y = "Count")
+
+p_neg <- ggplot(neg_rates, aes(x = label, y = neg_rate, fill = label)) +
+  geom_col(alpha = 0.85, colour = "white") +
+  scale_fill_manual(values = ent_colors, guide = "none") +
+  labs(title = "Negation rate by entity type", x = NULL, y = "% negated")
+
+p_ner <- patchwork::wrap_plots(p_count, p_neg, ncol = 2)
+print(p_ner)
+ggsave(file.path(mod05_dir, "ner_distribution.png"), p_ner,
+       width = 13, height = 5, dpi = 120)
+```
+
+## 7. Knowledge Check
+1. Why does EntityRuler have lower recall than a trained NER model?
+2. DISEASE recall is 0.72. List three types of disease mentions likely missed.
+3. Negation misses 'No ST elevation, but ST depression present' — why?
+4. What is the difference between exact span match and token-level evaluation?
+5. Add LAB_VALUE extraction: match 'WBC 18.4', 'creatinine 1.8 mg/dL'.
+
+```{r}
+lab_value_pat <- paste0(
+  "(WBC|Hgb|Hemoglobin|Hct|Platelets|PLT|Creatinine|Cr|BUN|Sodium|Na|",
+  "Potassium|K|Glucose|BNP|Troponin|TSH|INR)",
+  "\\s*:?\\s*(\\d+\\.?\\d*)\\s*(mg/dL|g/dL|mEq/L|ng/mL|mmol/L|IU/L|%)?"
+)
+
+extract_lab_values <- function(text) {
+  m <- stringr::str_match_all(text, stringr::regex(lab_value_pat, ignore_case = TRUE))[[1]]
+  if (nrow(m) == 0) {
+    return(tibble::tibble(analyte = character(), value = character(),
+                          unit = character(), label = character()))
+  }
+  tibble::tibble(
+    analyte = m[, 2],
+    value   = m[, 3],
+    unit    = ifelse(is.na(m[, 4]), "", stringr::str_squish(m[, 4])),
+    label   = "LAB_VALUE"
+  )
+}
+
+for (ann in annotated) {
+  labs <- extract_lab_values(ann$text)
+  if (nrow(labs) > 0) {
+    cat(sprintf("%s:\n", ann$id))
+    purrr::pwalk(labs, function(analyte, value, unit, ...) {
+      cat(sprintf("  %-15s = %s %s\n", analyte, value, unit))
+    })
+  }
+}
+```
+
+***
+**Next → NB-03: TF-IDF & Clinical Text Classification**

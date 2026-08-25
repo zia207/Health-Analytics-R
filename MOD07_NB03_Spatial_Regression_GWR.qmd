@@ -1,0 +1,276 @@
+---
+title: "Spatial Regression: Lag, Error & GWR"
+subtitle: "Module 07 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+***
+**Learning objectives**
+- Diagnose spatial autocorrelation in OLS residuals with Lagrange Multiplier tests
+- Fit Spatial Lag Model (SLM): includes spatially lagged outcome
+- Fit Spatial Error Model (SEM): includes spatially autocorrelated errors
+- Compare model fit with AIC, log-likelihood, and pseudo-R²
+- Implement Geographically Weighted Regression (GWR) with `GWmodel`
+- Map spatially varying coefficients from GWR
+
+**Estimated time:** 3 hours | **Level:** Advanced  
+**Libraries:** `sf`, `spdep`, `spatialreg`, `GWmodel`, `ggplot2`, `broom`
+
+## 1. Setup & Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(sf)
+library(sp)
+library(spdep)
+library(spatialreg)
+library(GWmodel)
+library(broom)
+library(patchwork)
+
+set.seed(42)
+out_dir <- file.path(tempdir(), "mod07")
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 2) {
+  grid <- matrix(0, nrow = nrow, ncol = ncol)
+  for (i in seq_along(values)) grid[row_idx[i], col_idx[i]] <- values[i]
+  k <- ceiling(3 * sigma)
+  xs <- (-k):k
+  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
+  kern <- kern / sum(kern)
+  pad <- k
+  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
+  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
+  out <- matrix(0, nrow, ncol)
+  for (r in seq_len(nrow)) for (c in seq_len(ncol)) {
+    out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
+  }
+  mapply(function(r, c) out[r, c], row_idx, col_idx)
+}
+
+NROW <- 10; NCOL <- 20; N <- NROW * NCOL
+row_idx <- rep(seq_len(NROW), each = NCOL)
+col_idx <- rep(seq_len(NCOL), times = NROW)
+lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
+lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
+pct_poverty   <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
+pct_uninsured <- 8 + 6 * rbeta(N, 2, 4) + 0.3 * pct_poverty
+pm25          <- 8 + 4 * rgamma(N, shape = 2, scale = 1)
+population    <- as.integer(rlnorm(N, 10.5, 1.0))
+spatial_risk  <- spatial_smooth(rnorm(N), row_idx, col_idx, NROW, NCOL)
+cvd_rate <- (180 + 1.2 * pct_poverty + 0.8 * pct_uninsured + 0.5 * pm25 +
+               15 * spatial_risk + rnorm(N, 0, 12))
+expected <- (cvd_rate / 100000) * population * 5
+observed <- rpois(N, expected)
+smr <- observed / pmax(expected, 1)
+
+df <- tibble(
+  county_id = sprintf("C%03d", seq_len(N) - 1),
+  lon, lat, row = row_idx, col = col_idx,
+  pct_poverty, pct_uninsured, pm25, population, cvd_rate,
+  observed, expected, smr, spatial_risk
+)
+geoms <- Map(function(lo, la) {
+  st_polygon(list(matrix(
+    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
+      lo - 1.25, la + 1, lo - 1.25, la - 1), ncol = 2, byrow = TRUE
+  )))
+}, df$lon, df$lat)
+gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
+
+nb <- vector("list", N)
+for (i in seq_len(N)) {
+  nbrs <- which(pmax(abs(df$row - df$row[i]), abs(df$col - df$col[i])) <= 1)
+  nb[[i]] <- setdiff(nbrs, i)
+}
+class(nb) <- "nb"
+attr(nb, "region.id") <- as.character(seq_len(N))
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+COVARIATES <- c("pct_poverty", "pct_uninsured", "pm25")
+cat(sprintf("N=%d | CVD=%.1f/100k | Weights built\n", N, mean(cvd_rate)))
+```
+
+## 2. OLS Baseline and Diagnostic Tests
+
+**OLS model:** CVD_i = β₀ + β₁·Poverty_i + β₂·Uninsured_i + β₃·PM25_i + ε_i
+
+**Spatial diagnostics:**
+- **Moran's I on residuals**: global test for residual autocorrelation
+- **Lagrange Multiplier (LM) Lag test**: tests if spatial lag of Y belongs in model
+- **LM Error test**: tests if spatial error structure is needed
+- **Robust LM tests**: account for presence of the other spatial effect
+
+```{r}
+ols <- lm(cvd_rate ~ pct_poverty + pct_uninsured + pm25, data = df)
+print(tidy(ols))
+cat(sprintf("\nAIC: %.2f | Log-L: %.2f | R²: %.4f\n",
+            AIC(ols), logLik(ols), summary(ols)$r.squared))
+```
+
+```{r}
+# Moran's I on residuals
+mt_ols <- moran.test(residuals(ols), lw, zero.policy = TRUE)
+mc_ols <- moran.mc(residuals(ols), lw, nsim = 499, zero.policy = TRUE)
+I_ols <- unname(mt_ols$estimate["Moran I statistic"])
+p_ols <- mc_ols$p.value
+cat(sprintf("Moran's I (OLS residuals): %.4f, p=%.4f\n", I_ols, p_ols))
+if (p_ols < 0.05) {
+  cat("-> Significant residual spatial autocorrelation: spatial model needed\n")
+}
+
+# LM tests (Anselin) via spdep
+lm_tests <- lm.LMtests(ols, lw, test = c("LMerr", "LMlag", "RLMerr", "RLMlag", "SARMA"))
+print(lm_tests)
+
+LM_lag <- as.numeric(lm_tests$RSlag$statistic)
+LM_err <- as.numeric(lm_tests$RSerr$statistic)
+p_lag  <- lm_tests$RSlag$p.value
+p_err  <- lm_tests$RSerr$p.value
+cat(sprintf("LM Lag test: %.4f (p=%.4f)\n", LM_lag, p_lag))
+cat(sprintf("LM Err test: %.4f (p=%.4f)\n", LM_err, p_err))
+cat("\nDecision rule: If both significant, choose the one with larger test statistic\n")
+if (LM_lag > LM_err) {
+  cat("  -> Spatial Lag Model preferred\n")
+} else {
+  cat("  -> Spatial Error Model preferred\n")
+}
+```
+
+## 3. Spatial Lag Model (SLM)
+
+```{r}
+# SLM: Y = rho*W*Y + X*beta + e  — spatialreg::lagsarlm
+slm <- lagsarlm(cvd_rate ~ pct_poverty + pct_uninsured + pm25,
+                data = df, listw = lw, zero.policy = TRUE)
+print(summary(slm, Nagelkerke = TRUE))
+cat(sprintf("Spatial Lag Model:\n"))
+cat(sprintf("  rho (spatial lag)  : %.4f\n", slm$rho))
+cat(sprintf("  Log-likelihood     : %.4f\n", slm$LL))
+cat(sprintf("  AIC                : %.4f\n", AIC(slm)))
+cat(sprintf("  OLS AIC            : %.4f\n", AIC(ols)))
+slm_beta <- coef(slm)
+```
+
+## 4. Spatial Error Model (SEM)
+
+```{r}
+# SEM: Y = X*beta + u, u = lambda*W*u + e  — spatialreg::errorsarlm
+sem <- errorsarlm(cvd_rate ~ pct_poverty + pct_uninsured + pm25,
+                  data = df, listw = lw, zero.policy = TRUE)
+print(summary(sem, Nagelkerke = TRUE))
+cat(sprintf("Spatial Error Model:\n"))
+cat(sprintf("  lambda (spatial error): %.4f\n", sem$lambda))
+cat(sprintf("  Log-likelihood: %.4f\n", sem$LL))
+cat(sprintf("  AIC           : %.4f\n", AIC(sem)))
+cat("\nModel comparison:\n")
+cat(sprintf("  OLS AIC: %.2f | SLM AIC: %.2f | SEM AIC: %.2f\n",
+            AIC(ols), AIC(slm), AIC(sem)))
+cat(sprintf(
+  "  True poverty coefficient: 1.20 | OLS: %.3f | SLM: %.3f | SEM: %.3f\n",
+  coef(ols)["pct_poverty"], slm_beta["pct_poverty"], coef(sem)["pct_poverty"]
+))
+```
+
+## 5. Geographically Weighted Regression (GWR)
+
+```{r}
+# GWR: estimates local coefficients at each location
+# Gaussian kernel: k_ij = exp(-d_ij^2 / (2*h^2))
+spdf <- df
+coordinates(spdf) <- ~ lon + lat
+proj4string(spdf) <- CRS("+proj=longlat +datum=WGS84")
+
+cat("Fitting GWR ...\n")
+gwr_res <- gwr.basic(
+  cvd_rate ~ pct_poverty + pct_uninsured + pm25,
+  data = spdf,
+  bw = 8.0,
+  kernel = "gaussian",
+  adaptive = FALSE
+)
+print(gwr_res)
+
+local_b <- as.data.frame(gwr_res$SDF)
+gdf$gwr_beta_Intercept     <- local_b$Intercept
+gdf$gwr_beta_pct_poverty   <- local_b$pct_poverty
+gdf$gwr_beta_pct_uninsured <- local_b$pct_uninsured
+gdf$gwr_beta_pm25          <- local_b$pm25
+gdf$gwr_pred  <- local_b$yhat
+gdf$gwr_resid <- local_b$residual
+
+sse_gwr <- sum(gdf$gwr_resid^2)
+sse_ols <- sum(residuals(ols)^2)
+cat(sprintf("GWR bandwidth: 8.0 degrees\n"))
+cat(sprintf("SSE improvement: OLS=%.0f -> GWR=%.0f (%.1f%% reduction)\n",
+            sse_ols, sse_gwr, (1 - sse_gwr / sse_ols) * 100))
+```
+
+```{r}
+# Map spatially varying coefficients from GWR
+covariate_plot <- c("pct_poverty", "pct_uninsured", "pm25")
+beta_true <- c(1.2, 0.8, 0.5)
+ols_b <- coef(ols)
+
+map_beta <- function(cov, true_b) {
+  col <- paste0("gwr_beta_", cov)
+  ggplot(gdf) +
+    geom_sf(aes(fill = .data[[col]]), colour = "white", linewidth = 0.15) +
+    scale_fill_distiller(name = "Local coefficient", palette = "RdBu", direction = -1) +
+    labs(
+      title = sprintf("GWR: Local β for %s", cov),
+      subtitle = sprintf("Global OLS β=%.3f | True β=%.1f", ols_b[cov], true_b),
+      x = "Lon", y = "Lat"
+    )
+}
+
+p_gwr <- map_beta("pct_poverty", 1.2) | map_beta("pct_uninsured", 0.8) | map_beta("pm25", 0.5)
+p_gwr <- p_gwr + plot_annotation(title = "GWR Spatially Varying Coefficients")
+print(p_gwr)
+ggsave(file.path(out_dir, "gwr_coefficients.png"), p_gwr, width = 18, height = 5, dpi = 150)
+
+cat("GWR coefficient statistics:\n")
+for (cov in covariate_plot) {
+  b <- gdf[[paste0("gwr_beta_", cov)]]
+  cat(sprintf("  %-20s: mean=%.3f | SD=%.3f | range=[%.2f,%.2f]\n",
+              cov, mean(b), sd(b), min(b), max(b)))
+}
+```
+
+## 6. Knowledge Check
+1. Spatial lag model rho = 0.38. Interpret this parameter in clinical terms.
+2. SEM has lower AIC than SLM. Under what conceptual assumption should you prefer SEM?
+3. GWR shows poverty coefficient varying from 0.4 to 2.8 across counties. Is this capturing true heterogeneity or spatial artefact?
+4. OLS coefficient for poverty = 1.42, SLM = 0.95. Why does controlling for spatial autocorrelation reduce the poverty coefficient?
+5. Run GWR with two different bandwidths (h=5 and h=15). How does bandwidth affect the spatial smoothness of local coefficients?
+
+```{r}
+# Exercise 5 — GWR bandwidth sensitivity
+cat("GWR bandwidth sensitivity (small sample, fast demo):\n")
+sp_sub <- spdf[1:50, ]
+for (bw in c(4.0, 8.0, 15.0)) {
+  gwr_bw <- gwr.basic(
+    cvd_rate ~ pct_poverty + pct_uninsured + pm25,
+    data = sp_sub, bw = bw, kernel = "gaussian", adaptive = FALSE
+  )
+  beta_pov <- gwr_bw$SDF$pct_poverty
+  sse_bw <- sum(gwr_bw$SDF$residual^2)
+  cat(sprintf("  bandwidth=%.0f: poverty β range=[%.2f,%.2f] SD=%.3f SSE=%.1f\n",
+              bw, min(beta_pov), max(beta_pov), sd(beta_pov), sse_bw))
+}
+cat("\nSmaller bandwidth -> more local variation, higher risk of overfitting\n")
+cat("Larger bandwidth  -> smoother coefficients, approaches global OLS\n")
+```
+
+***
+**Next → NB-04: Disease Mapping & Bayesian Smoothing**

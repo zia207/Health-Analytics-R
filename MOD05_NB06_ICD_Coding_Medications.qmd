@@ -1,0 +1,414 @@
+---
+title: "ICD Coding & Medication Extraction"
+subtitle: "Module 05 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 05: NLP for Clinical Text
+***
+**Learning objectives**
+- Build a TF-IDF ICD-10 code suggester from clinical text
+- Extract structured medication information (drug, dose, route, frequency)
+- Implement admission-to-discharge medication reconciliation
+- Build a drug-drug interaction checker
+- Validate extracted codes against ICD-10 format rules
+
+**Estimated time:** 2.5 hours | **Level:** Advanced | **Libraries:** `stringr`, `dplyr`, `quanteda`
+
+## 1. Setup & ICD-10 Reference Table
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(quanteda)
+library(stringr)
+
+set.seed(42)
+mod05_dir <- file.path(tempdir(), "mod05")
+dir.create(mod05_dir, showWarnings = FALSE, recursive = TRUE)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.ticks       = element_line(colour = "grey40")
+    )
+)
+
+icd10_ref <- tibble::tibble(
+  code = c("I50.20", "I50.30", "I50.9", "I21.19", "I21.4", "I48.91",
+           "J44.1", "J18.9", "J26.99", "E11.10", "E11.65", "N17.9",
+           "N18.6", "A41.9", "I10"),
+  desc = c(
+    "Unspecified systolic heart failure",
+    "Unspecified diastolic heart failure",
+    "Unspecified heart failure",
+    "STEMI other coronary artery",
+    "Non-ST elevation MI",
+    "Unspecified atrial fibrillation",
+    "COPD with acute exacerbation",
+    "Pneumonia unspecified",
+    "Other pulmonary embolism",
+    "T2DM with DKA without coma",
+    "T2DM with hyperglycemia",
+    "Acute kidney failure",
+    "End-stage renal disease",
+    "Sepsis unspecified organism",
+    "Essential hypertension"
+  ),
+  kw = c(
+    "systolic heart failure reduced ejection fraction HFrEF EF low BNP furosemide",
+    "diastolic heart failure preserved ejection HFpEF",
+    "heart failure congestive CHF decompensated BNP edema",
+    "STEMI myocardial infarction ST elevation troponin cath lab PCI stent",
+    "NSTEMI troponin elevated demand ischemia non-ST elevation ACS",
+    "atrial fibrillation AFib arrhythmia rate control anticoagulation",
+    "COPD exacerbation bronchospasm wheezes steroids albuterol ipratropium",
+    "pneumonia consolidation fever WBC antibiotics community acquired CAP",
+    "pulmonary embolism PE DVT anticoagulation rivaroxaban heparin RV strain",
+    "diabetic ketoacidosis DKA anion gap metabolic acidosis insulin drip glucose",
+    "uncontrolled diabetes hyperglycemia HbA1c elevated glucose A1c",
+    "acute kidney injury AKI creatinine elevated BUN nephrotoxins oliguria",
+    "ESRD hemodialysis dialysis end stage renal disease potassium",
+    "sepsis septic shock bacteremia lactate broad spectrum antibiotics norepinephrine",
+    "hypertension HTN blood pressure elevated antihypertensive"
+  )
+)
+cat(sprintf("ICD-10 reference: %d codes\n", nrow(icd10_ref)))
+print(head(icd10_ref[, c("code", "desc")], 8))
+```
+
+## 2. TF-IDF ICD-10 Code Suggester
+
+```{r}
+icd_texts <- paste(icd10_ref$kw, icd10_ref$desc)
+toks_icd <- quanteda::tokens(icd_texts, remove_punct = TRUE) |>
+  quanteda::tokens_tolower() |>
+  quanteda::tokens_ngrams(n = 1:2)
+dfm_icd <- quanteda::dfm_tfidf(quanteda::dfm(toks_icd))
+if (nfeat(dfm_icd) > 500) {
+  keep <- names(quanteda::topfeatures(dfm_icd, n = 500))
+  dfm_icd <- quanteda::dfm_select(dfm_icd, pattern = keep)
+}
+icd_matrix <- as.matrix(dfm_icd)
+
+cosine_rows <- function(vec, mat) {
+  nrms <- sqrt(rowSums(mat^2)); nrms[nrms == 0] <- 1
+  vn <- sqrt(sum(vec^2)); if (vn == 0) vn <- 1
+  as.numeric((mat / nrms) %*% (vec / vn))
+}
+
+suggest_icd <- function(text, top_k = 5, threshold = 0.12) {
+  toks <- quanteda::tokens(tolower(text), remove_punct = TRUE) |>
+    quanteda::tokens_ngrams(n = 1:2)
+  d <- quanteda::dfm_match(quanteda::dfm(toks), features = colnames(icd_matrix))
+  vec <- as.numeric(as.matrix(d))
+  scores <- cosine_rows(vec, icd_matrix)
+  top_idx <- order(scores, decreasing = TRUE)[seq_len(top_k)]
+  keep <- top_idx[scores[top_idx] >= threshold]
+  tibble::tibble(
+    code  = icd10_ref$code[keep],
+    desc  = icd10_ref$desc[keep],
+    score = round(scores[keep], 3)
+  )
+}
+
+test_notes <- c(
+  "Acute decompensated heart failure, BNP 1450, EF 30%, IV furosemide started.",
+  "STEMI inferior wall, troponin 2.4, EKG ST elevation, PCI with stent placement.",
+  "COPD exacerbation, diffuse wheezes, albuterol nebs, methylprednisolone IV.",
+  "Diabetic ketoacidosis, glucose 520, anion gap 24, insulin drip initiated.",
+  "Septic shock, lactate 4.2, norepinephrine, vancomycin and meropenem started."
+)
+cat("ICD-10 Code Suggestions:\n\n")
+for (note in test_notes) {
+  suggestions <- suggest_icd(note, top_k = 3)
+  cat(sprintf("  Note: '%s'\n", substr(note, 1, 60)))
+  purrr::pwalk(suggestions, function(code, desc, score) {
+    cat(sprintf("    %-8s (%.3f) — %s\n", code, score, desc))
+  })
+  cat("\n")
+}
+```
+
+## 3. Structured Medication Extraction
+
+```{r}
+drug_list <- sort(c(
+  "metoprolol", "carvedilol", "bisoprolol", "atenolol", "labetalol",
+  "lisinopril", "enalapril", "ramipril", "losartan", "valsartan", "sacubitril",
+  "amlodipine", "nifedipine", "diltiazem", "verapamil",
+  "furosemide", "torsemide", "spironolactone", "hydrochlorothiazide",
+  "warfarin", "rivaroxaban", "apixaban", "dabigatran", "edoxaban",
+  "aspirin", "clopidogrel", "ticagrelor", "prasugrel",
+  "heparin", "enoxaparin", "fondaparinux",
+  "digoxin", "amiodarone", "sotalol",
+  "atorvastatin", "rosuvastatin", "simvastatin", "pravastatin",
+  "nitroglycerin", "nitroprusside", "norepinephrine", "vasopressin",
+  "vancomycin", "linezolid", "ceftriaxone", "cefazolin", "cefepime",
+  "piperacillin-tazobactam", "meropenem", "imipenem", "ertapenem",
+  "azithromycin", "clarithromycin", "doxycycline", "ciprofloxacin", "levofloxacin",
+  "trimethoprim-sulfamethoxazole", "nitrofurantoin",
+  "metformin", "glipizide", "glimepiride", "empagliflozin", "dapagliflozin",
+  "sitagliptin", "liraglutide", "semaglutide",
+  "insulin", "insulin glargine", "insulin detemir", "insulin aspart", "insulin lispro",
+  "albuterol", "ipratropium", "tiotropium", "fluticasone", "salmeterol", "budesonide",
+  "prednisone", "methylprednisolone", "dexamethasone", "hydrocortisone",
+  "omeprazole", "pantoprazole", "lansoprazole", "famotidine",
+  "ondansetron", "metoclopramide", "acetaminophen", "ibuprofen", "ketorolac",
+  "morphine", "hydromorphone", "fentanyl", "oxycodone", "tramadol",
+  "midazolam", "lorazepam", "propofol", "dexmedetomidine",
+  "fluconazole", "micafungin", "acyclovir", "levothyroxine"
+), decreasing = TRUE, method = "radix")
+# Longest names first so "insulin glargine" matches before "insulin"
+drug_list <- drug_list[order(nchar(drug_list), decreasing = TRUE)]
+
+dose_unit <- "(?:mg|mcg|g|mL|units?|IU|mEq)"
+route_pat <- "(?:PO|IV|IM|SQ|SC|SL|inhaled|topical|PR)"
+freq_pat  <- "(?:QD|BID|TID|QID|QAM|QHS|q\\d+h|PRN|once daily|twice daily|daily|weekly)"
+drug_pat  <- paste0("\\b(", paste(stringr::str_replace_all(drug_list, "([\\W])", "\\\\\\1"),
+                                  collapse = "|"), ")\\b")
+med_pat <- paste0(
+  drug_pat,
+  "(?:[\\s,]+(\\d+(?:\\.\\d+)?)\\s*(", dose_unit, "))?",
+  "(?:[\\s,]+(", route_pat, "))?",
+  "(?:[\\s,]+(", freq_pat, "))?"
+)
+
+extract_meds <- function(text) {
+  m <- stringr::str_match_all(text, stringr::regex(med_pat, ignore_case = TRUE))[[1]]
+  if (nrow(m) == 0) {
+    return(tibble::tibble(drug = character(), dose = character(), unit = character(),
+                          route = character(), freq = character()))
+  }
+  out <- tibble::tibble(
+    drug  = tolower(m[, 2]),
+    dose  = ifelse(is.na(m[, 3]), "", stringr::str_squish(m[, 3])),
+    unit  = ifelse(is.na(m[, 4]), "", stringr::str_squish(m[, 4])),
+    route = toupper(ifelse(is.na(m[, 5]), "", m[, 5])),
+    freq  = toupper(ifelse(is.na(m[, 6]), "", m[, 6]))
+  )
+  dplyr::distinct(out, drug, .keep_all = TRUE)
+}
+
+test_med_notes <- c(
+  "Patient is on metoprolol 50 mg PO BID, lisinopril 10 mg PO QD, furosemide 40 mg PO QAM, warfarin 5 mg PO QD.",
+  "Started vancomycin 1250 mg IV q12h, piperacillin-tazobactam 4.5 g IV q8h, fluconazole 400 mg IV QD.",
+  "Insulin glargine 20 units SQ QHS, metformin 1000 mg PO BID, empagliflozin 10 mg PO QD."
+)
+cat("Structured medication extraction:\n\n")
+for (note in test_med_notes) {
+  meds <- extract_meds(note)
+  cat(sprintf("Note: '%s'\n", substr(note, 1, 65)))
+  purrr::pwalk(meds, function(drug, dose, unit, route, freq) {
+    cat(sprintf("  %-30s | %-6s %-6s | %-4s | %s\n", drug, dose, unit, route, freq))
+  })
+  cat("\n")
+}
+```
+
+## 4. Medication Reconciliation
+
+```{r}
+reconcile_medications <- function(admit_text, dc_text) {
+  admit_meds <- extract_meds(admit_text)
+  dc_meds    <- extract_meds(dc_text)
+  admit_set  <- admit_meds$drug
+  dc_set     <- dc_meds$drug
+  continued    <- sort(intersect(admit_set, dc_set))
+  discontinued <- sort(setdiff(admit_set, dc_set))
+  new_at_dc    <- sort(setdiff(dc_set, admit_set))
+  dose_changed <- continued[purrr::map_lgl(continued, function(d) {
+    a <- admit_meds$dose[admit_meds$drug == d]
+    b <- dc_meds$dose[dc_meds$drug == d]
+    nzchar(a) && nzchar(b) && a != b
+  })]
+  list(
+    continued = continued, discontinued = discontinued,
+    new_at_dc = new_at_dc, dose_changed = dose_changed,
+    admit_meds = admit_meds, dc_meds = dc_meds
+  )
+}
+
+admit_meds_text <- paste(
+  "metoprolol 50 mg PO BID, lisinopril 10 mg PO QD, furosemide 40 mg PO QAM,",
+  "warfarin 5 mg PO QD, atorvastatin 40 mg PO QHS, metformin 1000 mg PO BID, aspirin 81 mg PO QD."
+)
+dc_meds_text <- paste(
+  "metoprolol 25 mg PO BID, lisinopril 10 mg PO QD, furosemide 80 mg PO QAM,",
+  "rivaroxaban 20 mg PO QD, atorvastatin 40 mg PO QHS, metformin 1000 mg PO BID,",
+  "aspirin 81 mg PO QD, spironolactone 25 mg PO QD, sacubitril 24 mg PO BID."
+)
+
+recon <- reconcile_medications(admit_meds_text, dc_meds_text)
+cat("MEDICATION RECONCILIATION REPORT\n")
+cat(strrep("=", 55), "\n")
+cat(sprintf("Admission: %d meds | Discharge: %d meds\n",
+            nrow(recon$admit_meds), nrow(recon$dc_meds)))
+cat(sprintf("\nContinued (%d):\n", length(recon$continued)))
+for (m in recon$continued) cat(sprintf("  checkmark %s\n", m))
+cat(sprintf("\nDiscontinued (%d):\n", length(recon$discontinued)))
+for (m in recon$discontinued) cat(sprintf("  removed   %s\n", m))
+cat(sprintf("\nNew at discharge (%d):\n", length(recon$new_at_dc)))
+for (m in recon$new_at_dc) cat(sprintf("  added     %s\n", m))
+cat(sprintf("\nDose changed (%d):\n", length(recon$dose_changed)))
+for (m in recon$dose_changed) {
+  a <- recon$admit_meds[recon$admit_meds$drug == m, ]
+  d <- recon$dc_meds[recon$dc_meds$drug == m, ]
+  cat(sprintf("  changed   %s: %s %s -> %s %s\n",
+              m, a$dose, a$unit, d$dose, d$unit))
+}
+```
+
+## 5. Drug-Drug Interaction Checker
+
+```{r}
+ddi_ref <- tibble::tribble(
+  ~drug1,       ~drug2,          ~severity, ~message,
+  "warfarin",   "aspirin",       "HIGH", "Increased bleeding risk — monitor INR closely",
+  "warfarin",   "ciprofloxacin", "HIGH", "CYP2C9 inhibition — warfarin effect increased",
+  "warfarin",   "fluconazole",   "HIGH", "Azole antifungals inhibit warfarin metabolism",
+  "digoxin",    "amiodarone",    "HIGH", "Digoxin toxicity — reduce dose by 50%",
+  "heparin",    "enoxaparin",    "HIGH", "Concurrent anticoagulants — serious bleeding risk",
+  "metformin",  "contrast",      "MOD",  "Hold 48h post-contrast — nephropathy risk",
+  "lisinopril", "spironolactone","MOD",  "Hyperkalaemia risk — monitor K+ closely",
+  "metoprolol", "diltiazem",     "MOD",  "Additive bradycardia and hypotension",
+  "aspirin",    "ibuprofen",     "MOD",  "NSAIDs reduce aspirin cardioprotection"
+)
+
+check_ddi <- function(medication_list) {
+  med_names <- unique(tolower(medication_list$drug))
+  ddi_ref |>
+    dplyr::filter(drug1 %in% med_names, drug2 %in% med_names)
+}
+
+complex_note <- paste(
+  "warfarin 5 mg QD, aspirin 81 mg QD, metformin 500 mg BID,",
+  "lisinopril 10 mg QD, spironolactone 25 mg QD, digoxin 0.125 mg QD,",
+  "amiodarone 200 mg QD, fluconazole 400 mg IV QD."
+)
+meds_list <- extract_meds(complex_note)
+interactions <- check_ddi(meds_list)
+cat(sprintf("Medications: %s\n", paste(meds_list$drug, collapse = ", ")))
+cat(sprintf("\nDrug-Drug Interactions (%d flagged):\n\n", nrow(interactions)))
+purrr::pwalk(interactions, function(drug1, drug2, severity, message) {
+  icon <- if (severity == "HIGH") "HIGH_RISK" else "MOD_RISK"
+  cat(sprintf("  [%s] %s + %s\n", icon, drug1, drug2))
+  cat(sprintf("           %s\n", message))
+})
+```
+
+## 6. ICD-10 Code Validation
+
+```{r}
+validate_icd <- function(code) {
+  code <- toupper(stringr::str_squish(as.character(code)))
+  valid <- stringr::str_detect(code, "^[A-Z]\\d{2}(\\.\\d{0,4})?$")
+  match <- icd10_ref[icd10_ref$code == code, ]
+  list(
+    code = code,
+    valid_format = valid,
+    in_reference = nrow(match) > 0,
+    desc = if (nrow(match) > 0) match$desc[1] else "Not in reference"
+  )
+}
+
+test_codes <- c("I50.9", "E11.10", "A41.9", "INVALID", "I10", "XYZ1",
+                "J44.1", "N17.9", "I50.20")
+cat("ICD-10 Code Validation:\n\n")
+cat(sprintf("%-10s %-10s %-8s %s\n", "Code", "Format", "In Ref", "Description"))
+cat(strrep("-", 65), "\n")
+for (code in test_codes) {
+  r <- validate_icd(code)
+  fmt <- if (r$valid_format) "Valid" else "INVALID"
+  ref <- if (r$in_reference) "Yes" else "No"
+  cat(sprintf("  %-8s %-10s %-8s %s\n", code, fmt, ref, substr(r$desc, 1, 45)))
+}
+```
+
+## 7. Medication Completeness Audit
+
+```{r}
+completeness_audit <- function(text) {
+  meds <- extract_meds(text)
+  complete   <- meds[nzchar(meds$freq) | nzchar(meds$route), ]
+  incomplete <- meds[!nzchar(meds$freq) & !nzchar(meds$route), ]
+  cat(sprintf("Total medications : %d\n", nrow(meds)))
+  cat(sprintf("Complete records  : %d\n", nrow(complete)))
+  cat(sprintf("Incomplete records: %d\n", nrow(incomplete)))
+  if (nrow(incomplete) > 0) {
+    cat("\nMedications missing route AND frequency:\n")
+    purrr::pwalk(incomplete, function(drug, dose, unit, ...) {
+      cat(sprintf("  %-25s dose=%s %s -- INCOMPLETE\n", drug, dose, unit))
+    })
+  }
+  incomplete
+}
+
+sample <- paste(
+  "Patient is on atorvastatin 40 mg, metformin 500 mg PO BID,",
+  "aspirin 81 mg, lisinopril 10 mg PO QD, furosemide."
+)
+completeness_audit(sample)
+```
+
+## 8. Knowledge Check
+1. ICD-10 suggester gives I50.9 for EF=30%, systolic dysfunction. Is I50.20 more specific? Why does specificity matter for DRG billing?
+2. Your medication extractor misses 'Lasix 40 mg' (brand name). How do you fix this?
+3. Reconciliation found warfarin discontinued, rivaroxaban added. What clinical monitoring is needed at the transition?
+4. DDI checker flags warfarin + aspirin HIGH — but this combination is sometimes intentional. How do you handle this in a real system?
+5. Add route-specific dose validation: oral doses should not exceed typical maximum; flag outliers.
+
+```{r}
+# Exercise 5 — dose range validation
+dose_limits_oral <- list(
+  metformin    = c(250, 2550),
+  furosemide   = c(20, 600),
+  lisinopril   = c(2.5, 40),
+  warfarin     = c(1, 15),
+  aspirin      = c(81, 325),
+  atorvastatin = c(10, 80)
+)
+
+validate_doses <- function(text) {
+  meds <- extract_meds(text)
+  flags <- list()
+  for (i in seq_len(nrow(meds))) {
+    m <- meds[i, ]
+    if (m$drug %in% names(dose_limits_oral) && nzchar(m$dose) &&
+        m$route %in% c("PO", "")) {
+      dose <- suppressWarnings(as.numeric(m$dose))
+      if (is.na(dose)) next
+      lim <- dose_limits_oral[[m$drug]]
+      if (!(lim[1] <= dose && dose <= lim[2])) {
+        flags[[length(flags) + 1]] <- tibble::tibble(
+          drug = m$drug, dose = dose, unit = m$unit,
+          expected = sprintf("%s-%s mg", lim[1], lim[2]),
+          flag = if (dose > lim[2]) "ABOVE MAX" else "BELOW MIN"
+        )
+      }
+    }
+  }
+  if (length(flags) == 0) {
+    return(tibble::tibble(drug = character(), dose = numeric(), unit = character(),
+                          expected = character(), flag = character()))
+  }
+  dplyr::bind_rows(flags)
+}
+
+test_doses <- paste(
+  "metformin 3000 mg PO BID, furosemide 20 mg PO QD,",
+  "aspirin 81 mg PO QD, lisinopril 80 mg PO QD, warfarin 5 mg PO QD."
+)
+flags <- validate_doses(test_doses)
+cat(sprintf("Dose validation flags (%d found):\n", nrow(flags)))
+purrr::pwalk(flags, function(drug, dose, unit, expected, flag) {
+  cat(sprintf("  WARNING: %-15s %s %-5s -- %s (expected %s)\n",
+              drug, dose, unit, flag, expected))
+})
+```
+
+***
+**Next → NB-07: Clinical Text Summarisation & Zero-Shot NLP**

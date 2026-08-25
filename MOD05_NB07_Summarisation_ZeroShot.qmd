@@ -1,0 +1,397 @@
+---
+title: "Summarisation & Zero-Shot NLP"
+subtitle: "Module 05 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 05: NLP for Clinical Text
+***
+**Learning objectives**
+- Apply TextRank extractive summarisation to discharge summaries
+- Build LSA-based and section-aware summarisers
+- Evaluate with ROUGE-1, ROUGE-2, ROUGE-L
+- Design clinical LLM prompt templates
+- Build a zero-shot TF-IDF triage classifier
+
+**Estimated time:** 3 hours | **Level:** Advanced | **Libraries:** `quanteda`, `tidytext`, `stringr`
+
+## 1. Setup & Discharge Summary
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(quanteda)
+library(tidytext)
+library(stringr)
+
+set.seed(42)
+mod05_dir <- file.path(tempdir(), "mod05")
+dir.create(mod05_dir, showWarnings = FALSE, recursive = TRUE)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+discharge_summary <- paste0(
+  "DISCHARGE SUMMARY\n\n",
+  "PATIENT: 67-year-old male with type 2 diabetes mellitus, hypertension, CKD stage 3.\n\n",
+  "ADMITTING DIAGNOSIS: Acute decompensated heart failure.\n\n",
+  "HISTORY OF PRESENT ILLNESS: Patient presented with three days of progressive dyspnea, ",
+  "bilateral lower extremity edema, and orthopnea. Weight increased by 8 pounds. Denied chest pain.\n\n",
+  "HOSPITAL COURSE: BNP was elevated at 1450. Echocardiogram showed EF 30 percent with moderate ",
+  "mitral regurgitation. IV furosemide 80 mg twice daily achieved 3.5 liters negative fluid balance. ",
+  "Weight decreased from 98 to 94 kg. Lisinopril uptitrated to 20 mg. Carvedilol increased to 12.5 mg. ",
+  "Sacubitril-valsartan initiated. Creatinine rose to 1.9 then returned to 1.5 by discharge.\n\n",
+  "LABS: Admission BNP 1450, creatinine 1.6, sodium 136, potassium 3.8. ",
+  "Discharge BNP 620, creatinine 1.5, sodium 139, potassium 4.1.\n\n",
+  "DISCHARGE DIAGNOSES: 1. Acute decompensated systolic heart failure EF 30 percent. ",
+  "2. Type 2 diabetes. 3. CKD stage 3. 4. Hypertension. 5. Mitral regurgitation.\n\n",
+  "DISCHARGE MEDICATIONS: Sacubitril-valsartan 24/26 mg twice daily (new). ",
+  "Carvedilol 12.5 mg twice daily (increased). Furosemide 40 mg daily (reduced). ",
+  "Spironolactone 25 mg daily (new). Metformin 500 mg twice daily. Aspirin 81 mg daily.\n\n",
+  "FOLLOW-UP: Cardiology in 1 week. Primary care in 2 weeks. Daily weights, call if up 3 pounds.\n\n",
+  "CONDITION AT DISCHARGE: Stable, ambulatory, euvolemic."
+)
+cat(sprintf("Summary: %d chars, %d words\n",
+            nchar(discharge_summary),
+            length(strsplit(discharge_summary, "\\s+")[[1]])))
+```
+
+## 2. TextRank Extractive Summarisation
+
+Sentence scoring with tidytext / quanteda TF-IDF and a PageRank-style iteration (TextRank analogue). `lexRankr` implements the same algorithm if you prefer a package wrapper.
+
+```{r}
+stops <- c(quanteda::stopwords("en"),
+           "patient", "mg", "daily", "was", "were", "the", "a", "an",
+           "admission", "discharge", "history", "hospital", "noted")
+
+split_sentences <- function(text) {
+  sents <- unlist(quanteda::tokens(text, what = "sentence"))
+  sents <- stringr::str_squish(sents)
+  n_words <- vapply(strsplit(sents, "\\s+"), length, integer(1))
+  sents[n_words > 5]
+}
+
+sentence_tfidf <- function(sents) {
+  toks <- quanteda::tokens(sents, remove_punct = TRUE) |>
+    quanteda::tokens_tolower() |>
+    quanteda::tokens_remove(stops)
+  quanteda::dfm_tfidf(quanteda::dfm(toks))
+}
+
+cosine_sim_mat <- function(mat) {
+  nrms <- sqrt(rowSums(mat^2)); nrms[nrms == 0] <- 1
+  Xn <- mat / nrms
+  sim <- tcrossprod(Xn)
+  diag(sim) <- 0
+  sim
+}
+
+textrank_summarise <- function(text, n_sents = 5) {
+  sents <- split_sentences(text)
+  if (length(sents) <= n_sents) {
+    return(list(sents = sents, scores = rep(1, length(sents))))
+  }
+  d <- sentence_tfidf(sents)
+  mat <- as.matrix(d)
+  if (nrow(mat) == 0 || ncol(mat) == 0) {
+    return(list(sents = sents[seq_len(n_sents)], scores = rep(1, n_sents)))
+  }
+  sim <- cosine_sim_mat(mat)
+  n <- nrow(sim)
+  scores <- rep(1 / n, n)
+  for (iter in seq_len(50)) {
+    rs <- rowSums(sim); rs[rs == 0] <- 1
+    trans <- t(sim / rs)
+    scores <- 0.15 / n + 0.85 * as.numeric(trans %*% scores)
+  }
+  top_idx <- sort(order(scores, decreasing = TRUE)[seq_len(n_sents)])
+  list(sents = sents[top_idx], scores = scores)
+}
+
+tr <- textrank_summarise(discharge_summary, n_sents = 5)
+cat("TextRank Summary (5 sentences):\n\n")
+for (i in seq_along(tr$sents)) {
+  cat(sprintf("[%d] %s\n", i, stringr::str_squish(tr$sents[i])))
+}
+```
+
+## 3. LSA-Based Summarisation
+
+```{r}
+lsa_summarise <- function(text, n_sents = 5, n_comp = 4) {
+  sents <- split_sentences(text)
+  if (length(sents) <= n_sents) return(sents)
+  d <- sentence_tfidf(sents)
+  X <- as.matrix(d)
+  n_comp <- min(n_comp, nrow(X) - 1, ncol(X) - 1)
+  if (n_comp < 1) return(sents[seq_len(n_sents)])
+  svd_fit <- svd(X, nu = n_comp, nv = n_comp)
+  X_r <- svd_fit$u %*% diag(svd_fit$d[seq_len(n_comp)], n_comp, n_comp)
+  scs <- sqrt(rowSums(X_r^2))
+  top_idx <- sort(order(scs, decreasing = TRUE)[seq_len(n_sents)])
+  sents[top_idx]
+}
+
+lsa_sents <- lsa_summarise(discharge_summary, n_sents = 5)
+cat("LSA-Based Summary (5 sentences):\n\n")
+for (i in seq_along(lsa_sents)) {
+  cat(sprintf("[%d] %s\n", i, stringr::str_squish(lsa_sents[i])))
+}
+```
+
+## 4. Section-Aware Summarisation
+
+```{r}
+section_weights <- c(
+  "DISCHARGE DIAGNOSES"   = 3.0,
+  "DISCHARGE MEDICATIONS" = 2.5,
+  "HOSPITAL COURSE"       = 2.0,
+  "FOLLOW-UP"             = 1.5,
+  "LABS"                  = 1.0,
+  "ADMITTING DIAGNOSIS"   = 1.0,
+  "DISCHARGE CONDITION"   = 1.5
+)
+
+get_section <- function(pos, text) {
+  best <- "GENERAL"
+  best_pos <- -1
+  for (header in names(section_weights)) {
+    hp <- regexpr(header, toupper(text), fixed = TRUE)[1]
+    if (hp != -1 && hp < pos && hp > best_pos) {
+      best <- header
+      best_pos <- hp
+    }
+  }
+  best
+}
+
+section_aware_summarise <- function(text, n_sents = 6) {
+  sents <- split_sentences(text)
+  if (length(sents) <= n_sents) {
+    return(list(sents = sents, secs = rep("GENERAL", length(sents))))
+  }
+  d <- sentence_tfidf(sents)
+  ts <- as.numeric(rowSums(as.matrix(d)))
+  weighted <- numeric(length(sents))
+  secs <- character(length(sents))
+  for (i in seq_along(sents)) {
+    pos <- regexpr(sents[i], text, fixed = TRUE)[1]
+    if (pos == -1) pos <- 1
+    sec <- get_section(pos, text)
+    w <- if (sec %in% names(section_weights)) section_weights[[sec]] else 0.5
+    weighted[i] <- ts[i] * w
+    secs[i] <- sec
+  }
+  top_idx <- sort(order(weighted, decreasing = TRUE)[seq_len(n_sents)])
+  list(sents = sents[top_idx], secs = secs[top_idx])
+}
+
+sa <- section_aware_summarise(discharge_summary, n_sents = 6)
+cat("Section-Aware Summary (6 sentences):\n\n")
+for (i in seq_along(sa$sents)) {
+  cat(sprintf("  [%-22s] %s\n",
+              substr(sa$secs[i], 1, 22),
+              substr(stringr::str_squish(sa$sents[i]), 1, 75)))
+}
+```
+
+## 5. ROUGE Evaluation
+
+```{r}
+get_ngrams <- function(text, n) {
+  toks <- stringr::str_extract_all(tolower(text), "\\b\\w+\\b")[[1]]
+  if (length(toks) < n) return(character())
+  vapply(seq_len(length(toks) - n + 1), function(i) {
+    paste(toks[i:(i + n - 1)], collapse = " ")
+  }, character(1))
+}
+
+rouge_n <- function(hyp, ref, n = 1) {
+  h <- get_ngrams(hyp, n)
+  r <- get_ngrams(ref, n)
+  if (length(r) == 0) return(list(p = 0, r = 0, f1 = 0))
+  hc <- table(h); rc <- table(r)
+  ov <- sum(purrr::map_dbl(names(rc), function(ng) {
+    min(if (ng %in% names(hc)) as.numeric(hc[[ng]]) else 0, as.numeric(rc[[ng]]))
+  }))
+  p  <- if (length(h) > 0) ov / length(h) else 0
+  re <- ov / length(r)
+  f1 <- if ((p + re) > 0) 2 * p * re / (p + re) else 0
+  list(p = round(p, 4), r = round(re, 4), f1 = round(f1, 4))
+}
+
+rouge_l <- function(hyp, ref) {
+  h <- stringr::str_extract_all(tolower(hyp), "\\b\\w+\\b")[[1]]
+  r <- stringr::str_extract_all(tolower(ref), "\\b\\w+\\b")[[1]]
+  m <- length(h); n <- length(r)
+  dp <- matrix(0, m + 1, n + 1)
+  if (m > 0 && n > 0) {
+    for (i in seq_len(m)) {
+      for (j in seq_len(n)) {
+        dp[i + 1, j + 1] <- if (h[i] == r[j]) dp[i, j] + 1 else max(dp[i, j + 1], dp[i + 1, j])
+      }
+    }
+  }
+  lcs <- dp[m + 1, n + 1]
+  p  <- if (m > 0) lcs / m else 0
+  re <- if (n > 0) lcs / n else 0
+  f1 <- if ((p + re) > 0) 2 * p * re / (p + re) else 0
+  list(p = round(p, 4), r = round(re, 4), f1 = round(f1, 4))
+}
+
+reference <- paste(
+  "67-year-old male heart failure ejection fraction 30 percent admitted acute decompensation.",
+  "IV furosemide diuresis BNP improved 1450 to 620. New medications sacubitril-valsartan spironolactone.",
+  "Creatinine stable 1.5 at discharge. Cardiology follow-up one week."
+)
+methods <- list(
+  "TextRank (5)" = paste(tr$sents, collapse = " "),
+  "LSA (5)"      = paste(lsa_sents, collapse = " "),
+  "Section (6)"  = paste(sa$sents, collapse = " ")
+)
+cat("ROUGE Evaluation vs Human Reference:\n\n")
+cat(sprintf("%-18s  %8s  %8s  %8s\n", "Method", "R1-F1", "R2-F1", "RL-F1"))
+cat(strrep("-", 48), "\n")
+rouge_df <- purrr::imap_dfr(methods, function(hyp, name) {
+  r1 <- rouge_n(hyp, reference, 1)
+  r2 <- rouge_n(hyp, reference, 2)
+  rl <- rouge_l(hyp, reference)
+  cat(sprintf("  %-16s  %8.4f  %8.4f  %8.4f\n", name, r1$f1, r2$f1, rl$f1))
+  tibble::tibble(Method = name, `R1-F1` = r1$f1, `R2-F1` = r2$f1, `RL-F1` = rl$f1)
+})
+print(rouge_df)
+```
+
+## 6. LLM Prompt Templates for Clinical Tasks
+
+```{r}
+prompts <- list(
+  summarise_discharge = paste0(
+    "You are a clinical documentation specialist.\n",
+    "Summarise the discharge summary into 5 concise sentences covering:\n",
+    "primary diagnosis, key treatments, significant lab trends, ",
+    "new medications, and critical follow-up.\n\n",
+    "DISCHARGE SUMMARY:\n{text}\n\nSTRUCTURED SUMMARY:"
+  ),
+  extract_diagnoses = paste0(
+    "Extract all diagnoses from the clinical note as a JSON array.\n",
+    "Each element: {{diagnosis, icd10_suggestion, certainty}}.\n\n",
+    "CLINICAL NOTE:\n{text}\n\nJSON OUTPUT:"
+  ),
+  clinical_triage = paste0(
+    "Classify urgency as: IMMEDIATE / URGENT / SEMI-URGENT / ROUTINE.\n",
+    "Provide one sentence of rationale.\n\n",
+    "CLINICAL DESCRIPTION:\n{text}\n\nTRIAGE:"
+  )
+)
+
+cat("Clinical LLM Prompt Templates:\n\n")
+purrr::iwalk(prompts, function(template, task) {
+  filled <- stringr::str_replace(template, "\\{text\\}",
+                                 paste0(substr(discharge_summary, 1, 200), "..."))
+  cat(sprintf("Task: %s\n", task))
+  cat(sprintf("  Prompt length: %d chars\n", nchar(filled)))
+  cat(sprintf("  Preview: %s...\n\n", substr(filled, 1, 100)))
+})
+
+cat("httr2 / ellmer API integration pattern:\n")
+cat("  # library(ellmer)\n")
+cat("  # chat <- chat_anthropic(model = 'claude-sonnet-4-6')\n")
+cat("  # summary <- chat$chat(stringr::str_replace(\n")
+cat("  #   prompts$summarise_discharge, '{text}', note_text))\n")
+```
+
+## 7. Zero-Shot TF-IDF Triage Classifier
+
+Keyword / label similarity analogue of zero-shot NLI: cosine similarity between the note and triage-class descriptions.
+
+```{r}
+triage_descs <- c(
+  IMMEDIATE   = paste("cardiac arrest respiratory failure unresponsive SpO2 below 85 BP below 70",
+                      "active hemorrhage STEMI severe respiratory distress cyanosis anaphylaxis"),
+  URGENT      = paste("chest pain active angina dyspnea rest SpO2 92 altered mental status",
+                      "new neurological deficit uncontrolled pain severe hypertension fever sepsis"),
+  SEMI_URGENT = paste("moderate pain stable vital signs mild dyspnea worsening chronic condition",
+                      "urinary symptoms mild infection stable arrhythmia elevated glucose"),
+  ROUTINE     = paste("prescription refill follow-up chronic stable lab results review",
+                      "medication adjustment preventive care no acute distress")
+)
+
+zero_shot_triage <- function(text) {
+  all_texts <- c(unname(triage_descs), text)
+  toks <- quanteda::tokens(all_texts, remove_punct = TRUE) |>
+    quanteda::tokens_tolower() |>
+    quanteda::tokens_ngrams(n = 1:2)
+  d <- quanteda::dfm_tfidf(quanteda::dfm(toks))
+  mat <- as.matrix(d)
+  nrms <- sqrt(rowSums(mat^2)); nrms[nrms == 0] <- 1
+  Xn <- mat / nrms
+  scores <- as.numeric(Xn[nrow(Xn), ] %*% t(Xn[-nrow(Xn), , drop = FALSE]))
+  names(scores) <- names(triage_descs)
+  sort(scores, decreasing = TRUE)
+}
+
+triage_cases <- c(
+  "Patient found unresponsive, no pulse, CPR initiated.",
+  "67yo chest pain 7/10 radiating to left arm, diaphoretic, EKG ST elevation.",
+  "45yo BP 190/110, severe headache, visual changes, no focal neuro deficit.",
+  "72yo increasing shortness of breath x3 days, orthopnea, bilateral leg swelling.",
+  "32yo requests metformin refill, sugars 150-200, last visit 3 months ago."
+)
+cat("Zero-Shot Triage Classification:\n\n")
+for (case in triage_cases) {
+  results <- zero_shot_triage(case)
+  cat(sprintf("  Case: '%s'\n", substr(case, 1, 60)))
+  cat(sprintf("  => %s (score=%.3f)\n", names(results)[1], results[1]))
+  for (i in 2:length(results)) {
+    bar <- strrep("\u2588", max(0, as.integer(results[i] * 25)))
+    cat(sprintf("     %-12s %s %.3f\n", names(results)[i], bar, results[i]))
+  }
+  cat("\n")
+}
+```
+
+## 8. Knowledge Check
+1. TextRank ROUGE-1 F1=0.42. What baseline would you compare against (e.g. lead-1)?
+2. The section-aware method weighted DISCHARGE DIAGNOSES at 3.0. What justifies this?
+3. Zero-shot triage classified chest pain as SEMI-URGENT. What safety implications?
+4. Abstractive LLM summarisation can hallucinate clinical facts. Describe two validation strategies.
+5. Implement a lead-1 baseline: use the first sentence of each major section.
+
+```{r}
+lead_baseline <- function(text) {
+  headers <- c("ADMITTING DIAGNOSIS", "HOSPITAL COURSE", "DISCHARGE DIAGNOSES",
+               "DISCHARGE MEDICATIONS", "FOLLOW-UP", "DISCHARGE CONDITION")
+  sents <- character()
+  for (h in headers) {
+    pos <- regexpr(h, toupper(text), fixed = TRUE)[1]
+    if (pos == -1) next
+    rest <- substr(text, pos, min(nchar(text), pos + 299))
+    for (line in strsplit(rest, "\\.")[[1]]) {
+      line <- stringr::str_squish(line)
+      if (length(strsplit(line, "\\s+")[[1]]) > 5) {
+        sents <- c(sents, paste0(line, "."))
+        break
+      }
+    }
+  }
+  sents
+}
+
+lead_sents <- lead_baseline(discharge_summary)
+hyp_lead <- paste(lead_sents, collapse = " ")
+rl <- rouge_l(hyp_lead, reference)
+r1 <- rouge_n(hyp_lead, reference, 1)
+cat(sprintf("Lead-section baseline: ROUGE-1 F1=%.4f | ROUGE-L F1=%.4f\n\n", r1$f1, rl$f1))
+for (s in lead_sents) cat(sprintf("  %s\n", substr(stringr::str_squish(s), 1, 80)))
+```
+
+***
+**Next → NB-08: Capstone — End-to-End Clinical NLP Pipeline**

@@ -1,0 +1,375 @@
+---
+title: "Clinical Model Evaluation"
+subtitle: "Module 04 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 04: Machine Learning for Clinical Prediction
+***
+**Learning objectives**
+- Choose the right evaluation metric for imbalanced clinical outcomes
+- Interpret AUC-ROC, Precision-Recall, Brier score, and net benefit together
+- Plot and interpret calibration curves; apply Platt scaling and isotonic regression
+- Compute Decision Curve Analysis (DCA) and net benefit at clinical thresholds
+- Build a comprehensive evaluation report with confidence intervals
+
+**Estimated time:** 2.5 hours | **Level:** Advanced | **Libraries:** `tidymodels`, `yardstick`, `pROC`, `ggplot2`
+
+## 1. Setup, Dataset & Models
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(ranger)
+library(xgboost)
+library(pROC)
+library(patchwork)
+tidymodels_prefer()
+set.seed(42)
+
+mod04_dir <- file.path(tempdir(), "mod04")
+dir.create(mod04_dir, showWarnings = FALSE, recursive = TRUE)
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+col_blue <- "#2563EB"; col_red <- "#DC2626"; col_green <- "#16A34A"
+col_navy <- "#1E3A8A"
+colors_m <- c("Logistic Reg" = col_green, "Random Forest" = col_blue, "Grad Boosting" = col_red)
+
+auc_prob   <- function(y, p) yardstick::roc_auc_vec(factor(y, levels = c(0, 1)), p, event_level = "second")
+ap_prob    <- function(y, p) yardstick::pr_auc_vec(factor(y, levels = c(0, 1)), p, event_level = "second")
+brier_prob <- function(y, p) mean((p - y)^2)
+
+set.seed(42); N <- 3000
+sig <- function(x) 1 / (1 + exp(-x))
+clip <- function(x, lo, hi) pmin(pmax(x, lo), hi)
+b <- matrix(rnorm(N * 4), ncol = 4); set.seed(99)
+age <- as.integer(clip(rnorm(N, 62, 15), 18, 92))
+sex <- sample(c("M", "F"), N, replace = TRUE, prob = c(0.48, 0.52))
+payer <- sample(c("Medicare", "Medicaid", "Private", "Self-pay", "Other"),
+                N, replace = TRUE, prob = c(0.40, 0.22, 0.28, 0.07, 0.03))
+admit_type <- sample(c("Emergency", "Elective", "Urgent"),
+                     N, replace = TRUE, prob = c(0.52, 0.30, 0.18))
+los_days <- as.integer(clip(round(rgamma(N, shape = 2.5, scale = 1.8)), 1, 30))
+diabetes <- rbinom(N, 1, sig(0.6 * b[, 1] - 0.5 + 0.02 * (age - 62) / 15))
+hypertension <- rbinom(N, 1, sig(0.7 * b[, 1] - 0.2))
+hf <- rbinom(N, 1, sig(0.4 * b[, 2] + 0.5 * hypertension - 1.5))
+copd <- rbinom(N, 1, sig(0.5 * b[, 3] - 1.0))
+ckd <- rbinom(N, 1, sig(0.5 * b[, 1] + 0.6 * diabetes - 1.2))
+obesity <- rbinom(N, 1, sig(0.5 * b[, 1] - 0.8))
+depression <- rbinom(N, 1, sig(0.3 * b[, 4] - 1.4))
+n_comorb <- diabetes + hypertension + hf + copd + ckd
+set.seed(21)
+glucose <- round(clip(rnorm(N, 105 + 15 * diabetes, 28), 50, 400), 1)
+creatinine <- round(clip(rgamma(N, shape = 1.6 + 0.8 * hf, scale = 0.6), 0.4, 10), 2)
+hba1c <- round(clip(rnorm(N, 6.5 + 0.8 * diabetes, 1.4), 4, 14), 1)
+sbp <- round(clip(rnorm(N, 128 + 12 * hypertension, 18), 80, 200), 0)
+bmi <- round(clip(rnorm(N, 28 + 4 * obesity, 6), 15, 55), 1)
+logit <- (-3.2 + 0.6 * hf + 0.5 * diabetes + 0.5 * ckd + 0.3 * copd +
+            0.02 * (age - 62) / 15 +
+            0.3 * as.integer(admit_type == "Emergency") +
+            0.25 * as.integer(payer == "Medicaid") +
+            0.2 * as.integer(los_days > 7) +
+            0.5 * hf * diabetes + rnorm(N, 0, 0.25))
+readmitted <- rbinom(N, 1, sig(logit))
+df <- tibble(
+  age, sex, payer, admit_type, los_days,
+  diabetes, hypertension, hf, copd, ckd, obesity, depression, n_comorb,
+  glucose, creatinine, hba1c, sbp, bmi, readmitted
+)
+df$los_gt7 <- as.integer(df$los_days > 7)
+NUMERIC <- c("age", "los_days", "n_comorb", "glucose", "creatinine", "hba1c", "sbp", "bmi")
+BINARY <- c("diabetes", "hypertension", "hf", "copd", "ckd", "obesity", "depression", "los_gt7")
+CATEGORIC <- c("sex", "payer", "admit_type")
+FEATURES <- c(NUMERIC, BINARY, CATEGORIC); TARGET <- "readmitted"
+
+set.seed(42)
+df_ml <- df %>%
+  select(all_of(c(FEATURES, TARGET))) %>%
+  mutate(readmitted = factor(readmitted, levels = c(0, 1)))
+sp_te  <- initial_split(df_ml, prop = 0.80, strata = readmitted)
+df_tr_all <- training(sp_te); df_te <- testing(sp_te)
+sp_cal <- initial_split(df_tr_all, prop = 0.80, strata = readmitted)
+df_tr2 <- training(sp_cal); df_cal <- testing(sp_cal)
+
+rec <- recipe(readmitted ~ ., data = df_tr2) %>%
+  step_impute_median(all_of(NUMERIC)) %>%
+  step_normalize(all_of(NUMERIC)) %>%
+  step_impute_median(all_of(BINARY)) %>%
+  step_impute_mode(all_of(CATEGORIC)) %>%
+  step_dummy(all_of(CATEGORIC), one_hot = TRUE)
+rec_prep <- prep(rec, training = df_tr2)
+bake_x <- function(d) bake(rec_prep, new_data = d) %>% select(-readmitted)
+Xtr_tbl <- bake_x(df_tr2); Xcal_tbl <- bake_x(df_cal); Xte_tbl <- bake_x(df_te)
+Xtr <- as.matrix(Xtr_tbl); Xcal <- as.matrix(Xcal_tbl); Xte <- as.matrix(Xte_tbl)
+y_tr2 <- as.integer(as.character(df_tr2$readmitted))
+y_cal  <- as.integer(as.character(df_cal$readmitted))
+y_te   <- as.integer(as.character(df_te$readmitted))
+
+# Logistic regression (balanced weights)
+w_lr <- ifelse(y_tr2 == 1, 0.5 / mean(y_tr2 == 1), 0.5 / mean(y_tr2 == 0))
+lr <- glm(y ~ ., data = Xtr_tbl %>% mutate(y = y_tr2), family = binomial, weights = w_lr)
+
+# Random forest
+cw <- c("0" = 1 / mean(y_tr2 == 0), "1" = 1 / mean(y_tr2 == 1))
+rf <- ranger(
+  readmitted ~ ., data = Xtr_tbl %>% mutate(readmitted = factor(y_tr2, levels = c(0, 1))),
+  probability = TRUE, num.trees = 200, max.depth = 10, class.weights = cw, seed = 42
+)
+
+# Gradient boosting via xgboost (parsnip analogue of GBM)
+dtrain <- xgb.DMatrix(Xtr, label = y_tr2)
+gb <- xgb.train(
+  params = list(objective = "binary:logistic", eval_metric = "auc",
+                eta = 0.05, max_depth = 4, subsample = 0.8, seed = 42, verbosity = 0),
+  data = dtrain, nrounds = 200, verbose = 0
+)
+
+fitted <- list("Logistic Reg" = lr, "Random Forest" = rf, "Grad Boosting" = gb)
+probs <- list(
+  "Logistic Reg"  = as.numeric(predict(lr, newdata = Xte_tbl, type = "response")),
+  "Random Forest" = predict(rf, data = Xte_tbl)$predictions[, "1"],
+  "Grad Boosting" = predict(gb, xgb.DMatrix(Xte))
+)
+cat("Models trained. Positive rate (test):", mean(y_te) * 100, "%\n")
+```
+
+## 2. AUC-ROC and Precision-Recall with Bootstrap CIs
+
+```{r}
+bootstrap_ci <- function(y_true, y_prob, metric_fn, n_boot = 1000, seed = 42) {
+  set.seed(seed)
+  n <- length(y_true)
+  scores <- replicate(n_boot, {
+    idx <- sample.int(n, n, replace = TRUE)
+    metric_fn(y_true[idx], y_prob[idx])
+  })
+  quantile(scores, c(0.025, 0.975))
+}
+
+summary_rows <- list()
+roc_all <- list(); pr_all <- list()
+for (name in names(probs)) {
+  prob <- probs[[name]]
+  auc  <- auc_prob(y_te, prob)
+  ap   <- ap_prob(y_te, prob)
+  brier <- brier_prob(y_te, prob)
+  auc_ci <- bootstrap_ci(y_te, prob, auc_prob)
+  ap_ci  <- bootstrap_ci(y_te, prob, ap_prob)
+  summary_rows[[name]] <- tibble(
+    Model = name, AUC = auc,
+    `AUC 95%CI` = sprintf("%.3f–%.3f", auc_ci[1], auc_ci[2]),
+    `Avg Prec` = ap,
+    `AP 95%CI` = sprintf("%.3f–%.3f", ap_ci[1], ap_ci[2]),
+    Brier = brier
+  )
+  roc_all[[name]] <- yardstick::roc_curve(
+    tibble(truth = factor(y_te, levels = c(0, 1)), .pred = prob),
+    truth, .pred, event_level = "second"
+  ) %>% mutate(Model = name, lab = sprintf("%s AUC=%.3f (%.3f–%.3f)",
+                                           name, auc, auc_ci[1], auc_ci[2]))
+  pr_all[[name]] <- yardstick::pr_curve(
+    tibble(truth = factor(y_te, levels = c(0, 1)), .pred = prob),
+    truth, .pred, event_level = "second"
+  ) %>% mutate(Model = name, lab = sprintf("%s AP=%.3f (%.3f–%.3f)",
+                                           name, ap, ap_ci[1], ap_ci[2]))
+}
+
+p_roc <- ggplot(bind_rows(roc_all), aes(1 - specificity, sensitivity, colour = Model)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_path(linewidth = 1) +
+  scale_colour_manual(values = colors_m) +
+  labs(x = "1-Specificity", y = "Sensitivity",
+       title = "ROC Curves with Bootstrap 95% CI") +
+  theme(legend.position = "bottom")
+
+p_pr <- ggplot(bind_rows(pr_all), aes(recall, precision, colour = Model)) +
+  geom_hline(yintercept = mean(y_te), colour = col_red, linetype = "dashed") +
+  geom_path(linewidth = 1) +
+  scale_colour_manual(values = colors_m) +
+  labs(x = "Recall", y = "Precision", title = "Precision-Recall Curves") +
+  theme(legend.position = "bottom")
+
+p_roc + p_pr
+ggsave(file.path(mod04_dir, "roc_pr_curves.png"), width = 15, height = 6, dpi = 120)
+print(bind_rows(summary_rows) %>% mutate(across(where(is.numeric), ~ round(.x, 4))))
+```
+
+## 3. Calibration Assessment & Recalibration
+
+```{r}
+calib_bins <- function(y, p, n_bins = 10) {
+  tibble(y = y, p = p) %>%
+    mutate(bin = ntile(p, n_bins)) %>%
+    group_by(bin) %>%
+    summarise(mean_pred = mean(p), frac_pos = mean(y), .groups = "drop")
+}
+
+platt_calibrate <- function(p_fit, y_fit, p_new) {
+  cal <- glm(y ~ p, data = tibble(y = y_fit, p = p_fit), family = binomial)
+  as.numeric(predict(cal, newdata = tibble(p = p_new), type = "response"))
+}
+iso_calibrate <- function(p_fit, y_fit, p_new) {
+  ord <- order(p_fit)
+  iso <- isoreg(p_fit[ord], y_fit[ord])
+  sf  <- as.stepfun(iso)
+  pmin(pmax(sf(p_new), 0), 1)
+}
+
+calib_plots <- imap(probs, function(prob, name) {
+  orig   <- calib_bins(y_te, prob)
+  plat_p <- platt_calibrate(prob, y_te, prob)
+  iso_p  <- iso_calibrate(prob, y_te, prob)
+  d <- bind_rows(
+    orig %>% mutate(method = "Uncalibrated"),
+    calib_bins(y_te, plat_p) %>% mutate(method = "Platt (sigmoid)"),
+    calib_bins(y_te, iso_p)  %>% mutate(method = "Isotonic")
+  )
+  brier_orig  <- brier_prob(y_te, prob)
+  brier_platt <- brier_prob(y_te, plat_p)
+  ggplot(d, aes(mean_pred, frac_pos, colour = method, shape = method)) +
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey30") +
+    geom_point(size = 2) + geom_line() +
+    scale_colour_manual(values = c("Uncalibrated" = colors_m[[name]],
+                                   "Platt (sigmoid)" = "#D97706",
+                                   "Isotonic" = "#7C3AED")) +
+    annotate("text", x = 0.05, y = 0.95,
+             label = sprintf("Brier: %.3f→%.3f", brier_orig, brier_platt),
+             hjust = 0, size = 3) +
+    labs(x = "Mean predicted", y = "Fraction positives", title = name, colour = NULL, shape = NULL) +
+    coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
+    theme(legend.position = "bottom")
+})
+
+calib_plots[[1]] + calib_plots[[2]] + calib_plots[[3]] +
+  plot_annotation(title = "Calibration plots — before and after recalibration")
+ggsave(file.path(mod04_dir, "calibration.png"), width = 16, height = 5, dpi = 120)
+```
+
+## 4. Decision Curve Analysis (DCA) — Net Benefit
+
+```{r}
+net_benefit <- function(y_true, y_prob, threshold) {
+  y_pred <- as.integer(y_prob >= threshold)
+  tp <- sum(y_pred == 1 & y_true == 1)
+  fp <- sum(y_pred == 1 & y_true == 0)
+  n  <- length(y_true)
+  odds <- threshold / (1 - threshold)
+  (tp - fp * odds) / n
+}
+
+thresholds <- seq(0.01, 0.50, length.out = 100)
+dca <- imap_dfr(probs, function(prob, name) {
+  tibble(threshold = thresholds,
+         nb = map_dbl(thresholds, ~ net_benefit(y_te, prob, .x)),
+         Model = name)
+})
+nb_all <- tibble(
+  threshold = thresholds,
+  nb = map_dbl(thresholds, ~ net_benefit(y_te, rep(1, length(y_te)), .x)),
+  Model = "Treat all"
+)
+
+ggplot() +
+  geom_line(data = dca, aes(threshold, nb, colour = Model), linewidth = 1) +
+  geom_line(data = nb_all, aes(threshold, nb), colour = "grey20",
+            linetype = "dotdash", linewidth = 0.8) +
+  geom_hline(yintercept = 0, colour = "grey50", linetype = "dashed") +
+  scale_colour_manual(values = colors_m) +
+  coord_cartesian(xlim = c(0, 0.50), ylim = c(-0.05, 0.15)) +
+  labs(x = "Threshold probability", y = "Net benefit per patient",
+       title = "Decision Curve Analysis (area above 'Treat all' and 'Treat none' = clinical utility)")
+ggsave(file.path(mod04_dir, "dca.png"), width = 10, height = 6, dpi = 120)
+cat("DCA interpretation:\n")
+cat("  Treat all  = refer every patient regardless of model\n")
+cat("  Treat none = refer no patient\n")
+cat("  Model curve above both lines at a given threshold = model adds clinical value\n")
+cat("  Choose threshold that matches your clinical tradeoff (e.g. intervention cost vs harm of missing)\n")
+```
+
+## 5. Threshold Selection for Clinical Deployment
+
+```{r}
+best_prob <- probs[["Grad Boosting"]]
+roc_df <- pROC::roc(y_te, best_prob, quiet = TRUE)
+fpr <- 1 - roc_df$specificities
+tpr <- roc_df$sensitivities
+thrs <- roc_df$thresholds
+# pROC thresholds are in decreasing score order; replace Inf/-Inf
+thrs[is.infinite(thrs)] <- ifelse(thrs[is.infinite(thrs)] > 0, 1, 0)
+
+pr_df <- yardstick::pr_curve(
+  tibble(truth = factor(y_te, levels = c(0, 1)), .pred = best_prob),
+  truth, .pred, event_level = "second"
+)
+precision_v <- pr_df$precision
+recall_v    <- pr_df$recall
+thrs_pr     <- pr_df$.threshold
+thrs_pr[is.infinite(thrs_pr)] <- 1
+
+# Three threshold strategies
+youden_thr <- thrs[which.max(tpr - fpr)]
+sens80_idx <- which(tpr >= 0.80)
+thr_sens80 <- if (length(sens80_idx)) thrs[sens80_idx[1]] else 0.5
+prec40_idx <- which(precision_v >= 0.40)
+thr_prec40 <- if (length(prec40_idx)) thrs_pr[prec40_idx[1]] else 0.5
+
+thresholds_clinical <- c(
+  "Youden's J (balanced)" = youden_thr,
+  "Sensitivity≥0.80"      = thr_sens80,
+  "Precision≥0.40"        = thr_prec40
+)
+
+cat(sprintf("%-30s %10s %8s %8s %8s %8s\n",
+            "Strategy", "Threshold", "Sens", "Spec", "PPV", "NPV"))
+cat(strrep("-", 70), "\n")
+for (strategy in names(thresholds_clinical)) {
+  thr <- as.numeric(thresholds_clinical[[strategy]])
+  y_pred <- as.integer(best_prob >= thr)
+  tp <- sum(y_pred == 1 & y_te == 1); fp <- sum(y_pred == 1 & y_te == 0)
+  tn <- sum(y_pred == 0 & y_te == 0); fn <- sum(y_pred == 0 & y_te == 1)
+  sens <- tp / (tp + fn); spec <- tn / (tn + fp)
+  ppv  <- if ((tp + fp) > 0) tp / (tp + fp) else 0
+  npv  <- if ((tn + fn) > 0) tn / (tn + fn) else 0
+  cat(sprintf("%-30s %10.3f %8.3f %8.3f %8.3f %8.3f\n",
+              strategy, thr, sens, spec, ppv, npv))
+}
+cat("\n")
+cat("Clinical guidance:\n")
+cat("  High sensitivity = fewer missed readmissions (prefer when intervention is cheap/safe)\n")
+cat("  High precision   = fewer unnecessary interventions (prefer when intervention is costly/harmful)\n")
+```
+
+## 6. Knowledge Check
+1. AUC=0.78 but Avg Precision=0.32. Why the large gap, and which is more informative here?
+2. The calibration plot shows the RF overestimates risk at high probabilities. What recalibration approach should you use?
+3. At threshold=0.20, GB model has net benefit > treat all. What does this mean clinically?
+4. A colleague insists on maximising AUC. Name two scenarios where this would be the wrong objective.
+5. Apply isotonic regression recalibration on the validation set and re-evaluate Brier score on the test set.
+
+```{r}
+# Exercise 5 — isotonic recalibration on val → test
+pred_val <- list(
+  "Logistic Reg"  = as.numeric(predict(lr, newdata = Xcal_tbl, type = "response")),
+  "Random Forest" = predict(rf, data = Xcal_tbl)$predictions[, "1"],
+  "Grad Boosting" = predict(gb, xgb.DMatrix(Xcal))
+)
+for (name in names(fitted)) {
+  prob_val  <- pred_val[[name]]
+  prob_test <- probs[[name]]
+  prob_recal <- iso_calibrate(prob_val, y_cal, prob_test)
+  brier_orig  <- brier_prob(y_te, prob_test)
+  brier_recal <- brier_prob(y_te, prob_recal)
+  cat(sprintf("%-20s: Brier %.4f → %.4f (change: %+.4f)\n",
+              name, brier_orig, brier_recal, brier_recal - brier_orig))
+}
+```
+
+***
+**Next → NB-05: Hyperparameter Tuning with `tune`**

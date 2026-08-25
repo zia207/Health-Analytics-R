@@ -1,0 +1,485 @@
+---
+title: "Quarto Documents for Health Reports"
+subtitle: "Module 08 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 08: Reproducible Research & Deployment
+***
+**Learning objectives**
+- Understand Quarto's role in reproducible health research reporting
+- Create multi-format Quarto documents (HTML, PDF, Word)
+- Build publication-quality figures with embedded captions and cross-references
+- Generate programmatic Table 1 with statistical tests
+- Apply Quarto callouts, tabs, and interactive elements
+- Use Quarto for journal submission workflows
+
+**Estimated time:** 2.5 hours | **Level:** Intermediate | **Libraries:** `ggplot2`, `dplyr`, `tidymodels`, `gt`, `patchwork`
+
+## 1. Setup & Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(patchwork)
+library(pROC)
+library(rsample)
+library(broom)
+library(gt)
+library(fs)
+
+mod08_dir <- file.path(tempdir(), "mod08")
+dir.create(mod08_dir, recursive = TRUE, showWarnings = FALSE)
+
+col_blue <- "#2563EB"
+col_red  <- "#DC2626"
+col_green <- "#16A34A"
+col_gold <- "#D4A017"
+
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.line        = element_line(colour = "grey40")
+    )
+)
+
+set.seed(42)
+N <- 2000
+df <- tibble(
+  patient_id = sprintf("PT-%05d", seq_len(N) - 1),
+  age        = as.integer(pmin(pmax(rnorm(N, 60, 15), 18), 90)),
+  los_days   = as.integer(pmin(pmax(rgamma(N, 2.5, scale = 1.8), 1), 30)),
+  diabetes   = rbinom(N, 1, 0.35),
+  hf         = rbinom(N, 1, 0.22),
+  smoking    = rbinom(N, 1, 0.25),
+  payer      = sample(
+    c("Medicare", "Medicaid", "Private", "Self-pay"),
+    N, replace = TRUE, prob = c(0.40, 0.22, 0.28, 0.10)
+  )
+)
+sigmoid <- function(x) 1 / (1 + exp(-x))
+logit <- -3.2 + 0.6 * df$hf + 0.5 * df$diabetes + 0.02 * (df$age - 60) +
+  0.2 * as.integer(df$los_days > 7)
+df$readmitted <- rbinom(N, 1, sigmoid(logit))
+cat(sprintf("Dataset: %d x %d | Readmission rate: %.1f%%\n",
+            nrow(df), ncol(df), mean(df$readmitted) * 100))
+```
+
+## 2. Quarto Document Structure
+
+A `.qmd` file is a Markdown file with YAML front matter and executable code chunks. This notebook *is* a Quarto document for R: you are looking at the same format you will use for journal-ready reports.
+
+````markdown
+---                          # YAML front matter (metadata)
+title: "Report Title"
+format: html
+engine: knitr
+
+## Section                   # Markdown content
+
+```{{r}}
+#| label: fig-roc            # Cross-referenceable label
+#| fig-cap: "ROC Curve"      # Caption
+plot_roc_curve()
+```
+
+See @fig-roc for the discrimination results.   # Auto-numbered cross-ref
+````
+
+**Key Quarto advantages over R Markdown / notebooks:**
+- Clean separation of code and output
+- Native multi-format (HTML/PDF/Word) from same source
+- Built-in bibliography (`.bib`) support
+- Cross-references, callouts, panel layouts
+- Version-control friendly (`.qmd` is plain text)
+- Knitr engine is first-class for R (`{r}` chunks, `echo`, `cache`, `fig-cap`)
+
+**Chunk options you will use constantly:**
+
+| Option | Purpose |
+|--------|---------|
+| `#\| label: fig-roc` | Cross-reference target (`@fig-roc`) |
+| `#\| fig-cap:` | Figure caption |
+| `#\| tbl-cap:` | Table caption |
+| `#\| echo: false` | Hide code in the rendered report |
+| `#\| cache: true` | Skip re-running unchanged chunks |
+| `#\| fig-width:` / `#\| fig-height:` | Figure size in inches |
+| `#\| message: false` | Suppress package startup messages |
+
+## 3. Quarto YAML Front Matter Template
+
+```{r}
+# The Quarto document template for health research reports (R / knitr)
+fence_r <- paste0(strrep("`", 3), "{r}")
+fence_end <- strrep("`", 3)
+
+QMD_TEMPLATE <- paste(
+  c(
+    "---",
+    "title: '30-Day Readmission Analysis Report'",
+    "subtitle: 'Health Analytics Division | Fiscal Year 2024'",
+    "author:",
+    "  - name: Dr. Data Analyst",
+    "    affiliation: Health System Analytics",
+    "    email: analyst@healthsystem.org",
+    "date: today",
+    "format:",
+    "  html:",
+    "    toc: true",
+    "    toc-depth: 3",
+    "    theme: cosmo",
+    "    embed-resources: true",
+    "    code-fold: true",
+    "    code-summary: 'Show code'",
+    "  pdf:",
+    "    documentclass: article",
+    "    geometry: margin=1in",
+    "    toc: true",
+    "  docx:",
+    "    reference-doc: templates/report_template.docx",
+    "execute:",
+    "  echo: false",
+    "  warning: false",
+    "  cache: true",
+    "engine: knitr",
+    "bibliography: references.bib",
+    "---",
+    "",
+    "## Executive Summary",
+    "",
+    "::: {.callout-note}",
+    "**Key Finding:** 30-day readmission rate was {{< readmit_rate >}}%, with highest risk",
+    "among patients with heart failure (OR {{< hf_or >}}, 95% CI {{< hf_ci >}}).",
+    ":::",
+    "",
+    "## Methods",
+    "",
+    fence_r,
+    "#| label: tbl-patient-characteristics",
+    "#| tbl-cap: 'Patient characteristics by readmission status'",
+    "# Table 1 code here (gtsummary / gt)",
+    fence_end,
+    "",
+    "## Results",
+    "",
+    fence_r,
+    "#| label: fig-roc-curve",
+    "#| fig-cap: 'ROC curve for 30-day readmission model'",
+    "#| fig-width: 8",
+    "#| fig-height: 5",
+    "# Figure code here (ggplot2)",
+    fence_end,
+    "",
+    "@fig-roc-curve shows model discrimination (AUC = 0.78, 95% CI: 0.74-0.81).",
+    "",
+    "## References",
+    "",
+    "::: {#refs}",
+    ":::"
+  ),
+  collapse = "\n"
+)
+cat("Quarto document template:\n")
+cat(substr(QMD_TEMPLATE, 1, 1200), "\n")
+qmd_path <- file.path(mod08_dir, "readmission_report.qmd")
+writeLines(QMD_TEMPLATE, qmd_path)
+cat("\nTemplate written to:", qmd_path, "\n")
+```
+
+## 4. Publication-Quality Figures (300 dpi)
+
+```{r}
+set.seed(42)
+split <- initial_split(df, prop = 0.8, strata = readmitted)
+train <- training(split)
+test  <- testing(split)
+
+fit <- glm(
+  readmitted ~ age + los_days + diabetes + hf + smoking,
+  data = train, family = binomial()
+)
+prob <- predict(fit, newdata = test, type = "response")
+auc  <- as.numeric(pROC::auc(test$readmitted, prob, quiet = TRUE))
+roc_obj <- pROC::roc(test$readmitted, prob, quiet = TRUE)
+roc_df <- tibble(fpr = 1 - roc_obj$specificities, tpr = roc_obj$sensitivities)
+
+# Panel A — ROC
+p_a <- ggplot(roc_df, aes(fpr, tpr)) +
+  geom_ribbon(aes(ymin = 0, ymax = tpr), fill = col_red, alpha = 0.10) +
+  geom_line(colour = col_red, linewidth = 1.1) +
+  geom_abline(linetype = "dashed") +
+  labs(x = "1 - Specificity", y = "Sensitivity",
+       title = "A  ROC Curve", subtitle = sprintf("AUC = %.3f", auc))
+
+# Panel B — Score distribution
+score_df <- tibble(prob = prob, readmitted = factor(test$readmitted,
+                     labels = c("Not readmitted", "Readmitted")))
+p_b <- ggplot(score_df, aes(prob, fill = readmitted)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 25, alpha = 0.65,
+                 position = "identity") +
+  scale_fill_manual(values = c(col_blue, col_red)) +
+  labs(x = "Predicted probability", y = "Density",
+       title = "B  Score Distribution", fill = NULL)
+
+# Panel C — Readmission by factor
+baseline <- mean(df$readmitted) * 100
+factor_rates <- tibble(
+  feature = c("HF", "Diabetes", "Smoking", "LOS>7d", "Age>70"),
+  rate = c(
+    mean(df$readmitted[df$hf == 1]),
+    mean(df$readmitted[df$diabetes == 1]),
+    mean(df$readmitted[df$smoking == 1]),
+    mean(df$readmitted[df$los_days > 7]),
+    mean(df$readmitted[df$age > 70])
+  ) * 100
+) %>%
+  mutate(col = if_else(rate > baseline + 3, col_red, col_blue))
+p_c <- ggplot(factor_rates, aes(rate, reorder(feature, rate), fill = col)) +
+  geom_col(alpha = 0.85, colour = "white") +
+  geom_vline(xintercept = baseline, linetype = "dashed") +
+  scale_fill_identity() +
+  labs(x = "30-day readmission rate (%)", y = NULL,
+       title = "C  Readmission by Factor")
+
+# Panel D — Payer analysis
+payer_rates <- df %>%
+  group_by(payer) %>%
+  summarise(rate = mean(readmitted) * 100, .groups = "drop") %>%
+  arrange(desc(rate)) %>%
+  mutate(payer = factor(payer, levels = payer),
+         col = c(col_red, col_gold, col_blue, col_green))
+p_d <- ggplot(payer_rates, aes(payer, rate, fill = col)) +
+  geom_col(alpha = 0.85, colour = "white") +
+  geom_hline(yintercept = baseline, linetype = "dashed") +
+  geom_text(aes(label = sprintf("%.1f%%", rate)), vjust = -0.3, size = 3) +
+  scale_fill_identity() +
+  labs(x = NULL, y = "Readmission rate (%)", title = "D  Readmission by Payer") +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1))
+
+# Panel E — Feature importance (log-odds coefficients)
+coefs <- broom::tidy(fit) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(col = if_else(estimate > 0, col_red, col_blue))
+p_e <- ggplot(coefs, aes(estimate, reorder(term, estimate), fill = col)) +
+  geom_col(alpha = 0.85, colour = "white") +
+  geom_vline(xintercept = 0, linewidth = 0.4) +
+  scale_fill_identity() +
+  labs(x = "Log-odds coefficient", y = NULL, title = "E  Model Coefficients")
+
+# Panel F — LOS distribution
+p_f <- ggplot(df, aes(los_days, fill = factor(readmitted,
+                     labels = c("Not readmitted", "Readmitted")))) +
+  geom_histogram(aes(y = after_stat(density)), bins = 20, alpha = 0.6,
+                 position = "identity") +
+  scale_fill_manual(values = c(col_blue, col_red)) +
+  labs(x = "Length of Stay (days)", y = "Density",
+       title = "F  LOS Distribution", fill = NULL)
+
+fig1 <- (p_a | p_b | p_c) / (p_d | p_e | p_f) +
+  plot_annotation(
+    title = "30-Day Hospital Readmission Analysis Report",
+    subtitle = "Figure 1: Key Results Summary"
+  )
+print(fig1)
+ggsave(file.path(mod08_dir, "quarto_figure1.png"), fig1,
+       width = 18, height = 10, dpi = 300, bg = "white")
+cat(sprintf("Publication figure saved at 300 dpi | AUC=%.3f\n", auc))
+```
+
+## 5. Programmatic Table 1
+
+```{r}
+# Generate publication-ready Table 1 (patient characteristics)
+table1_row_continuous <- function(df_all, col, group_col = "readmitted", label = NULL) {
+  label <- label %||% col
+  overall <- sprintf("%.1f (%.1f)", mean(df_all[[col]]), sd(df_all[[col]]))
+  g0 <- df_all[[col]][df_all[[group_col]] == 0]
+  g1 <- df_all[[col]][df_all[[group_col]] == 1]
+  p  <- wilcox.test(g0, g1, alternative = "two.sided")$p.value
+  tibble(
+    Variable = label, Overall = overall,
+    `Not Readmitted` = sprintf("%.1f (%.1f)", mean(g0), sd(g0)),
+    Readmitted = sprintf("%.1f (%.1f)", mean(g1), sd(g1)),
+    `p-value` = sprintf("%.3f", p)
+  )
+}
+
+table1_row_binary <- function(df_all, col, group_col = "readmitted", label = NULL) {
+  label <- label %||% col
+  overall <- sprintf("%.1f%%", mean(df_all[[col]]) * 100)
+  g0 <- df_all[[col]][df_all[[group_col]] == 0]
+  g1 <- df_all[[col]][df_all[[group_col]] == 1]
+  ct <- table(df_all[[col]], df_all[[group_col]])
+  p  <- chisq.test(ct)$p.value
+  tibble(
+    Variable = label, Overall = overall,
+    `Not Readmitted` = sprintf("%.1f%%", mean(g0) * 100),
+    Readmitted = sprintf("%.1f%%", mean(g1) * 100),
+    `p-value` = sprintf("%.3f", p)
+  )
+}
+
+table1 <- bind_rows(
+  tibble(
+    Variable = "N", Overall = as.character(nrow(df)),
+    `Not Readmitted` = as.character(sum(df$readmitted == 0)),
+    Readmitted = as.character(sum(df$readmitted == 1)),
+    `p-value` = ""
+  ),
+  table1_row_continuous(df, "age", "readmitted", "Age (years), mean (SD)"),
+  table1_row_continuous(df, "los_days", "readmitted", "Length of stay (days), mean (SD)"),
+  table1_row_binary(df, "diabetes", "readmitted", "Diabetes, n (%)"),
+  table1_row_binary(df, "hf", "readmitted", "Heart failure, n (%)"),
+  table1_row_binary(df, "smoking", "readmitted", "Current smoker, n (%)")
+)
+cat("Table 1: Patient Characteristics by Readmission Status\n")
+cat(strrep("=", 75), "\n")
+print(table1)
+gt(table1) %>% tab_header(title = "Patient characteristics by readmission status")
+
+write_csv(table1, file.path(mod08_dir, "table1.csv"))
+cat("\nTable 1 saved to", file.path(mod08_dir, "table1.csv"), "\n")
+```
+
+## 6. Quarto Rendering Commands
+
+```{r}
+QUARTO_COMMANDS <- paste(
+  c(
+    "# Install Quarto (once):",
+    "# wget https://quarto.org/download/latest/quarto-linux-amd64.deb",
+    "# sudo dpkg -i quarto-linux-amd64.deb",
+    "",
+    "# Render to HTML (self-contained):",
+    "# quarto render report.qmd --to html",
+    "",
+    "# Render to PDF (requires LaTeX):",
+    "# quarto render report.qmd --to pdf",
+    "",
+    "# Render to Word:",
+    "# quarto render report.qmd --to docx",
+    "",
+    "# Render all formats:",
+    "# quarto render report.qmd",
+    "",
+    "# Preview with live reload:",
+    "# quarto preview report.qmd",
+    "",
+    "# Publish to Quarto Pub:",
+    "# quarto publish quarto-pub report.qmd",
+    "",
+    "# Cross-references in .qmd:",
+    "# @fig-roc-curve   -> Figure 1",
+    "# @tbl-table1      -> Table 1",
+    "# @sec-methods     -> Section 2",
+    "# @eq-logistic     -> Equation 1"
+  ),
+  collapse = "\n"
+)
+cat(QUARTO_COMMANDS, "\n")
+```
+
+## 7. Advanced Quarto Features
+
+```{r}
+QUARTO_ADVANCED <- paste(
+  c(
+    "## Panel Layout",
+    "::: {layout-ncol=2}",
+    paste0(strrep("`", 3), "{r}"),
+    "#| label: fig-roc",
+    "plot_roc()",
+    strrep("`", 3),
+    paste0(strrep("`", 3), "{r}"),
+    "#| label: fig-calibration",
+    "plot_calibration()",
+    strrep("`", 3),
+    ":::",
+    "",
+    "## Tabset",
+    "::: {.panel-tabset}",
+    "### Training Set",
+    "Content for training set...",
+    "### Test Set",
+    "Content for test set...",
+    ":::",
+    "",
+    "## Callout Boxes",
+    "::: {.callout-warning}",
+    "### Model Limitations",
+    "This model was trained on a single-site cohort and may not generalise.",
+    ":::",
+    "",
+    "::: {.callout-tip}",
+    "### Clinical Application",
+    "Flag patients with predicted probability > 0.30 for care transition support.",
+    ":::",
+    "",
+    "## Conditional Content (for-loop tables)",
+    paste0(strrep("`", 3), "{r}"),
+    "#| output: asis",
+    "for (payer in unique(df$payer)) {",
+    "  sub <- df %>% filter(payer == !!payer)",
+    "  cat(sprintf('### %s (n=%d)\\n', payer, nrow(sub)))",
+    "  print(knitr::kable(summary(sub)))",
+    "}",
+    strrep("`", 3)
+  ),
+  collapse = "\n"
+)
+cat(QUARTO_ADVANCED, "\n")
+```
+
+## 8. Knowledge Check
+1. What is the advantage of Quarto's `execute: cache: true` for a long-running model?
+2. How do cross-references (`@fig-roc`) differ from manually typing "Figure 1"?
+3. A journal requires a Word `.docx` with specific formatting. How does Quarto handle this?
+4. Your `.qmd` renders fine locally but fails in CI because `quarto` is not installed. How do you fix this?
+5. Build a Quarto parameterised report that generates separate HTML pages for each hospital unit.
+
+```{r}
+# Exercise 5 — Parameterised Quarto report
+PARAMETERISED_QMD <- paste(
+  c(
+    "---",
+    "title: 'Unit Report: {{< meta params.unit_name >}}'",
+    "params:",
+    "  unit_name: 'Cardiology'",
+    "  min_date:  '2023-01-01'",
+    "  max_date:  '2023-12-31'",
+    "engine: knitr",
+    "---",
+    "",
+    paste0(strrep("`", 3), "{r}"),
+    "unit <- params$unit_name",
+    "df_unit <- df %>% filter(unit == unit)",
+    "cat(sprintf('Report for %s: N=%d patients\\n', unit, nrow(df_unit)))",
+    strrep("`", 3),
+    "",
+    "# Render for each unit from command line:",
+    "# for unit in Cardiology Pulmonology Neurology; do",
+    "#   quarto render unit_report.qmd -P unit_name:$unit --output ${unit}_report.html",
+    "# done"
+  ),
+  collapse = "\n"
+)
+cat("Parameterised report template:\n")
+cat(PARAMETERISED_QMD, "\n")
+
+# Simulate rendering for multiple units
+units <- c("Cardiology", "Pulmonology", "Neurology")
+set.seed(42)
+df$unit <- sample(units, nrow(df), replace = TRUE, prob = c(0.4, 0.35, 0.25))
+for (unit in units) {
+  sub <- df %>% filter(unit == !!unit)
+  readmit_r <- mean(sub$readmitted) * 100
+  cat(sprintf("Unit: %-15s | N=%4d | Readmission rate: %.1f%%\n",
+              unit, nrow(sub), readmit_r))
+}
+```
+
+***
+**Next → NB-03: Shiny Dashboards for Clinical Analytics**

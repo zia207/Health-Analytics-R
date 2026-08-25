@@ -1,0 +1,455 @@
+---
+title: "Geostatistical Risk Analysis"
+subtitle: "Module 07 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+***
+**Learning objectives**
+- Understand indicator kriging (IK) for probabilistic geostatistical risk mapping
+- Prepare groundwater arsenic survey data with detection-limit censoring rules
+- Transform continuous concentrations into binary health-risk indicators (WHO & Bangladesh thresholds)
+- Compute, model, and visualise indicator semivariograms
+- Validate IK predictions with k-fold cross-validation
+- Map the probability of exceeding regulatory arsenic limits across Bangladesh
+- Interpret IK outputs for environmental health decision-making
+
+**Data:** `Data/bgs_geochemical.csv`, `Data/bd_grid.csv`, `Data/BD_Banladesh_BUTM.shp` (+ sidecar files)  
+**Context:** British Geological Survey (BGS) groundwater survey, 3,534 boreholes across 61 districts  
+**Thresholds:** 10 µg/L (WHO) and 50 µg/L (Bangladesh national standard)  
+**Estimated time:** 3 hours | **Level:** Advanced  
+**Libraries:** `sf`, `gstat`, `ggplot2`, `dplyr`
+
+## 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(sf)
+library(gstat)
+library(patchwork)
+
+set.seed(42)
+DATA <- "Data"
+THRESHOLDS <- c(WHO = 10, Bangladesh = 50)  # µg/L (ppb)
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+cat("Setup complete\n")
+```
+
+## 2. Indicator Kriging for Environmental Health Risk
+
+**Kriging** is a geostatistical interpolation technique that provides the *best linear unbiased prediction* (BLUP) of a spatially distributed variable, based on observed data and a model of spatial autocorrelation (the variogram). For a location $\mathbf{s}_0$, the ordinary kriging estimate $\hat{Z}(\mathbf{s}_0)$ is a weighted sum of $n$ observed values:
+
+$$
+\hat{Z}(\mathbf{s}_0) = \sum_{i=1}^n \lambda_i Z(\mathbf{s}_i)
+$$
+
+where $Z(\mathbf{s}_i)$ are the observed values at known locations $\mathbf{s}_i$, and $\lambda_i$ are weights optimized to minimize prediction variance, subject to unbiasedness (weights sum to 1).
+
+**Indicator kriging (IK)** extends this approach for modeling the *probability* that a variable exceeds a threshold $z_c$, rather than its absolute value. Instead of direct values, we code:
+
+$$
+I(\mathbf{s}_i; z_c) = 
+  \begin{cases}
+    1 & \text{if } Z(\mathbf{s}_i) > z_c \\
+    0 & \text{otherwise}
+  \end{cases}
+$$
+
+and perform ordinary kriging on $I(\mathbf{s}_i; z_c)$ to estimate, at each unsampled location $\mathbf{s}_0$, the *conditional probability*:
+
+$$
+\mathbb{P}[Z(\mathbf{s}_0) > z_c \mid \text{data}] \approx \hat{I}(\mathbf{s}_0; z_c) = \sum_{i=1}^n \lambda_i I(\mathbf{s}_i; z_c)
+$$
+
+Thus, indicator kriging yields a spatial probability surface, mapping the risk of exceeding health-relevant thresholds.
+
+This is directly useful for probabilistic decision-making in environmental epidemiology:
+
+| Application | Why IK helps |
+|-------------|-------------|
+| **Regulatory compliance** | Map P(As > 10 µg/L) for WHO guideline exceedance |
+| **National standards** | Map P(As > 50 µg/L) for Bangladesh drinking-water policy |
+| **Skewed distributions** | Arsenic is strongly right-skewed; log-transforms distort tail behaviour |
+| **Censored data** | Detection-limit samples can be handled before indicator coding |
+
+IK can also estimate an entire cumulative distribution function (CDF); the mean of the CDF (E-type estimate) provides a concentration estimate when multiple thresholds are modelled [(Goovaerts, 2009)](https://www.ncbi.nlm.nih.gov/pubmed/20161335).
+
+In this notebook we follow the classic BGS Bangladesh arsenic workflow:
+
+1. Convert arsenic concentrations to indicator variables at 10 and 50 µg/L
+2. Compute and model indicator semivariograms
+3. Predict the probability of exceeding each threshold by indicator kriging
+4. Visualise probability surfaces on a national prediction grid
+
+## 3. Load Data
+
+```{r}
+df   <- read_csv(file.path(DATA, "bgs_geochemical.csv"), show_col_types = FALSE)
+grid <- read_csv(file.path(DATA, "bd_grid.csv"), show_col_types = FALSE)
+bd   <- st_read(file.path(DATA, "BD_Banladesh_BUTM.shp"), quiet = TRUE)
+
+cat(sprintf("BGS samples : %s boreholes\n", format(nrow(df), big.mark = ",")))
+cat(sprintf("Prediction grid: %s cells\n", format(nrow(grid), big.mark = ",")))
+cat(sprintf("Bangladesh boundary CRS: BUTM (Bangladesh Universal Transverse Mercator)\n"))
+cat(sprintf("Districts in shapefile: %d\n", nrow(bd)))
+print(head(df, 3))
+```
+
+### 3.1 Handle detection limits
+
+About 27.7% of wells had arsenic below the instrumental detection limit of 0.5 µg/L. Following the BGS protocol, censored values are assigned **half the detection limit** (0.25 µg/L) before analysis.
+
+```{r}
+parse_concentration <- function(val, dl = 0.5, half_dl = 0.25) {
+  parse_one <- function(v) {
+    if (is.na(v)) return(NA_real_)
+    s <- str_trim(as.character(v))
+    if (str_starts(s, "<")) return(half_dl)
+    num <- suppressWarnings(as.numeric(s))
+    if (is.na(num)) return(NA_real_)
+    if (isTRUE(all.equal(num, dl))) return(half_dl)  # BGS: below DL reported as 0.5 -> 0.25
+    num
+  }
+  vapply(val, parse_one, numeric(1))
+}
+
+df$As_ppb <- parse_concentration(df$As)
+as_num <- suppressWarnings(as.numeric(as.character(df$As)))
+n_at_dl <- sum(as_num == 0.5, na.rm = TRUE)
+n_censored <- sum(str_starts(str_trim(as.character(df$As)), "<"), na.rm = TRUE)
+cat(sprintf("Values at detection limit (0.5 -> 0.25 µg/L): %s (%.1f%%)\n",
+            format(n_at_dl, big.mark = ","), 100 * n_at_dl / nrow(df)))
+cat(sprintf("Censored string readings (< DL): %s\n", format(n_censored, big.mark = ",")))
+print(summary(df$As_ppb))
+```
+
+## 4. Exploratory Data Analysis
+
+```{r}
+p_hist <- ggplot(df, aes(As_ppb)) +
+  geom_histogram(bins = 30, fill = "steelblue", colour = "white") +
+  geom_vline(xintercept = THRESHOLDS, colour = "#DC2626", linetype = "dashed") +
+  labs(x = "As (µg/L)", y = "Count", title = "Histogram of groundwater As")
+
+p_qq <- ggplot(df, aes(sample = As_ppb)) +
+  stat_qq(colour = "steelblue", size = 0.8, alpha = 0.6) +
+  stat_qq_line(colour = "grey30") +
+  labs(x = "Theoretical quantiles", y = "Sample quantiles",
+       title = "Normal Q–Q plot of As")
+
+print(p_hist | p_qq)
+
+for (nm in names(THRESHOLDS)) {
+  thr <- THRESHOLDS[[nm]]
+  pct <- 100 * mean(df$As_ppb > thr, na.rm = TRUE)
+  cat(sprintf("Samples exceeding %s standard (%g µg/L): %.1f%%\n", nm, thr, pct))
+}
+```
+
+## 5. Project Sample Locations to BUTM
+
+Sample coordinates are stored as longitude/latitude (WGS 84). We reproject borehole locations to **Bangladesh Universal Transverse Mercator (BUTM)**, the same projected CRS as the national boundary shapefile,  so that Euclidean distances in metres are meaningful for the semivariogram.
+
+```{r}
+gdf <- st_as_sf(df, coords = c("LONG_DEG", "LAT_DEG"), crs = 4326)
+gdf_proj <- st_transform(gdf, st_crs(bd))
+xy <- st_coordinates(gdf_proj)
+
+mf <- tibble(
+  x        = as.numeric(xy[, 1]),
+  y        = as.numeric(xy[, 2]),
+  As       = df$As_ppb,
+  DISTRICT = df$DISTRICT
+) %>% drop_na(As)
+
+n_before <- nrow(mf)
+mf <- mf %>% distinct(x, y, .keep_all = TRUE)
+cat(sprintf("Unique sample locations: %s (dropped %d duplicates)\n",
+            format(nrow(mf), big.mark = ","), n_before - nrow(mf)))
+print(head(mf))
+```
+
+## 6. Indicator Transformation
+
+```{r}
+mf$ik_10 <- as.numeric(mf$As > THRESHOLDS[["WHO"]])
+mf$ik_50 <- as.numeric(mf$As > THRESHOLDS[["Bangladesh"]])
+cat(sprintf("ik_10 (As > 10 µg/L): mean = %.3f (%d / %d samples above threshold)\n",
+            mean(mf$ik_10), sum(mf$ik_10), nrow(mf)))
+cat(sprintf("ik_50 (As > 50 µg/L): mean = %.3f (%d / %d samples above threshold)\n",
+            mean(mf$ik_50), sum(mf$ik_50), nrow(mf)))
+print(head(mf %>% select(x, y, As, ik_10, ik_50)))
+```
+
+## 7. Map Sample Data
+
+```{r}
+bd_line <- st_cast(st_geometry(bd), "MULTILINESTRING") %>% st_sf(geometry = .)
+
+p_as <- ggplot() +
+  geom_sf(data = bd, fill = NA, colour = "grey50", linewidth = 0.3) +
+  geom_point(data = mf, aes(x, y, colour = As), size = 0.6, alpha = 0.85) +
+  scale_colour_distiller(name = "As (µg/L)", palette = "YlOrRd", direction = 1,
+                         limits = c(0, 200), oob = scales::squish) +
+  labs(title = "Groundwater As (µg/L)", x = "Easting (m)", y = "Northing (m)") +
+  coord_sf()
+
+map_ik <- function(col, title) {
+  ggplot() +
+    geom_sf(data = bd, fill = NA, colour = "grey50", linewidth = 0.3) +
+    geom_point(data = mf, aes(x, y, colour = factor(.data[[col]])),
+               size = 0.6, alpha = 0.85) +
+    scale_colour_manual(values = c("0" = "#16A34A", "1" = "#DC2626"), guide = "none") +
+    labs(title = title, x = "Easting (m)", y = NULL) +
+    coord_sf()
+}
+
+p_samp <- p_as | map_ik("ik_10", "As > 10 µg/L (WHO)") | map_ik("ik_50", "As > 50 µg/L (Bangladesh)")
+print(p_samp)
+```
+
+## 8. Indicator Semivariograms
+
+**What is a variogram?**  
+In geostatistics, the (semi)variogram quantifies how spatial similarity between observations decreases as the distance between them increases. For a spatial variable $Z(\mathbf{s})$, the *semivariogram* at a given lag distance $h$ is mathematically defined as:
+
+$$
+\gamma(h) = \frac{1}{2N(h)} \sum_{i,j;\ |\mathbf{s}_i-\mathbf{s}_j| \approx h} [ Z(\mathbf{s}_i) - Z(\mathbf{s}_j) ]^2
+$$
+
+where $N(h)$ is the number of sample pairs separated by approximately $h$.
+
+**What is an indicator variogram?**  
+An *indicator variogram* applies the same principle, but to a binary (0/1) transformation of the variable. For example, for a threshold $T$, the indicator variable $I_T(\mathbf{s})$ is given by:
+
+$$
+I_T(\mathbf{s}) = 
+   \begin{cases}
+     1, & \text{if } Z(\mathbf{s}) > T \\\\
+     0, & \text{otherwise}
+   \end{cases}
+$$
+
+The indicator semivariogram is then:
+
+$$
+\gamma_{I_T}(h) = \frac{1}{2N(h)} \sum_{i,j;\ |\mathbf{s}_i-\mathbf{s}_j| \approx h} [ I_T(\mathbf{s}_i) - I_T(\mathbf{s}_j) ]^2
+$$
+
+Indicator variograms describe the spatial continuity of high/low risk zones (e.g., areas exceeding an arsenic threshold). In practice, we fit a model (e.g., exponential) to the experimental variogram points to estimate parameters such as nugget, sill, and range.
+
+In this section, we compute and fit indicator variogram models for each binary risk threshold using **gstat**.
+
+```{r}
+mf_sf <- st_as_sf(mf, coords = c("x", "y"), crs = st_crs(bd))
+
+fit_indicator_variogram <- function(sf_pts, zcol, cutoff = 400000, width = 15000) {
+  fml <- as.formula(paste(zcol, "~ 1"))
+  v_emp <- variogram(fml, sf_pts, cutoff = cutoff, width = width)
+  v_mod <- fit.variogram(v_emp, vgm(psill = var(sf_pts[[zcol]]), model = "Exp",
+                                    range = 80000, nugget = 0.05))
+  list(emp = v_emp, fit = v_mod)
+}
+
+vg_10 <- fit_indicator_variogram(mf_sf, "ik_10")
+vg_50 <- fit_indicator_variogram(mf_sf, "ik_50")
+
+print_vgm <- function(label, fit) {
+  cat(sprintf("As > %s: sill=%.4f, range=%.0f m, nugget=%.4f\n",
+              label, fit$psill[2], fit$range[2], fit$psill[1]))
+}
+print_vgm("10 µg/L", vg_10$fit)
+print_vgm("50 µg/L", vg_50$fit)
+```
+
+```{r}
+plot_variogram <- function(vg, title, max_dist = 400000) {
+  emp <- vg$emp %>% filter(dist <= max_dist)
+  h <- seq(0, max_dist, length.out = 300)
+  gamma_model <- variogramLine(vg$fit, dist_vector = h)
+  ggplot() +
+    geom_point(data = emp, aes(dist, gamma), size = 2) +
+    geom_line(data = gamma_model, aes(dist, gamma), colour = "darkblue", linewidth = 1) +
+    coord_cartesian(xlim = c(0, max_dist)) +
+    labs(x = "Distance (m)", y = "Semivariance", title = title)
+}
+
+p_vg <- plot_variogram(vg_10, "Indicator variogram\nAs > 10 µg/L") |
+  plot_variogram(vg_50, "Indicator variogram\nAs > 50 µg/L")
+print(p_vg)
+```
+
+## 9. Cross-Validation
+
+Following the R `gstat::krige.cv(..., nfold = 5)` workflow, we use **5-fold cross-validation**: each fold is held out, indicator kriging is refit on the training folds, and P(indicator = 1) is predicted at held-out locations. Points are coloured **green** when the indicator is 0 (below threshold) and **red** when 1 (above); symbol size is proportional to predicted probability.
+
+```{r}
+cv_10 <- krige.cv(ik_10 ~ 1, mf_sf, model = vg_10$fit, nfold = 5, verbose = FALSE)
+cv_50 <- krige.cv(ik_50 ~ 1, mf_sf, model = vg_50$fit, nfold = 5, verbose = FALSE)
+
+cv_pred_10 <- pmin(pmax(cv_10$var1.pred, 0), 1)
+cv_pred_50 <- pmin(pmax(cv_50$var1.pred, 0), 1)
+
+report_cv <- function(name, pred, obs) {
+  brier <- mean((pred - obs)^2, na.rm = TRUE)
+  cat(sprintf("As > %s: Brier score = %.4f | pred range [%.3f, %.3f]\n",
+              name, brier, min(pred, na.rm = TRUE), max(pred, na.rm = TRUE)))
+}
+report_cv("10 µg/L", cv_pred_10, mf$ik_10)
+report_cv("50 µg/L", cv_pred_50, mf$ik_50)
+```
+
+```{r}
+cv_map <- function(pred, obs, title) {
+  ggplot() +
+    geom_sf(data = bd, fill = NA, colour = "grey50", linewidth = 0.3) +
+    geom_point(
+      data = mf,
+      aes(x, y, colour = factor(obs), size = 10 + 80 * pred),
+      alpha = 0.6
+    ) +
+    scale_colour_manual(values = c("0" = "#16A34A", "1" = "#DC2626"), guide = "none") +
+    scale_size_identity() +
+    labs(title = title, x = "Easting (m)", y = "Northing (m)") +
+    coord_sf()
+}
+
+p_cv <- cv_map(cv_pred_10, mf$ik_10, "5-fold CV: P(As > 10 µg/L)") |
+  cv_map(cv_pred_50, mf$ik_50, "5-fold CV: P(As > 50 µg/L)")
+p_cv <- p_cv + plot_annotation(
+  caption = "Green = below threshold | Red = above | size ∝ predicted probability"
+)
+print(p_cv)
+```
+
+## 10. Indicator Kriging on the Prediction Grid
+
+We krige each indicator onto the national prediction grid (`bd_grid.csv`). Predicted probabilities are clipped to [0, 1].
+
+```{r}
+grid_sf <- st_as_sf(grid, coords = c("x", "y"), crs = st_crs(bd))
+
+ik_grid_10 <- krige(ik_10 ~ 1, mf_sf, grid_sf, model = vg_10$fit,
+                    nmax = 40, debug.level = 0)
+ik_grid_50 <- krige(ik_50 ~ 1, mf_sf, grid_sf, model = vg_50$fit,
+                    nmax = 40, debug.level = 0)
+
+grid_out <- grid %>%
+  mutate(
+    p_as_gt_10 = pmin(pmax(ik_grid_10$var1.pred, 0), 1),
+    p_as_gt_50 = pmin(pmax(ik_grid_50$var1.pred, 0), 1)
+  )
+
+cat("P(As > 10 µg/L):\n")
+print(summary(grid_out$p_as_gt_10))
+cat("\nP(As > 50 µg/L):\n")
+print(summary(grid_out$p_as_gt_50))
+```
+
+## 11. Probability Maps
+
+```{r}
+probability_surface <- function(grid_df, value_col, title) {
+  ggplot() +
+    geom_sf(data = bd, fill = NA, colour = "grey50", linewidth = 0.3) +
+    geom_point(data = grid_df, aes(x, y, colour = .data[[value_col]]),
+               size = 0.4, alpha = 0.9) +
+    geom_point(data = mf, aes(x, y), colour = "black", size = 0.15, alpha = 0.15) +
+    scale_colour_gradientn(
+      name = "Probability",
+      colours = c("blue", "green", "yellow", "red"),
+      limits = c(0, 1)
+    ) +
+    labs(title = title, x = "Easting (m)", y = "Northing (m)") +
+    coord_sf()
+}
+
+p_prob <- probability_surface(grid_out, "p_as_gt_10", "P(As > 10 µg/L) — WHO guideline") |
+  probability_surface(grid_out, "p_as_gt_50", "P(As > 50 µg/L) — Bangladesh standard")
+print(p_prob)
+```
+
+## 12. District-Level Risk Summary
+
+The boundary shapefile labels are sparse, so we summarise risk using the **DISTRICT** field from the BGS borehole survey. For each district we report the fraction of sampled wells exceeding each threshold and the mean IK probability at sample locations (by joining each borehole to its nearest grid cell).
+
+```{r}
+grid_pts <- st_as_sf(grid_out, coords = c("x", "y"), crs = st_crs(bd))
+nn <- st_nearest_feature(mf_sf, grid_pts)
+mf_out <- mf %>%
+  mutate(
+    p_as_gt_10 = grid_out$p_as_gt_10[nn],
+    p_as_gt_50 = grid_out$p_as_gt_50[nn]
+  )
+
+district_risk <- mf_out %>%
+  group_by(DISTRICT) %>%
+  summarise(
+    n_wells      = n(),
+    frac_gt_10   = mean(ik_10),
+    frac_gt_50   = mean(ik_50),
+    mean_p_gt_10 = mean(p_as_gt_10, na.rm = TRUE),
+    mean_p_gt_50 = mean(p_as_gt_50, na.rm = TRUE),
+    median_as    = median(As),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(frac_gt_10))
+
+cat("Top 10 districts by sampled exceedance of WHO guideline (10 µg/L):\n")
+print(district_risk %>% head(10) %>% mutate(across(where(is.numeric), ~ round(.x, 3))))
+```
+
+```{r}
+top <- district_risk %>% slice_head(n = 12) %>%
+  mutate(DISTRICT = fct_reorder(DISTRICT, frac_gt_10))
+
+p_d1 <- ggplot(top, aes(frac_gt_10, DISTRICT)) +
+  geom_col(fill = "coral", colour = "white") +
+  coord_cartesian(xlim = c(0, 1)) +
+  labs(x = "Fraction of wells with As > 10 µg/L",
+       y = NULL, title = "Observed exceedance by district (top 12)")
+
+p_d2 <- ggplot(top, aes(mean_p_gt_10, DISTRICT)) +
+  geom_col(fill = "steelblue", colour = "white") +
+  labs(x = "Mean P(As > 10 µg/L) at wells",
+       y = NULL, title = "IK probability at well locations (top 12)")
+
+print(p_d1 | p_d2)
+```
+
+## 13. Interpretation & Health Policy Context
+
+**Key findings from indicator kriging:**
+
+- IK maps show *where* groundwater is likely unsafe, not just where samples were taken — critical because borehole density is uneven.
+- The 10 µg/L (WHO) surface is more extensive than the 50 µg/L (Bangladesh) surface, reflecting the stricter health guideline.
+- Probabilities are spatially smooth but locally adjusted to nearby sample indicators.
+- Cross-validation Brier scores quantify calibration; lower is better.
+
+**Limitations:**
+- IK assumes stationarity of the indicator semivariogram.
+- Censored values at 0.25 µg/L affect indicators only near zero.
+- E-type concentration estimates require multiple thresholds and CDF reconstruction (Goovaerts AUTO-IK).
+
+**References:**
+- Goovaerts P. (2009). AUTO-IK: a geostatistical program for indicator kriging. *Environ Sci Technol*.
+- BGS Bangladesh arsenic survey: [bgs.ac.uk groundwater health data](http://www.bgs.ac.uk/research/groundwater/health/arsenic/Bangladesh/data.html)
+
+## 14. Knowledge Check
+1. Why is indicator kriging preferred over ordinary kriging on log-transformed arsenic for mapping regulatory exceedance?
+2. What does a predicted probability of 0.7 at an unmonitored grid cell mean for a household relying on a local tube well?
+3. How would you test whether the exponential variogram model is adequate for the 50 µg/L indicator?
+4. If the Bangladesh government wanted to prioritise well testing, how would you use the P(As > 50 µg/L) map to rank districts?
+5. Extend the analysis: add a third threshold (e.g., 200 µg/L) and compare spatial patterns of severe poisoning risk.
+
+***
+**Next → NB-08: Capstone — Spatial Health Inequity Atlas** (or continue to advanced spatial ML in NB-09)

@@ -1,0 +1,595 @@
+---
+title: "NB-03 · Health Data Ecosystem & Codes"
+subtitle: "Module 01 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+***
+**Learning objectives**
+- Navigate the major public health data ecosystems (CMS, CDC, HCUP, PhysioNet)
+- Decode ICD-10-CM, CPT-4, and LOINC code hierarchies in R
+- Build lookup and mapping utilities for clinical code systems
+- Flag and validate code formats for data quality checks
+- Simulate FHIR-like data and parse it with dplyr / tibble
+- Understand HIPAA safe-harbour de-identification requirements
+
+**Estimated time:** 2 hours  
+**Level:** Beginner → Intermediate  
+**Libraries:** `dplyr` / tibble, `stringr`, `jsonlite`
+
+## 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(jsonlite)
+
+options(dplyr.width = Inf)
+cat("Setup complete.\n")
+```
+
+## 2. The Health Data Ecosystem
+
+Understanding where data originates shapes every analytical decision — from choosing the right denominator to knowing which variables are trustworthy.
+
+```{r}
+# Build a reference table of major health data sources
+sources <- list(
+  list(
+    Source   = "CMS Medicare FFS Claims",
+    Level    = "Patient/claim",
+    Coverage = "Medicare beneficiaries (65+, disabled)",
+    Key_vars = "ICD-10, DRG, revenue codes, provider NPI",
+    Access   = "Data use agreement (DUA)",
+    Format   = "CSV / SAS",
+    Latency  = "12–18 months",
+    Use_case = "Claims-based quality measures, utilisation"
+  ),
+  list(
+    Source   = "HCUP NIS",
+    Level    = "Discharge",
+    Coverage = "All payers, ~7M stays/year",
+    Key_vars = "ICD-10, DRG, LOS, charges, payer, APR-DRG",
+    Access   = "AHRQ purchase (~$300)",
+    Format   = "SAS / ASCII",
+    Latency  = "~24 months",
+    Use_case = "National inpatient trends, LOS, costs"
+  ),
+  list(
+    Source   = "CDC BRFSS",
+    Level    = "Survey respondent",
+    Coverage = "400k+ US adults/year",
+    Key_vars = "Chronic conditions, BMI, smoking, state FIPS",
+    Access   = "Public download",
+    Format   = "XPT / CSV",
+    Latency  = "~12 months",
+    Use_case = "Prevalence of risk factors, state comparisons"
+  ),
+  list(
+    Source   = "MIMIC-IV Demo",
+    Level    = "Patient / ICU stay",
+    Coverage = "De-identified ICU patients (BIDMC)",
+    Key_vars = "Labs, vitals, meds, diagnoses, notes, procedures",
+    Access   = "Free; PhysioNet credentialing (~30 min)",
+    Format   = "CSV",
+    Latency  = "Historical (2008–2019)",
+    Use_case = "ML model training, clinical prediction"
+  ),
+  list(
+    Source   = "Synthea",
+    Level    = "Synthetic patient",
+    Coverage = "Unlimited synthetic FHIR records",
+    Key_vars = "Full FHIR: encounters, labs, meds, conditions",
+    Access   = "Open source, run locally",
+    Format   = "FHIR JSON / CSV",
+    Latency  = "Generated on demand",
+    Use_case = "Education, algorithm development (no DUA)"
+  ),
+  list(
+    Source   = "NYC SPARCS",
+    Level    = "Discharge",
+    Coverage = "NY State inpatient and outpatient",
+    Key_vars = "ZIP, APR-DRG, charges, payer, diagnosis",
+    Access   = "Public download",
+    Format   = "CSV",
+    Latency  = "~12 months",
+    Use_case = "Geospatial health disparities, NYC analyses"
+  )
+)
+
+df_sources <- bind_rows(sources)
+cat("Major health data sources:\n")
+print(df_sources %>% select(Source, Level, Coverage, Access, Use_case))
+```
+
+## 3. ICD-10-CM Code Structure
+
+ICD-10-CM (International Classification of Diseases, 10th Revision, Clinical Modification) is the standard for diagnosis coding in US healthcare.
+
+```
+E   1 1 . 9
+│   │ │   └── 5th-7th characters: clinical detail / laterality / episode
+│   │ └────── 4th character: subcategory / anatomic site
+│   └──────── 2nd-3rd characters: condition / etiology
+└──────────── 1st character: chapter letter (A–Z)
+```
+
+```{r}
+# --- 3.1  ICD-10-CM chapter map ---
+icd10_chapters <- c(
+  A = "Certain infectious and parasitic diseases",
+  B = "Certain infectious and parasitic diseases",
+  C = "Neoplasms",
+  D = "Neoplasms / Blood diseases",
+  E = "Endocrine, nutritional and metabolic diseases",
+  F = "Mental, behavioural and neurodevelopmental disorders",
+  G = "Diseases of the nervous system",
+  H = "Diseases of the eye / ear",
+  I = "Diseases of the circulatory system",
+  J = "Diseases of the respiratory system",
+  K = "Diseases of the digestive system",
+  L = "Diseases of the skin and subcutaneous tissue",
+  M = "Diseases of the musculoskeletal system",
+  N = "Diseases of the genitourinary system",
+  O = "Pregnancy, childbirth and the puerperium",
+  P = "Conditions originating in the perinatal period",
+  Q = "Congenital malformations and chromosomal abnormalities",
+  R = "Symptoms, signs and abnormal clinical findings",
+  S = "Injury, poisoning and external causes",
+  T = "Injury, poisoning and external causes",
+  U = "Codes for special purposes (COVID-19 etc.)",
+  V = "External causes of morbidity",
+  W = "External causes of morbidity",
+  X = "External causes of morbidity",
+  Y = "External causes of morbidity",
+  Z = "Factors influencing health status / contact with health services"
+)
+
+chapter_df <- tibble(
+  `First letter`        = names(icd10_chapters),
+  `Chapter description` = unname(icd10_chapters)
+) %>%
+  distinct(`Chapter description`, .keep_all = TRUE)
+cat("ICD-10-CM chapter map:\n")
+print(chapter_df, n = Inf)
+```
+
+```{r}
+# --- 3.2  ICD-10-CM parser ---
+parse_icd10cm <- function(code) {
+  # Parse an ICD-10-CM code into its structural components.
+  # Returns a named list with chapter, category, subcategory, detail, and formatted code.
+  code <- toupper(gsub("\\.", "", trimws(as.character(code))))
+  if (!grepl("^[A-Z][0-9]{2}", code)) {
+    return(list(
+      valid = FALSE, formatted = NA_character_, chapter = NA_character_,
+      category = NA_character_, subcategory = NA_character_,
+      detail = NA_character_, specificity = NA_character_, raw = code
+    ))
+  }
+
+  chapter     <- unname(icd10_chapters[substr(code, 1, 1)])
+  if (is.na(chapter)) chapter <- "Unknown"
+  category    <- substr(code, 1, 3)
+  subcategory <- if (nchar(code) > 3) substr(code, 4, 4) else ""
+  detail      <- if (nchar(code) > 4) substr(code, 5, nchar(code)) else ""
+  formatted   <- paste0(category, if (nchar(code) > 3) paste0(".", substr(code, 4, nchar(code))) else "")
+  spec_idx    <- min(nchar(code) - 3, 4) + 1
+  specificity <- c("3-char", "4-char", "5-char", "6-char", "7-char")[spec_idx]
+
+  list(
+    valid       = TRUE,
+    formatted   = formatted,
+    chapter     = chapter,
+    category    = category,
+    subcategory = subcategory,
+    detail      = detail,
+    specificity = specificity,
+    raw         = code
+  )
+}
+
+# Test with a range of codes
+test_codes <- c("E11.9", "I10", "N18.3", "J18.9", "A41.9", "M16.11", "Z87.891", "BADCODE")
+for (c in test_codes) {
+  parsed <- parse_icd10cm(c)
+  if (isTRUE(parsed$valid)) {
+    cat(sprintf("  %-10s → formatted: %-10s | chapter: %s\n",
+                c, parsed$formatted, substr(parsed$chapter, 1, 40)))
+  } else {
+    cat(sprintf("  %-10s → INVALID CODE\n", c))
+  }
+}
+```
+
+```{r}
+# --- 3.3  Batch-parse ICD codes in a data frame ---
+set.seed(42)
+N <- 300
+icd_pool <- c("E11.9", "I10", "N18.3", "I50.9", "J18.9", "A41.9", "M16.11",
+              "N39.0", "Z87.891", "R06.00", "K21.0", "F32.9", "I25.10")
+
+df_dx <- tibble(
+  encounter_id = seq_len(N),
+  primary_dx   = sample(icd_pool, N, replace = TRUE),
+  secondary_dx = sample(c(icd_pool, ""), N, replace = TRUE)
+)
+
+# Parse primary diagnosis codes
+parsed_cols <- purrr::map_dfr(df_dx$primary_dx, parse_icd10cm) %>%
+  rename_with(~ paste0("dx_", .x))
+df_dx <- bind_cols(df_dx, parsed_cols)
+
+cat("Diagnosis code frequency by ICD-10 chapter:\n")
+df_dx %>%
+  group_by(dx_chapter) %>%
+  summarise(n_encounters = n(), .groups = "drop") %>%
+  arrange(desc(n_encounters)) %>%
+  head(8) %>%
+  print()
+```
+
+## 4. CPT-4 Code Structure (Procedure Codes)
+
+CPT (Current Procedural Terminology) codes are 5-digit numeric codes used to bill for medical procedures and services.
+
+| Range | Section |
+|-------|---------|
+| 00100–01999 | Anaesthesia |
+| 10004–69990 | Surgery (by body system) |
+| 70010–79999 | Radiology |
+| 80047–89398 | Pathology & Laboratory |
+| 90281–99607 | Medicine & Evaluation/Management |
+| 99202–99499 | Office/Outpatient E&M visits |
+
+```{r}
+# --- 4.1  CPT reference table ---
+cpt_reference <- tibble(
+  cpt         = c("99213", "99214", "99232", "36415", "85025",
+                  "93000", "71046", "27447", "43239", "99285"),
+  description = c(
+    "Office visit, established patient, low complexity",
+    "Office visit, established patient, moderate complexity",
+    "Subsequent hospital care, moderate complexity",
+    "Routine venipuncture",
+    "Complete CBC with differential",
+    "Electrocardiogram, routine, with interpretation",
+    "Chest X-ray, 2 views",
+    "Total knee arthroplasty",
+    "EGD with biopsy",
+    "ED visit, high complexity"
+  ),
+  category = c("E&M", "E&M", "E&M", "Lab", "Lab",
+               "Medicine", "Radiology", "Surgery", "Surgery", "E&M"),
+  rvu      = c(1.30, 1.92, 1.39, 0.17, 0.00, 0.17, 0.22, 20.26, 4.32, 4.00)
+)
+
+cat("CPT code reference:\n")
+print(cpt_reference)
+```
+
+```{r}
+# --- 4.2  CPT validator ---
+validate_cpt <- function(code) {
+  # Check if a CPT code is a valid 5-digit numeric string.
+  code <- trimws(as.character(code))
+  is_numeric_5 <- grepl("^[0-9]{5}$", code)
+  code_int <- if (is_numeric_5) as.integer(code) else NA_integer_
+
+  if (!is_numeric_5) {
+    return(list(valid = FALSE, code = code, section = "Unknown", notes = "Not 5 digits"))
+  }
+
+  section <- "Unknown"
+  if      (code_int >= 100   && code_int <= 1999)  section <- "Anaesthesia"
+  else if (code_int >= 10004 && code_int <= 69990) section <- "Surgery"
+  else if (code_int >= 70010 && code_int <= 79999) section <- "Radiology"
+  else if (code_int >= 80047 && code_int <= 89398) section <- "Pathology/Lab"
+  else if (code_int >= 90281 && code_int <= 99607) section <- "Medicine/E&M"
+
+  list(valid = TRUE, code = code, section = section, notes = "")
+}
+
+for (cpt in c("99213", "71046", "27447", "00100", "ABCDE", "9921")) {
+  r      <- validate_cpt(cpt)
+  status <- if (isTRUE(r$valid)) "VALID" else "INVALID"
+  cat(sprintf("  %-8s → %-8s | section: %s\n", cpt, status, r$section))
+}
+```
+
+## 5. LOINC Code Structure (Lab & Clinical Observations)
+
+LOINC (Logical Observation Identifiers Names and Codes) standardises laboratory and clinical observations. Each code identifies a specific measurement.
+
+Structure: `NNNNN-C`  (5–6 digit numeric) + (1 digit check digit)
+
+LOINC names follow a 6-part axis:
+1. **Component** — what was measured (e.g. Glucose)
+2. **Property** — type of quantity (e.g. MCnc = mass concentration)
+3. **Time aspect** — Pt (point in time) vs 24H (24-hour)
+4. **System** — specimen (e.g. Ser/Plas = serum/plasma)
+5. **Scale** — Qn (quantitative), Ord (ordinal), Nom (nominal)
+6. **Method** — analytical method (if relevant)
+
+```{r}
+# --- 5.1  LOINC reference for common lab panels ---
+loinc_ref <- tibble(
+  loinc       = c("2345-7", "2160-0", "2823-3", "2951-2", "718-7", "6690-2",
+                  "777-3", "1742-6", "10839-9", "4548-4", "2093-3", "5902-2"),
+  component   = c("Glucose", "Creatinine", "Potassium", "Sodium", "Hemoglobin", "WBC",
+                  "Platelets", "ALT", "Troponin I", "HbA1c", "Total Cholesterol",
+                  "Prothrombin time (PT)"),
+  property    = c("MCnc", "MCnc", "SCnc", "SCnc", "MCnc", "NCnc",
+                  "NCnc", "CCnc", "MCnc", "MFr", "MCnc", "Time"),
+  system      = c("Ser/Plas", "Ser/Plas", "Ser/Plas", "Ser/Plas", "Bld", "Bld",
+                  "Bld", "Ser/Plas", "Ser/Plas", "Bld", "Ser/Plas", "PPP"),
+  unit        = c("mg/dL", "mg/dL", "mEq/L", "mEq/L", "g/dL", "10^3/uL",
+                  "10^3/uL", "U/L", "ng/mL", "%", "mg/dL", "s"),
+  normal_low  = c(70, 0.6, 3.5, 136, 12.0, 4.5, 150, 7, 0, 4.0, 0, 11),
+  normal_high = c(100, 1.2, 5.0, 145, 17.5, 11.0, 400, 56, 0.04, 5.6, 200, 13.5)
+)
+
+cat(sprintf("LOINC reference — %d common labs:\n", nrow(loinc_ref)))
+print(loinc_ref %>% select(loinc, component, unit, normal_low, normal_high))
+```
+
+```{r}
+# --- 5.2  Simulate lab results and flag abnormals ---
+set.seed(7)
+n_patients <- 200
+
+# For each patient, generate realistic lab values
+sim_lab <- function(lo, hi, n) {
+  mid  <- (lo + hi) / 2
+  span <- (hi - lo) / 2
+  vals <- rnorm(n, mean = mid, sd = span * 0.6)
+  round(pmin(pmax(vals, lo * 0.4), hi * 2.5), 2)
+}
+
+lab_records <- purrr::pmap_dfr(loinc_ref, function(loinc, component, property, system,
+                                                   unit, normal_low, normal_high) {
+  vals <- sim_lab(normal_low, normal_high, n_patients)
+  tibble(
+    patient_id  = sprintf("PT-%05d", seq_len(n_patients)),
+    loinc       = loinc,
+    component   = component,
+    value       = vals,
+    unit        = unit,
+    flag        = ifelse(vals > normal_high, "H", ifelse(vals < normal_low, "L", "N")),
+    normal_low  = normal_low,
+    normal_high = normal_high
+  )
+})
+
+df_labs <- lab_records
+cat(sprintf("Lab dataset: %s results (%d patients × %d labs)\n\n",
+            format(nrow(df_labs), big.mark = ","), n_patients, nrow(loinc_ref)))
+
+# Abnormal rate by test
+ab_rate <- df_labs %>%
+  group_by(component) %>%
+  summarise(abnormal_pct = round(mean(flag != "N") * 100, 1), .groups = "drop") %>%
+  arrange(desc(abnormal_pct))
+cat("Abnormal rate by lab:\n")
+print(ab_rate)
+```
+
+```{r}
+# --- 5.3  Wide-format lab panel per patient (pivot) ---
+lab_wide <- df_labs %>%
+  pivot_wider(
+    id_cols     = patient_id,
+    names_from  = component,
+    values_from = value,
+    values_fn   = ~ .x[1]
+  )
+
+cat(sprintf("Wide lab panel shape: %d × %d\n", nrow(lab_wide), ncol(lab_wide)))
+print(head(lab_wide, 5))
+```
+
+## 6. FHIR-Like JSON Parsing
+
+```{r}
+# FHIR (Fast Healthcare Interoperability Resources) is the modern HL7 standard
+# for exchanging health data. Resources are JSON objects. Here we simulate
+# a small FHIR Bundle containing Patient + Observation resources.
+
+make_fhir_bundle <- function(n = 5) {
+  # Generate a minimal FHIR-like bundle for n patients.
+  loinc_sample <- loinc_ref %>% select(loinc, component, unit) %>% head(3)
+  entries <- list()
+
+  for (i in seq_len(n)) {
+    pt_id <- paste0("patient-", i)
+    entries[[length(entries) + 1]] <- list(
+      resourceType = "Patient",
+      id           = pt_id,
+      gender       = sample(c("male", "female"), 1),
+      birthDate    = sprintf("%d-%02d-15", sample(1940:1984, 1), sample(1:12, 1)),
+      address      = list(list(postalCode = as.character(sample(10000:99999, 1))))
+    )
+    for (j in seq_len(nrow(loinc_sample))) {
+      lab <- loinc_sample[j, ]
+      lo  <- loinc_ref$normal_low[loinc_ref$loinc == lab$loinc]
+      hi  <- loinc_ref$normal_high[loinc_ref$loinc == lab$loinc]
+      val <- round(runif(1, lo, hi), 2)
+      entries[[length(entries) + 1]] <- list(
+        resourceType  = "Observation",
+        id            = paste0("obs-", pt_id, "-", lab$loinc),
+        subject       = list(reference = paste0("Patient/", pt_id)),
+        code          = list(coding = list(list(
+          system  = "http://loinc.org",
+          code    = lab$loinc,
+          display = lab$component
+        ))),
+        valueQuantity = list(value = val, unit = lab$unit),
+        status        = "final"
+      )
+    }
+  }
+  list(resourceType = "Bundle", type = "collection", entry = entries)
+}
+
+bundle <- make_fhir_bundle(n = 5)
+
+# --- Parse the bundle into tidy data frames ---
+patients     <- Filter(function(e) identical(e$resourceType, "Patient"),     bundle$entry)
+observations <- Filter(function(e) identical(e$resourceType, "Observation"), bundle$entry)
+
+df_pts <- bind_rows(lapply(patients, function(p) {
+  tibble(
+    patient_id = p$id,
+    gender     = p$gender,
+    birthDate  = p$birthDate,
+    zip        = p$address[[1]]$postalCode
+  )
+}))
+
+df_obs <- bind_rows(lapply(observations, function(o) {
+  tibble(
+    patient_id = strsplit(o$subject$reference, "/", fixed = TRUE)[[1]][2],
+    loinc      = o$code$coding[[1]]$code,
+    test_name  = o$code$coding[[1]]$display,
+    value      = o$valueQuantity$value,
+    unit       = o$valueQuantity$unit,
+    status     = o$status
+  )
+}))
+
+cat("FHIR Patients:\n")
+print(df_pts)
+cat("\nFHIR Observations (first 6):\n")
+print(head(df_obs, 6))
+```
+
+## 7. HIPAA Safe-Harbour De-identification
+
+```{r}
+# HIPAA Safe Harbour requires removal of 18 identifiers before data sharing.
+# This function demonstrates the safe-harbour checks on a data frame.
+
+HIPAA_IDENTIFIERS <- c(
+  "name", "geographic_data_smaller_than_state", "dates_except_year",
+  "phone", "fax", "email", "ssn", "mrn", "health_plan_id",
+  "account_number", "certificate_license", "vehicle_id", "device_id",
+  "url", "ip_address", "biometric", "full_face_photo", "any_unique_id"
+)
+
+# Simulate a raw dataset with some PHI columns
+df_raw <- df_pts
+df_raw$full_name <- paste("Patient", seq_len(nrow(df_raw)) - 1)
+df_raw$phone     <- paste0("555-", sample(1000000:9999999, nrow(df_raw), replace = TRUE))
+df_raw$email     <- paste0("pt", seq_len(nrow(df_raw)) - 1, "@example.com")
+df_raw$ssn_last4 <- as.character(sample(1000:9999, nrow(df_raw), replace = TRUE))
+
+safe_harbour_check <- function(df) {
+  # Flag columns that may contain PHI based on name heuristics.
+  phi_keywords <- c("name", "phone", "fax", "email", "ssn", "mrn", "dob", "birth",
+                    "address", "zip", "ip", "device", "url", "id_", "npi")
+  flagged <- character()
+  for (col in names(df)) {
+    if (any(vapply(phi_keywords, function(kw) grepl(kw, tolower(col), fixed = TRUE), logical(1)))) {
+      flagged <- c(flagged, col)
+    }
+  }
+  flagged
+}
+
+flagged_cols <- safe_harbour_check(df_raw)
+cat("Columns flagged as potential PHI:\n")
+for (col in flagged_cols) cat(sprintf("  ⚠  %s\n", col))
+
+# De-identify: drop PHI, generalise ZIP to 3-digit
+deidentify <- function(df, phi_cols, zip_col = NULL) {
+  keep <- setdiff(names(df), intersect(phi_cols, names(df)))
+  df_clean <- df[keep]
+  if (!is.null(zip_col) && zip_col %in% names(df_clean)) {
+    # HIPAA: 3-digit ZIP if population > 20,000; else replace with 000
+    df_clean[[zip_col]] <- paste0(substr(df_clean[[zip_col]], 1, 3), "XX")
+  }
+  df_clean
+}
+
+df_deid <- deidentify(df_raw, flagged_cols, zip_col = "zip")
+cat("\nDe-identified dataset:\n")
+print(df_deid)
+```
+
+## 8. Code Quality Validation Pipeline
+
+```{r}
+# Build a reusable validation function that checks ICD, CPT, and LOINC
+# codes in a data frame and produces a quality report.
+
+validate_code_column <- function(series, code_type) {
+  # Validate a column of clinical codes. code_type: 'icd10', 'cpt', or 'loinc'
+  purrr::map_dfr(series, function(code) {
+    if (is.na(code) || identical(code, "")) {
+      return(tibble(code = as.character(code), valid = FALSE, reason = "Missing/empty"))
+    }
+    code <- trimws(as.character(code))
+    if (code_type == "icd10") {
+      r <- parse_icd10cm(code)
+      tibble(code = code, valid = isTRUE(r$valid),
+             reason = if (isTRUE(r$valid)) "" else "Invalid ICD-10 format")
+    } else if (code_type == "cpt") {
+      r <- validate_cpt(code)
+      tibble(code = code, valid = isTRUE(r$valid), reason = r$notes)
+    } else if (code_type == "loinc") {
+      valid <- grepl("^[0-9]{2,5}-[0-9]$", code)
+      tibble(code = code, valid = valid,
+             reason = if (valid) "" else "Invalid LOINC format (expected NNNNN-C)")
+    } else {
+      tibble(code = code, valid = FALSE, reason = "Unknown code_type")
+    }
+  })
+}
+
+# --- Test with mixed valid/invalid codes ---
+test_icd   <- c("E11.9", "I10", "BADCODE", "", "Z87.891", "XYZ")
+test_cpt   <- c("99213", "27447", "1234", "ABCDE", "71046")
+test_loinc <- c("2345-7", "718-7", "99999", "loinc_bad", "4548-4")
+
+for (item in list(
+  list(name = "ICD-10", series = test_icd,   ctype = "icd10"),
+  list(name = "CPT",    series = test_cpt,   ctype = "cpt"),
+  list(name = "LOINC",  series = test_loinc, ctype = "loinc")
+)) {
+  result    <- validate_code_column(item$series, item$ctype)
+  valid_pct <- mean(result$valid) * 100
+  cat(sprintf("%s — valid: %.0f%%\n", item$name, valid_pct))
+  print(result)
+  cat("\n")
+}
+```
+
+## 9. Knowledge Check
+
+1. What is the difference between ICD-10-CM and ICD-10-PCS?
+2. Why does LOINC exist separately from ICD-10? What does it code for?
+3. Which public dataset would you use to study national trends in sepsis hospitalisations — and why?
+4. Under HIPAA Safe Harbour, which fields must be removed from a dataset before sharing?
+5. Write code to count how many lab results in `df_labs` have a 'H' (high) flag for Glucose and Creatinine.
+
+```{r}
+# --- Exercise 5 solution ---
+high_flags <- df_labs %>%
+  filter(component %in% c("Glucose", "Creatinine"), flag == "H")
+cat("High-flagged results by component:\n")
+print(count(high_flags, component, name = "n_high"))
+```
+
+***
+## Summary
+
+In this notebook you:
+- Mapped the major US health data ecosystems by access level and key variables
+- Built an ICD-10-CM parser that decodes chapter, category, subcategory, and clinical detail
+- Validated CPT-4 codes and mapped them to their billing sections
+- Constructed a LOINC reference panel and simulated abnormal lab result flagging
+- Parsed a FHIR-like JSON bundle into tidy `Patient` and `Observation` data frames
+- Applied HIPAA Safe-Harbour de-identification heuristics to a raw dataset
+- Built a reusable code-quality validation pipeline for ICD, CPT, and LOINC
+
+**You have now completed Module 01.** Proceed to **Module 02 — EDA in Healthcare** for visualisation, time-series analysis, and missingness handling.

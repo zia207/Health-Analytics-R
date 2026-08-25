@@ -1,0 +1,397 @@
+---
+title: "Reproducible Research Foundations"
+subtitle: "Module 08 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 08: Reproducible Research & Deployment
+***
+**Learning objectives**
+- Understand reproducibility threats in health analytics
+- Build canonical project structure with dependency management
+- Implement data provenance with SHA-256 checksums and MANIFEST.json
+- Build reproducible pipelines with structured logging and wrappers
+- Write Makefiles for pipeline orchestration
+- Conduct a reproducibility audit
+
+**Estimated time:** 2 hours | **Level:** Intermediate | **Libraries:** `digest`, `fs`, `here`, `jsonlite`, `renv`
+
+## 1. Reproducibility Threats
+
+| Threat | Example | Prevention |
+|--------|---------|------------|
+| Random seeds | ML results change | `set.seed(42)` everywhere |
+| Package versions | tidymodels API breaks pipelines | Pin versions in packages.R / renv.lock |
+| Data drift | Source updated silently | Checksums + MANIFEST.json |
+| Hidden notebook state | Chunks run out of order | Restart & Render All + CI |
+| OS differences | Float rounding varies | Docker |
+| Undocumented transforms | 'I normalised this manually' | Code-only pipelines |
+
+## 2. Project Setup & Dependencies
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(fs)
+library(here)
+library(digest)
+library(jsonlite)
+library(glue)
+
+mod08_dir <- file.path(tempdir(), "mod08")
+dir.create(mod08_dir, recursive = TRUE, showWarnings = FALSE)
+
+PROJECT_ROOT <- fs::path(mod08_dir, "demo_project")
+dirs <- c(
+  "data/raw", "data/processed", "src/data", "src/models",
+  "models", "reports/figures", "tests", "notebooks"
+)
+walk(dirs, ~ fs::dir_create(fs::path(PROJECT_ROOT, .x)))
+cat("Project structure created at:", as.character(PROJECT_ROOT), "\n")
+cat("here() project root would resolve to:", here::here(), "\n")
+```
+
+```{r}
+PACKAGES_R <- paste(
+  c(
+    "# Health Analytics Project packages.R",
+    "# Pin versions with renv::snapshot() after install.",
+    "pkgs <- list(",
+    "  dplyr       = '>= 1.1, < 2.0',",
+    "  tidyr       = '>= 1.3, < 2.0',",
+    "  readr       = '>= 2.1, < 3.0',",
+    "  ggplot2     = '>= 3.4, < 4.0',",
+    "  tidymodels  = '>= 1.1, < 2.0',",
+    "  ranger      = '>= 0.16, < 1.0',",
+    "  xgboost     = '>= 1.7, < 3.0',",
+    "  lightgbm    = '>= 4.0, < 5.0',",
+    "  pROC        = '>= 1.18, < 2.0',",
+    "  DALEX       = '>= 2.3, < 3.0',",
+    "  shiny       = '>= 1.8, < 2.0',",
+    "  plumber     = '>= 1.2, < 2.0',",
+    "  mlflow      = '>= 2.8, < 3.0',",
+    "  testthat    = '>= 3.2, < 4.0',",
+    "  digest      = '>= 0.6, < 1.0',",
+    "  fs          = '>= 1.6, < 2.0',",
+    "  here        = '>= 1.0, < 2.0',",
+    "  jsonlite    = '>= 1.8, < 2.0',",
+    "  renv        = '>= 1.0, < 2.0'",
+    ")",
+    "inst <- rownames(installed.packages())",
+    "need <- setdiff(names(pkgs), inst)",
+    "if (length(need)) install.packages(need)",
+    "# renv::snapshot()  # write renv.lock",
+    "# renv::restore()   # restore from renv.lock"
+  ),
+  collapse = "\n"
+)
+writeLines(PACKAGES_R, fs::path(PROJECT_ROOT, "packages.R"))
+cat("packages.R written with pinned version ranges:\n")
+cat(PACKAGES_R, "\n")
+
+# renv.lock analogue: a version-pinned lockfile for restore
+renv_lock <- list(
+  R = list(Version = paste(R.version$major, R.version$minor, sep = ".")),
+  Packages = list(
+    dplyr = list(Package = "dplyr", Version = "1.1.4", Source = "CRAN"),
+    ggplot2 = list(Package = "ggplot2", Version = "3.5.1", Source = "CRAN"),
+    xgboost = list(Package = "xgboost", Version = "1.7.7.1", Source = "CRAN")
+  )
+)
+write_json(renv_lock, fs::path(PROJECT_ROOT, "renv.lock"), pretty = TRUE, auto_unbox = TRUE)
+cat("\nrenv.lock written. Restore with renv::restore() after renv::init().\n")
+```
+
+```{r}
+cat("sessionInfo() — capture this in every research report:\n")
+print(sessionInfo())
+```
+
+## 3. Data Provenance & Checksums
+
+```{r}
+compute_checksum <- function(filepath, algorithm = "sha256") {
+  p <- fs::path(filepath)
+  if (fs::is_file(p)) {
+    digest::digest(file = as.character(p), algo = algorithm)
+  } else {
+    "file_not_found"
+  }
+}
+
+create_manifest <- function(data_info, output_path) {
+  manifest <- list(
+    created_at  = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+    r_version   = paste(R.version$major, R.version$minor, sep = "."),
+    files       = list()
+  )
+  for (name in names(data_info)) {
+    info <- data_info[[name]]
+    manifest$files[[name]] <- list(
+      path          = info$path %||% "",
+      source        = info$source %||% "",
+      download_date = info$download_date %||% format(Sys.Date()),
+      sha256        = compute_checksum(info$path %||% ""),
+      description   = info$description %||% "",
+      n_rows        = info$n_rows,
+      n_cols        = info$n_cols
+    )
+  }
+  fs::dir_create(fs::path_dir(output_path))
+  write_json(manifest, output_path, pretty = TRUE, auto_unbox = TRUE, null = "null")
+  manifest
+}
+
+# Generate synthetic dataset
+set.seed(42)
+N <- 2000
+df_raw <- tibble(
+  patient_id = sprintf("PT-%05d", seq_len(N) - 1),
+  age        = as.integer(pmin(pmax(rnorm(N, 60, 15), 18), 90)),
+  readmitted = rbinom(N, 1, 0.18),
+  los_days   = as.integer(pmin(pmax(rgamma(N, 2.5, scale = 1.8), 1), 30)),
+  diabetes   = rbinom(N, 1, 0.35),
+  hf         = rbinom(N, 1, 0.22)
+)
+raw_path <- fs::path(PROJECT_ROOT, "data", "raw", "readmission_cohort.csv")
+write_csv(df_raw, raw_path)
+
+manifest <- create_manifest(
+  list(readmission_cohort = list(
+    path          = as.character(raw_path),
+    source        = "Synthetic (MIMIC-III inspired), seed=42",
+    description   = "30-day readmission cohort",
+    n_rows        = nrow(df_raw),
+    n_cols        = ncol(df_raw)
+  )),
+  output_path = as.character(fs::path(PROJECT_ROOT, "data", "MANIFEST.json"))
+)
+sha <- manifest$files$readmission_cohort$sha256
+cat(glue("Dataset: {nrow(df_raw)} rows | SHA-256: {substr(sha, 1, 12)}...{substr(sha, nchar(sha) - 7, nchar(sha))}\n"))
+cat("MANIFEST.json written.\n")
+```
+
+## 4. Reproducible Pipeline with Logging
+
+```{r}
+log_file <- fs::path(PROJECT_ROOT, "pipeline.log")
+logger_write <- function(level, message) {
+  line <- sprintf("%s | %-7s | %s", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), level, message)
+  cat(line, "\n")
+  cat(line, "\n", file = log_file, append = TRUE)
+}
+
+log_step <- function(name, fn) {
+  force(name); force(fn)
+  function(...) {
+    logger_write("INFO", paste("START ", name))
+    t0 <- proc.time()[["elapsed"]]
+    tryCatch({
+      result <- fn(...)
+      elapsed <- proc.time()[["elapsed"]] - t0
+      logger_write("INFO", sprintf("OK     %s | %.2fs", name, elapsed))
+      result
+    }, error = function(e) {
+      logger_write("ERROR", sprintf("FAIL   %s | %s", name, e$message))
+      stop(e)
+    })
+  }
+}
+
+load_raw <- log_step("load_raw_data", function(path) {
+  df <- read_csv(path, show_col_types = FALSE)
+  logger_write("INFO", sprintf("  Loaded %dr x %dc", nrow(df), ncol(df)))
+  df
+})
+
+validate <- log_step("validate_schema", function(df) {
+  checks <- list(
+    patient_id_unique = n_distinct(df$patient_id) == nrow(df),
+    age_18_90         = all(df$age >= 18 & df$age <= 90),
+    readmitted_binary = all(df$readmitted %in% c(0, 1)),
+    los_positive      = all(df$los_days > 0)
+  )
+  for (check in names(checks)) {
+    if (!isTRUE(checks[[check]])) stop(glue("Validation FAILED: {check}"))
+    logger_write("INFO", paste("  PASS:", check))
+  }
+  df
+})
+
+engineer_features <- log_step("feature_engineering", function(df) {
+  df <- df %>%
+    mutate(
+      los_gt7  = as.integer(los_days > 7),
+      age_std  = (age - mean(age)) / sd(age),
+      n_comorb = diabetes + hf
+    )
+  logger_write("INFO", sprintf("  Added 3 features | Output: %d x %d", nrow(df), ncol(df)))
+  df
+})
+
+df_loaded   <- load_raw(raw_path)
+df_valid    <- validate(df_loaded)
+df_features <- engineer_features(df_valid)
+proc_path   <- fs::path(PROJECT_ROOT, "data", "processed", "features.rds")
+saveRDS(df_features, proc_path)
+cat(glue("Pipeline complete | Processed: {nrow(df_features)} x {ncol(df_features)}\n"))
+```
+
+## 5. Makefile Pipeline Orchestration
+
+```{r}
+MAKEFILE_CONTENT <- paste(
+  c(
+    "# Health Analytics Pipeline Makefile",
+    ".PHONY: all clean data features train evaluate report test",
+    "",
+    "all: data features train evaluate report",
+    "\t@echo '[OK] Full pipeline complete'",
+    "",
+    "data:",
+    "\tRscript src/data/download.R --output data/raw/",
+    "\tRscript src/data/validate.R --manifest data/MANIFEST.json",
+    "",
+    "features: data",
+    "\tRscript src/data/features.R --input data/raw/ --output data/processed/",
+    "",
+    "train: features",
+    "\tRscript src/models/train.R --seed 42 --output models/readmission_v1.rds",
+    "",
+    "evaluate: train",
+    "\tRscript src/models/evaluate.R --output reports/metrics.json",
+    "",
+    "report: evaluate",
+    "\tquarto render notebooks/readmission_report.qmd --to html",
+    "",
+    "test:",
+    "\tRscript -e 'testthat::test_dir(\"tests\")'",
+    "",
+    "clean:",
+    "\trm -rf data/processed/ models/ reports/figures/",
+    "\t@echo 'Cleaned. Raw data preserved.'"
+  ),
+  collapse = "\n"
+)
+writeLines(MAKEFILE_CONTENT, fs::path(PROJECT_ROOT, "Makefile"))
+cat("Makefile written:\n")
+cat(MAKEFILE_CONTENT, "\n")
+```
+
+## 6. Reproducibility Audit
+
+```{r}
+reproducibility_audit <- function(project_dir) {
+  root <- fs::path(project_dir)
+  issues <- character()
+  score <- 100
+
+  req <- fs::path(root, "packages.R")
+  lock <- fs::path(root, "renv.lock")
+  if (!fs::file_exists(req) && !fs::file_exists(lock)) {
+    issues <- c(issues, "MISSING packages.R / renv.lock")
+    score <- score - 20
+  } else if (fs::file_exists(req)) {
+    lines <- readLines(req)
+    pkg_lines <- lines[grepl("=", lines) & !grepl("^\\s*#", lines) & grepl("dplyr|ggplot2|xgboost", lines)]
+    unpinned <- pkg_lines[!grepl(">=|==|<=", pkg_lines)]
+    if (length(unpinned)) {
+      issues <- c(issues, paste("Unpinned packages:", paste(unpinned, collapse = ", ")))
+      score <- score - 10
+    }
+  }
+
+  if (!fs::file_exists(fs::path(root, "data", "MANIFEST.json"))) {
+    issues <- c(issues, "MISSING data/MANIFEST.json")
+    score <- score - 20
+  }
+
+  gi <- fs::path(root, ".gitignore")
+  if (fs::file_exists(gi)) {
+    content <- paste(readLines(gi), collapse = "\n")
+    for (p in c(".Renviron", "data/raw/")) {
+      if (!grepl(p, content, fixed = TRUE)) {
+        issues <- c(issues, paste(".gitignore missing:", p))
+        score <- score - 5
+      }
+    }
+  } else {
+    issues <- c(issues, "MISSING .gitignore")
+    score <- score - 15
+  }
+
+  if (!fs::file_exists(fs::path(root, "pipeline.log"))) {
+    issues <- c(issues, "No pipeline.log found")
+    score <- score - 5
+  }
+
+  list(score = max(0, score), issues = issues)
+}
+
+writeLines(c(".Renviron", "data/raw/", "models/", ".Rproj.user", "*.Rhistory"),
+           fs::path(PROJECT_ROOT, ".gitignore"))
+
+result <- reproducibility_audit(as.character(PROJECT_ROOT))
+cat(glue("Reproducibility Score: {result$score}/100\n"))
+if (length(result$issues)) {
+  walk(result$issues, ~ cat("  [WARN]", .x, "\n"))
+} else {
+  cat("  All checks passed!\n")
+}
+```
+
+## 7. Knowledge Check
+1. A colleague says 'I ran all chunks top-to-bottom — it is reproducible.' Why might this still fail?
+2. Your packages.R pins `tidymodels>=1.1,<2.0`. Six months later predictions differ. What happened?
+3. How does SHA-256 checksumming protect against silent data warehouse updates?
+4. The Makefile re-runs `train` if `features.rds` is newer. A bug in `train.R` is fixed. Does `make train` re-run?
+5. Write a testthat helper that verifies MANIFEST.json checksums before any test runs.
+
+```{r}
+# Exercise 5 — testthat helper for checksum validation
+HELPER_MANIFEST <- paste(
+  c(
+    "# tests/testthat/helper-manifest.R",
+    "library(jsonlite)",
+    "library(digest)",
+    "library(fs)",
+    "",
+    "verify_data_integrity <- function() {",
+    "  manifest_path <- fs::path('data', 'MANIFEST.json')",
+    "  if (!fs::file_exists(manifest_path)) {",
+    "    skip('No MANIFEST.json')",
+    "  }",
+    "  manifest <- jsonlite::fromJSON(manifest_path, simplifyVector = FALSE)",
+    "  for (name in names(manifest$files)) {",
+    "    info <- manifest$files[[name]]",
+    "    p <- fs::path(info$path)",
+    "    if (!fs::file_exists(p)) fail(paste('Missing:', p))",
+    "    h <- digest::digest(file = as.character(p), algo = 'sha256')",
+    "    if (!is.null(info$sha256) && h != info$sha256) {",
+    "      fail(paste('Checksum FAILED for', name, '-- data may have changed!'))",
+    "    }",
+    "  }",
+    "  cat(sprintf('[OK] %d files passed integrity check\\n', length(manifest$files)))",
+    "}",
+    "",
+    "# Called automatically by testthat for every file in tests/testthat/"
+  ),
+  collapse = "\n"
+)
+cat(HELPER_MANIFEST, "\n")
+
+# Run the helper against this demo project
+manifest_path <- fs::path(PROJECT_ROOT, "data", "MANIFEST.json")
+manifest_chk <- fromJSON(manifest_path, simplifyVector = FALSE)
+n_ok <- 0
+for (name in names(manifest_chk$files)) {
+  info <- manifest_chk$files[[name]]
+  h <- compute_checksum(info$path)
+  stopifnot(h == info$sha256)
+  n_ok <- n_ok + 1
+}
+cat(glue("[OK] {n_ok} files passed integrity check\n"))
+```
+
+***
+**Next → NB-02: Quarto Documents for Health Research Reports**

@@ -1,0 +1,491 @@
+---
+title: "G-Computation, TMLE & Mediation"
+subtitle: "Module 06 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 06: Causal Inference in Health Research
+***
+**Learning objectives**
+- Implement G-computation (standardisation) for ATE estimation
+- Understand TMLE (Targeted Maximum Likelihood Estimation) conceptually
+- Build a simple TMLE estimator with cross-fitting
+- Decompose total effects into direct and indirect (mediation analysis)
+- Compare G-comp, IPTW, and TMLE performance under model misspecification
+- Apply bootstrap inference for all estimators
+
+**Estimated time:** 3 hours | **Level:** Advanced | **Libraries:** `stats`, `ranger`, `xgboost`, `tmle`, `mediation`, `ggplot2`
+
+## 1. Setup & Shared Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(broom)
+library(tibble)
+library(patchwork)
+library(ranger)
+library(xgboost)
+library(tmle)
+library(mediation)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+mod06_dir <- file.path(tempdir(), "mod06")
+dir.create(mod06_dir, showWarnings = FALSE, recursive = TRUE)
+
+logistic <- function(x) 1 / (1 + exp(-x))
+logit    <- function(p) log(p / (1 - p))
+
+set.seed(42)
+N <- 5000
+age <- pmin(pmax(rnorm(N, 60, 12), 30), 90)
+smoking <- rbinom(N, 1, logistic(-1 + 0.02 * (age - 60)))
+chd_history <- rbinom(N, 1, logistic(-2 + 0.03 * (age - 60)))
+ldl_baseline <- pmin(pmax(rnorm(N, 140 + 20 * smoking, 30), 60), 280)
+ses_score <- rnorm(N, 0, 1)
+statin_logit <- -2.0 + 0.025 * (ldl_baseline - 140) + 1.0 * chd_history +
+  0.02 * (age - 60) - 0.3 * ses_score
+statin <- rbinom(N, 1, logistic(statin_logit))
+TRUE_EFFECT <- -0.8
+mi_logit <- -3.0 + TRUE_EFFECT * statin + 0.03 * (age - 60) + 0.5 * smoking +
+  0.8 * chd_history + 0.005 * (ldl_baseline - 140)
+mi <- rbinom(N, 1, logistic(mi_logit))
+df <- tibble(
+  age          = age,
+  smoking      = smoking,
+  chd_history  = chd_history,
+  ldl_baseline = ldl_baseline,
+  ses_score    = ses_score,
+  statin       = statin,
+  mi           = mi
+)
+COVARIATES <- c("age", "smoking", "chd_history", "ldl_baseline", "ses_score")
+cat(sprintf("N=%d | Statin=%.1f%% | MI=%.1f%% | True OR=%.3f\n",
+            N, mean(statin) * 100, mean(mi) * 100, exp(TRUE_EFFECT)))
+```
+
+## 2. G-Computation (Standardisation)
+
+G-computation uses the **g-formula**:
+
+```
+ATE = (1/N) * sum_i [ Q(1, X_i) - Q(0, X_i) ]
+```
+
+Where Q(a, X) = E[Y | A=a, X] is the **outcome model** (Q-model).
+
+**Algorithm:**
+1. Fit outcome model Q on all observations
+2. Predict Y(1) for everyone (set A=1)
+3. Predict Y(0) for everyone (set A=0)
+4. ATE = mean(Y(1)) - mean(Y(0))
+
+```{r}
+g_computation <- function(df, treatment, outcome, covariates, model_type = "logistic") {
+  x_cols <- c(covariates, treatment)
+  form <- as.formula(paste(outcome, "~", paste(x_cols, collapse = " + ")))
+  X_a1 <- df
+  X_a1[[treatment]] <- 1
+  X_a0 <- df
+  X_a0[[treatment]] <- 0
+
+  if (model_type == "logistic") {
+    model <- glm(form, data = df, family = binomial())
+    mu1 <- predict(model, newdata = X_a1, type = "response")
+    mu0 <- predict(model, newdata = X_a0, type = "response")
+  } else if (model_type == "gbm") {
+    x_mat <- as.matrix(df[, x_cols, drop = FALSE])
+    dtrain <- xgb.DMatrix(x_mat, label = df[[outcome]])
+    model <- xgb.train(
+      params = list(objective = "binary:logistic", max_depth = 3, eta = 0.1, nthread = 1),
+      data = dtrain, nrounds = 200, verbose = 0
+    )
+    mu1 <- predict(model, xgb.DMatrix(as.matrix(X_a1[, x_cols, drop = FALSE])))
+    mu0 <- predict(model, xgb.DMatrix(as.matrix(X_a0[, x_cols, drop = FALSE])))
+  } else {
+    df_rf <- df[, c(x_cols, outcome), drop = FALSE]
+    df_rf[[outcome]] <- factor(df_rf[[outcome]], levels = c(0, 1))
+    model <- ranger(
+      formula = form, data = df_rf, probability = TRUE,
+      num.trees = 200, seed = 42, num.threads = 1
+    )
+    mu1 <- predict(model, data = X_a1)$predictions[, "1"]
+    mu0 <- predict(model, data = X_a0)$predictions[, "1"]
+  }
+
+  ate_rd  <- mean(mu1 - mu0)
+  p1 <- mean(mu1); p0 <- mean(mu0)
+  ate_lor <- log(p1 / (1 - p1)) - log(p0 / (1 - p0))
+  list(
+    ATE_RD    = round(ate_rd, 4),
+    ATE_logOR = round(ate_lor, 4),
+    mu1 = mu1, mu0 = mu0, model = model
+  )
+}
+
+# Compare across outcome model specifications
+results_gc <- list()
+for (model_name in c("logistic", "gbm", "rf")) {
+  res <- g_computation(df, "statin", "mi", COVARIATES, model_type = model_name)
+  results_gc[[model_name]] <- res
+  cat(sprintf("G-comp (%-8s): ATE log-OR=%.4f | RD=%.4f | Bias=%+.4f\n",
+              model_name, res$ATE_logOR, res$ATE_RD, res$ATE_logOR - TRUE_EFFECT))
+}
+
+cat(sprintf("\nTrue causal log-OR: %.4f\n", TRUE_EFFECT))
+```
+
+## 3. TMLE — Targeted Maximum Likelihood Estimation
+
+```{r}
+tmle_ate <- function(df, treatment, outcome, covariates, n_folds = 5) {
+  # TMLE with cross-fitting (cross-validated TMLE).
+  # Combines:
+  # - Q-model (outcome model)
+  # - g-model (propensity score)
+  # - Targeting step: fluctuates Q toward efficient influence function
+  n <- nrow(df)
+  A <- df[[treatment]]
+  Y <- df[[outcome]]
+
+  set.seed(42)
+  fold <- sample(rep(seq_len(n_folds), length.out = n))
+  mu1 <- numeric(n)
+  mu0 <- numeric(n)
+  ps  <- numeric(n)
+
+  q_form <- as.formula(paste(outcome, "~", paste(c(covariates, treatment), collapse = " + ")))
+  g_form <- as.formula(paste(treatment, "~", paste(covariates, collapse = " + ")))
+
+  for (k in seq_len(n_folds)) {
+    train <- fold != k
+    val   <- fold == k
+
+    q_model <- glm(q_form, data = df[train, ], family = binomial())
+    new1 <- df[val, ]
+    new1[[treatment]] <- 1
+    new0 <- df[val, ]
+    new0[[treatment]] <- 0
+    mu1[val] <- predict(q_model, newdata = new1, type = "response")
+    mu0[val] <- predict(q_model, newdata = new0, type = "response")
+
+    g_model <- glm(g_form, data = df[train, ], family = binomial())
+    ps[val] <- predict(g_model, newdata = df[val, ], type = "response")
+  }
+
+  ps <- pmin(pmax(ps, 1e-4), 1 - 1e-4)
+  mu1 <- pmin(pmax(mu1, 1e-6), 1 - 1e-6)
+  mu0 <- pmin(pmax(mu0, 1e-6), 1 - 1e-6)
+
+  # TMLE targeting step — clever covariate H
+  H1 <- A / ps                  # for treated
+  H0 <- -(1 - A) / (1 - ps)     # for controls
+  H  <- H1 + H0
+
+  mu_init    <- pmin(pmax(A * mu1 + (1 - A) * mu0, 1e-6), 1 - 1e-6)
+  logit_init <- logit(mu_init)
+
+  # Fit targeting model (fluctuation) with offset = logit(Q_n)
+  target_df <- tibble(Y = Y, H = H, logit_init = logit_init)
+  target_model <- glm(Y ~ H - 1 + offset(logit_init),
+                      data = target_df, family = binomial())
+  eps <- unname(coef(target_model)[["H"]])
+
+  # Update predictions
+  mu1_star <- logistic(logit(mu1) + eps / ps)
+  mu0_star <- logistic(logit(mu0) - eps / (1 - ps))
+  mu1_star <- pmin(pmax(mu1_star, 1e-6), 1 - 1e-6)
+  mu0_star <- pmin(pmax(mu0_star, 1e-6), 1 - 1e-6)
+
+  # ATE estimate
+  ate_tmle <- mean(mu1_star - mu0_star)
+
+  # Efficient influence function for SE
+  eif <- (A * (Y - mu1_star) / ps + mu1_star) -
+    ((1 - A) * (Y - mu0_star) / (1 - ps) + mu0_star) - ate_tmle
+  se_tmle <- sd(eif) / sqrt(n)
+
+  p1 <- mean(mu1_star); p0 <- mean(mu0_star)
+  ate_lor <- log(p1 / (1 - p1)) - log(p0 / (1 - p0))
+  list(
+    ATE_RD    = round(ate_tmle, 4),
+    ATE_logOR = round(ate_lor, 4),
+    SE        = round(se_tmle, 4),
+    mu1_star  = mu1_star,
+    mu0_star  = mu0_star
+  )
+}
+
+tmle_res <- tmle_ate(df, "statin", "mi", COVARIATES)
+ci_lo <- tmle_res$ATE_RD - 1.96 * tmle_res$SE
+ci_hi <- tmle_res$ATE_RD + 1.96 * tmle_res$SE
+cat(sprintf("TMLE ATE (RD)    : %.4f (95%% CI: %.4f, %.4f)\n",
+            tmle_res$ATE_RD, ci_lo, ci_hi))
+cat(sprintf("TMLE ATE (log-OR): %.4f\n", tmle_res$ATE_logOR))
+cat(sprintf("True log-OR      : %.4f\n", TRUE_EFFECT))
+cat(sprintf("Bias             : %+.4f\n", tmle_res$ATE_logOR - TRUE_EFFECT))
+
+# Package-based TMLE (glm Q and g models)
+W <- as.data.frame(df[, COVARIATES, drop = FALSE])
+tmle_pkg <- tmle(
+  Y = df$mi,
+  A = df$statin,
+  W = W,
+  family = "binomial",
+  Qform = "Y ~ A + age + smoking + chd_history + ldl_baseline + ses_score",
+  gform = "A ~ age + smoking + chd_history + ldl_baseline + ses_score"
+)
+cat("\n--- tmle package ---\n")
+print(tmle_pkg$estimates$ATE)
+pkg_rd  <- unname(tmle_pkg$estimates$ATE$psi)
+pkg_p1  <- unname(tmle_pkg$estimates$EY1$psi)
+pkg_p0  <- unname(tmle_pkg$estimates$EY0$psi)
+pkg_lor <- log(pkg_p1 / (1 - pkg_p1)) - log(pkg_p0 / (1 - pkg_p0))
+cat(sprintf("tmle package ATE (RD)    : %.4f\n", pkg_rd))
+cat(sprintf("tmle package ATE (log-OR): %.4f\n", pkg_lor))
+```
+
+## 4. Mediation Analysis — Natural Direct & Indirect Effects
+
+```{r}
+# Research question: Statin -> LDL -> MI (mediated path) vs
+#                   Statin -> MI directly (direct path)
+# Generate mediator: LDL post-statin
+set.seed(99)
+ldl_post <- pmin(pmax(df$ldl_baseline - 40 * df$statin + rnorm(N, 0, 10), 40), 280)
+df$ldl_post <- ldl_post
+
+# G-computation based mediation analysis.
+# Decomposes total effect into natural direct (NDE) and indirect (NIE) effects.
+mediation_analysis <- function(df, treatment, mediator, outcome, covariates) {
+  X_base <- as.data.frame(df[, covariates, drop = FALSE])
+  for (nm in names(X_base)) {
+    if (anyNA(X_base[[nm]])) {
+      X_base[[nm]][is.na(X_base[[nm]])] <- median(X_base[[nm]], na.rm = TRUE)
+    }
+  }
+
+  # Step 1: Mediator model M ~ A, X
+  med_df <- cbind(X_base, treat = df[[treatment]], M = df[[mediator]])
+  names(med_df)[names(med_df) == "treat"] <- treatment
+  names(med_df)[names(med_df) == "M"] <- mediator
+  m_reg <- lm(as.formula(paste(mediator, "~ .")), data = med_df)
+
+  # Step 2: Outcome model Y ~ A, M, X
+  out_df <- cbind(X_base, treat = df[[treatment]],
+                  M = df[[mediator]], Y = df[[outcome]])
+  names(out_df)[names(out_df) == "treat"] <- treatment
+  names(out_df)[names(out_df) == "M"] <- mediator
+  names(out_df)[names(out_df) == "Y"] <- outcome
+  q_model <- glm(as.formula(paste(outcome, "~ .")), data = out_df, family = binomial())
+
+  predict_outcome <- function(A_val, M_vals, X) {
+    X_pred <- X
+    X_pred[[treatment]] <- A_val
+    X_pred[[mediator]]  <- M_vals
+    predict(q_model, newdata = X_pred, type = "response")
+  }
+
+  # Natural mediator values under A=1 and A=0
+  X1 <- X_base; X1[[treatment]] <- 1
+  X0 <- X_base; X0[[treatment]] <- 0
+  M_a1 <- predict(m_reg, newdata = X1)
+  M_a0 <- predict(m_reg, newdata = X0)
+
+  # E[Y(1, M(1))], E[Y(0, M(0))], E[Y(1, M(0))], E[Y(0, M(1))]
+  EY11 <- mean(predict_outcome(1, M_a1, X_base))  # Y when A=1, M=M(1)
+  EY00 <- mean(predict_outcome(0, M_a0, X_base))  # Y when A=0, M=M(0)
+  EY10 <- mean(predict_outcome(1, M_a0, X_base))  # Y when A=1, M=M(0)
+  EY01 <- mean(predict_outcome(0, M_a1, X_base))  # Y when A=0, M=M(1)
+
+  TE  <- EY11 - EY00   # Total effect
+  NDE <- EY10 - EY00   # Natural direct effect
+  NIE <- EY11 - EY10   # Natural indirect effect (through M)
+
+  list(TE = TE, NDE = NDE, NIE = NIE, EY01 = EY01,
+       prop_mediated = if (TE != 0) NIE / TE else 0)
+}
+
+med_res <- mediation_analysis(df, "statin", "ldl_post", "mi", COVARIATES)
+cat("Mediation Analysis: Statin -> LDL_post -> MI\n")
+cat(sprintf("  Total Effect (TE)    : %.4f (RD)\n", med_res$TE))
+cat(sprintf("  Natural Direct (NDE) : %.4f (Statin -> MI, not through LDL)\n", med_res$NDE))
+cat(sprintf("  Natural Indirect (NIE): %.4f (Statin -> LDL -> MI)\n", med_res$NIE))
+cat(sprintf("  Proportion mediated  : %.1f%%\n", med_res$prop_mediated * 100))
+cat("\n")
+cat("Interpretation: Statin's effect on MI is partially mediated through LDL reduction.\n")
+cat(sprintf("  ~%.0f%% of total statin benefit operates through LDL lowering.\n",
+            med_res$prop_mediated * 100))
+cat(sprintf("  ~%.0f%% is a direct pleiotropic effect.\n",
+            (1 - med_res$prop_mediated) * 100))
+
+# mediation package (Imai, Keele, Tingley)
+med.fit <- lm(
+  ldl_post ~ statin + age + smoking + chd_history + ldl_baseline + ses_score,
+  data = df
+)
+out.fit <- glm(
+  mi ~ statin + ldl_post + age + smoking + chd_history + ldl_baseline + ses_score,
+  data = df, family = binomial()
+)
+set.seed(42)
+med.out <- mediate(
+  med.fit, out.fit,
+  treat = "statin", mediator = "ldl_post",
+  sims = 200
+)
+cat("\n--- mediation package ---\n")
+print(summary(med.out))
+```
+
+## 5. Estimator Comparison
+
+```{r}
+# Bootstrap-based comparison of all estimators
+iptw_simple <- function(df_sub, covariates, treatment, outcome) {
+  g_form <- as.formula(paste(treatment, "~", paste(covariates, collapse = " + ")))
+  lr_ps <- glm(g_form, data = df_sub, family = binomial())
+  ps <- pmin(pmax(predict(lr_ps, type = "response"), 0.05), 0.95)
+  w  <- ifelse(df_sub[[treatment]] == 1, 1 / ps, 1 / (1 - ps))
+  treated <- df_sub[[treatment]] == 1
+  r1 <- sum(df_sub[[outcome]][treated] * w[treated]) / sum(w[treated])
+  r0 <- sum(df_sub[[outcome]][!treated] * w[!treated]) / sum(w[!treated])
+  log(r1 / (1 - r1)) - log(r0 / (1 - r0))
+}
+
+tmle_approx <- function(df_sub, treatment, outcome, covariates) {
+  # Single-sample TMLE (no cross-fitting) for bootstrap speed
+  q_form <- as.formula(paste(outcome, "~", paste(c(covariates, treatment), collapse = " + ")))
+  g_form <- as.formula(paste(treatment, "~", paste(covariates, collapse = " + ")))
+  q_model <- glm(q_form, data = df_sub, family = binomial())
+  g_model <- glm(g_form, data = df_sub, family = binomial())
+  new1 <- df_sub; new1[[treatment]] <- 1
+  new0 <- df_sub; new0[[treatment]] <- 0
+  mu1 <- pmin(pmax(predict(q_model, newdata = new1, type = "response"), 1e-6), 1 - 1e-6)
+  mu0 <- pmin(pmax(predict(q_model, newdata = new0, type = "response"), 1e-6), 1 - 1e-6)
+  ps  <- pmin(pmax(predict(g_model, type = "response"), 1e-4), 1 - 1e-4)
+  A <- df_sub[[treatment]]; Y <- df_sub[[outcome]]
+  H <- A / ps - (1 - A) / (1 - ps)
+  mu_init <- pmin(pmax(A * mu1 + (1 - A) * mu0, 1e-6), 1 - 1e-6)
+  target <- glm(Y ~ H - 1 + offset(logit(mu_init)), family = binomial())
+  eps <- unname(coef(target)[1])
+  mu1_star <- logistic(logit(mu1) + eps / ps)
+  mu0_star <- logistic(logit(mu0) - eps / (1 - ps))
+  p1 <- mean(mu1_star); p0 <- mean(mu0_star)
+  log(p1 / (1 - p1)) - log(p0 / (1 - p0))
+}
+
+N_BOOT <- 300
+bootstrap_estimates <- list(
+  `G-comp (LR)`   = numeric(0),
+  `G-comp (GBM)`  = numeric(0),
+  IPTW            = numeric(0),
+  `TMLE (approx)` = numeric(0)
+)
+
+set.seed(42)
+for (b in seq_len(N_BOOT)) {
+  idx  <- sample.int(nrow(df), replace = TRUE)
+  df_b <- df[idx, ]
+  bootstrap_estimates[["G-comp (LR)"]][b] <-
+    g_computation(df_b, "statin", "mi", COVARIATES, "logistic")$ATE_logOR
+  bootstrap_estimates[["G-comp (GBM)"]][b] <-
+    g_computation(df_b, "statin", "mi", COVARIATES, "gbm")$ATE_logOR
+  bootstrap_estimates[["IPTW"]][b] <-
+    iptw_simple(df_b, COVARIATES, "statin", "mi")
+  bootstrap_estimates[["TMLE (approx)"]][b] <-
+    tmle_approx(df_b, "statin", "mi", COVARIATES)
+}
+
+boot_df <- tibble(
+  estimator = rep(names(bootstrap_estimates),
+                  times = vapply(bootstrap_estimates, length, integer(1))),
+  estimate  = unlist(bootstrap_estimates, use.names = FALSE)
+)
+est_means <- boot_df |>
+  group_by(estimator) |>
+  summarise(m = mean(estimate), .groups = "drop")
+boot_df <- boot_df |>
+  left_join(est_means, by = "estimator") |>
+  mutate(label = sprintf("%s (%.3f)", estimator, m))
+
+colors_est <- c(
+  "G-comp (LR)"   = "#2563EB",
+  "G-comp (GBM)"  = "#16A34A",
+  "IPTW"          = "#D97706",
+  "TMLE (approx)" = "#DC2626"
+)
+
+legend_labels <- sprintf(
+  "%s (%.3f)",
+  names(colors_est),
+  vapply(names(colors_est), function(nm) mean(bootstrap_estimates[[nm]]), numeric(1))
+)
+names(legend_labels) <- names(colors_est)
+
+p_boot <- ggplot(boot_df, aes(estimate, fill = estimator)) +
+  geom_histogram(bins = 30, alpha = 0.55, position = "identity") +
+  geom_vline(xintercept = TRUE_EFFECT, colour = "black",
+             linetype = "dashed", linewidth = 1.1) +
+  scale_fill_manual(values = colors_est, labels = legend_labels) +
+  labs(
+    x = "Estimated log-OR",
+    y = "Bootstrap count",
+    title = sprintf("Bootstrap Distribution of Causal Effect Estimates (B=%d)", N_BOOT),
+    fill = NULL
+  )
+print(p_boot)
+ggsave(file.path(mod06_dir, "estimator_comparison.png"), p_boot,
+       width = 12, height = 5, dpi = 120)
+
+cat("Bootstrap performance (log-OR):\n")
+cat(sprintf("  %-20s %8s %8s %8s %8s\n", "Estimator", "Mean", "SD", "Bias", "RMSE"))
+cat(paste(rep("-", 55), collapse = ""), "\n")
+for (name in names(bootstrap_estimates)) {
+  ests <- bootstrap_estimates[[name]]
+  if (length(ests) > 0) {
+    m <- mean(ests); s <- sd(ests)
+    bias <- m - TRUE_EFFECT
+    rmse <- sqrt(bias^2 + s^2)
+    cat(sprintf("  %-20s %8.4f %8.4f %8.4f %8.4f\n", name, m, s, bias, rmse))
+  }
+}
+```
+
+## 6. Knowledge Check
+1. G-computation with GBM has lower bias than logistic regression here. When would logistic regression outperform GBM for causal inference?
+2. TMLE is "doubly robust" — what does this mean precisely?
+3. The mediation analysis shows 40% of statin's effect is mediated through LDL. What assumption is required for this to be a causal claim?
+4. Why is cross-fitting (split-sample nuisance estimation) important for TMLE?
+5. Re-run mediation analysis restricting to diabetic patients (smoking==1). Does the proportion mediated differ?
+
+```{r}
+# Exercise 5 — Subgroup mediation analysis
+for (grp in list(
+  list(df$smoking == 0, "Non-smokers"),
+  list(df$smoking == 1, "Smokers")
+)) {
+  mask <- grp[[1]]; group_name <- grp[[2]]
+  df_sub <- df[mask, ]
+  res_sub <- mediation_analysis(
+    df_sub, "statin", "ldl_post", "mi",
+    setdiff(COVARIATES, "smoking")
+  )
+  cat(sprintf("Mediation in %s (n=%d):\n", group_name, sum(mask)))
+  cat(sprintf("  TE=%.4f | NDE=%.4f | NIE=%.4f | Prop mediated=%.1f%%\n",
+              res_sub$TE, res_sub$NDE, res_sub$NIE, res_sub$prop_mediated * 100))
+}
+```
+
+***
+**Next -> NB-07: Sensitivity Analysis & Reporting**

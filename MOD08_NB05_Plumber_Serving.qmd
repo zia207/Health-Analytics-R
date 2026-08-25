@@ -1,0 +1,460 @@
+---
+title: "plumber for Clinical Model Serving"
+subtitle: "Module 08 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 08: Reproducible Research & Deployment
+***
+**Learning objectives**
+- Build a production plumber REST API for clinical model serving
+- Implement request/response validation for patient features
+- Create single and batch prediction endpoints
+- Write an API test suite with edge cases and error handling
+- Add filters: CORS, logging, rate limiting, authentication
+- Containerise with Docker and docker-compose for deployment
+
+**Estimated time:** 3 hours | **Level:** Advanced | **Libraries:** `plumber`, `jsonlite`, `xgboost`
+
+## 1. Setup — Train & Save Model
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(pROC)
+library(rsample)
+library(xgboost)
+library(jsonlite)
+library(fs)
+
+mod08_dir <- file.path(tempdir(), "mod08")
+dir.create(mod08_dir, recursive = TRUE, showWarnings = FALSE)
+
+col_blue <- "#2563EB"
+col_red  <- "#DC2626"
+
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.line        = element_line(colour = "grey40")
+    )
+)
+
+set.seed(42)
+N <- 2000
+sigmoid <- function(x) 1 / (1 + exp(-x))
+age  <- as.integer(pmin(pmax(rnorm(N, 60, 15), 18), 90))
+los  <- as.integer(pmin(pmax(rgamma(N, 2.5, scale = 1.8), 1), 30))
+dm   <- rbinom(N, 1, 0.35)
+hf   <- rbinom(N, 1, 0.22)
+copd <- rbinom(N, 1, 0.18)
+logit <- -3.2 + 0.6 * hf + 0.5 * dm + 0.3 * copd + 0.02 * (age - 60) +
+  0.2 * as.integer(los > 7)
+readmitted <- rbinom(N, 1, sigmoid(logit))
+df <- tibble(age = age, los_days = los, diabetes = dm, hf = hf, copd = copd,
+             readmitted = readmitted)
+FEATURES <- c("age", "los_days", "diabetes", "hf", "copd")
+split <- initial_split(df, prop = 0.8, strata = readmitted)
+train <- training(split)
+test  <- testing(split)
+model <- xgb.train(
+  params = list(objective = "binary:logistic", max_depth = 4, eta = 0.05,
+                eval_metric = "auc"),
+  data = xgb.DMatrix(as.matrix(train[FEATURES]), label = train$readmitted),
+  nrounds = 200, verbose = 0
+)
+auc <- as.numeric(pROC::auc(test$readmitted, predict(model, as.matrix(test[FEATURES])), quiet = TRUE))
+model_path <- file.path(mod08_dir, "readmission_model.rds")
+saveRDS(model, model_path)
+cat(sprintf("Model trained | AUC=%.4f | Saved: %s\n", auc, model_path))
+```
+
+## 2. plumber Architecture for Clinical APIs
+
+```
+POST /predict           <- Single patient prediction
+POST /predict/batch     <- Batch predictions (list of patients)
+GET  /health            <- Health check (for Docker/k8s)
+GET  /model/info        <- Model metadata
+GET  /__docs__          <- plumber Swagger UI (auto-generated)
+GET  /metrics           <- Prometheus metrics (optional)
+
+Request flow:
+  HTTP Request
+    -> plumber parser (raise 400 if invalid JSON)
+    -> Filters (auth, logging, rate limit)
+    -> Endpoint function
+    -> predict(model, type = "response")
+    -> JSON serialisation
+    -> HTTP Response (JSON)
+```
+
+## 3. Complete plumber Application
+
+```{r}
+PLUMBER_APP <- paste(
+  c(
+    "# plumber.R -- plumber Clinical Readmission API",
+    "library(plumber)",
+    "library(jsonlite)",
+    "library(xgboost)",
+    "",
+    "MODEL_PATH <- Sys.getenv('MODEL_PATH', 'readmission_model.rds')",
+    "MODEL <- readRDS(MODEL_PATH)",
+    "FEATURES <- c('age', 'los_days', 'diabetes', 'hf', 'copd')",
+    "",
+    "risk_tier <- function(prob) {",
+    "  if (prob < 0.10) 'Low' else if (prob < 0.20) 'Moderate'",
+    "  else if (prob < 0.35) 'High' else 'Very High'",
+    "}",
+    "",
+    "validate_patient <- function(age, los_days, diabetes, hf, copd) {",
+    "  errors <- character()",
+    "  if (is.null(age) || age < 18 || age > 90) errors <- c(errors, paste('age must be 18-90, got', age))",
+    "  if (is.null(los_days) || los_days < 1 || los_days > 60) errors <- c(errors, paste('los_days must be 1-60, got', los_days))",
+    "  if (!diabetes %in% c(0, 1)) errors <- c(errors, 'diabetes must be 0 or 1')",
+    "  if (!hf %in% c(0, 1)) errors <- c(errors, 'hf must be 0 or 1')",
+    "  if (!copd %in% c(0, 1)) errors <- c(errors, 'copd must be 0 or 1')",
+    "  errors",
+    "}",
+    "",
+    "predict_one <- function(age, los_days, diabetes, hf, copd, patient_id = NULL) {",
+    "  X <- matrix(c(age, los_days, diabetes, hf, copd), nrow = 1,",
+    "              dimnames = list(NULL, FEATURES))",
+    "  prob <- as.numeric(predict(MODEL, X))",
+    "  list(",
+    "    patient_id = patient_id,",
+    "    readmission_probability = round(prob, 4),",
+    "    risk_tier = risk_tier(prob),",
+    "    model_version = '1.0.0',",
+    "    prediction_timestamp = format(Sys.time(), '%Y-%m-%dT%H:%M:%S')",
+    "  )",
+    "}",
+    "",
+    "#* Health check",
+    "#* @get /health",
+    "function() {",
+    "  list(status = 'healthy', timestamp = format(Sys.time(), '%Y-%m-%dT%H:%M:%S'))",
+    "}",
+    "",
+    "#* Model metadata",
+    "#* @get /model/info",
+    "function() {",
+    "  list(",
+    "    model_type = 'xgboost',",
+    "    version = '1.0.0', auc = 0.789,",
+    "    features = FEATURES,",
+    "    trained_on = '2024-01-15', n_training = 2400",
+    "  )",
+    "}",
+    "",
+    "#* Single patient prediction",
+    "#* @post /predict",
+    "#* @parser json",
+    "#* @serializer json",
+    "function(req, res) {",
+    "  body <- req$body",
+    "  if (is.null(body)) body <- jsonlite::fromJSON(req$postBody)",
+    "  errs <- validate_patient(body$age, body$los_days, body$diabetes, body$hf, body$copd)",
+    "  if (length(errs)) {",
+    "    res$status <- 400",
+    "    return(list(error = '422 Unprocessable Entity', detail = paste(errs, collapse = '; ')))",
+    "  }",
+    "  predict_one(body$age, body$los_days, body$diabetes, body$hf, body$copd, body$patient_id)",
+    "}",
+    "",
+    "#* Batch predictions",
+    "#* @post /predict/batch",
+    "#* @parser json",
+    "#* @serializer json",
+    "function(req, res) {",
+    "  body <- req$body",
+    "  if (is.null(body)) body <- jsonlite::fromJSON(req$postBody)",
+    "  patients <- body$patients",
+    "  if (is.data.frame(patients)) patients <- split(patients, seq_len(nrow(patients)))",
+    "  results <- lapply(patients, function(p) {",
+    "    errs <- validate_patient(p$age, p$los_days, p$diabetes, p$hf, p$copd)",
+    "    if (length(errs)) return(list(patient_id = p$patient_id, error = paste(errs, collapse = '; ')))",
+    "    out <- predict_one(p$age, p$los_days, p$diabetes, p$hf, p$copd, p$patient_id)",
+    "    list(patient_id = out$patient_id, probability = out$readmission_probability,",
+    "         risk_tier = out$risk_tier)",
+    "  })",
+    "  list(predictions = results, count = length(results))",
+    "}",
+    "",
+    "# Run: plumber::pr('plumber.R') %>% plumber::pr_run(host = '0.0.0.0', port = 8000)"
+  ),
+  collapse = "\n"
+)
+cat("plumber application code (plumber.R):\n")
+cat(substr(PLUMBER_APP, 1, 2000), "\n")
+plumber_path <- file.path(mod08_dir, "plumber.R")
+writeLines(PLUMBER_APP, plumber_path)
+cat("\nplumber.R written to:", plumber_path, "\n")
+```
+
+```{r}
+# pr / pr_run pattern (do not bind a port during knit)
+PR_RUN_DEMO <- paste(
+  c(
+    "library(plumber)",
+    "pr <- plumber::pr(file.path(tempdir(), 'mod08', 'plumber.R'))",
+    "pr <- plumber::pr_set_debug(pr, TRUE)",
+    "# plumber::pr_run(pr, host = '0.0.0.0', port = 8000)  # start the server",
+    "# POST /predict  JSON body: {age, los_days, diabetes, hf, copd, patient_id}"
+  ),
+  collapse = "\n"
+)
+cat(PR_RUN_DEMO, "\n")
+if (requireNamespace("plumber", quietly = TRUE)) {
+  pr <- plumber::pr(plumber_path)
+  cat("plumber::pr() loaded routes:\n")
+  print(pr)
+}
+```
+
+## 4. Request Validation & Predictions
+
+```{r}
+PatientFeatures <- function(age, los_days, diabetes, hf, copd, patient_id = NULL) {
+  errors <- character()
+  if (!(18 <= age && age <= 90)) errors <- c(errors, sprintf("age must be 18-90, got %s", age))
+  if (!(1 <= los_days && los_days <= 60)) errors <- c(errors, sprintf("los_days must be 1-60, got %s", los_days))
+  if (!diabetes %in% c(0, 1)) errors <- c(errors, "diabetes must be 0 or 1")
+  if (!hf %in% c(0, 1)) errors <- c(errors, "hf must be 0 or 1")
+  if (!copd %in% c(0, 1)) errors <- c(errors, "copd must be 0 or 1")
+  if (length(errors)) stop(paste(errors, collapse = "; "))
+  list(age = age, los_days = los_days, diabetes = diabetes, hf = hf, copd = copd,
+       patient_id = patient_id)
+}
+
+predict_patient <- function(patient, model_obj) {
+  X <- matrix(
+    c(patient$age, patient$los_days, patient$diabetes, patient$hf, patient$copd),
+    nrow = 1, dimnames = list(NULL, FEATURES)
+  )
+  prob <- as.numeric(predict(model_obj, X))
+  tier <- if (prob < 0.10) "Low" else if (prob < 0.20) "Moderate" else if (prob < 0.35) "High" else "Very High"
+  list(
+    patient_id = patient$patient_id,
+    readmission_probability = round(prob, 4),
+    risk_tier = tier,
+    model_version = "1.0.0"
+  )
+}
+
+test_cases <- list(
+  list(age = 72, los_days = 8, diabetes = 1, hf = 1, copd = 0, patient_id = "PT-00142",
+       label = "High-risk HF patient"),
+  list(age = 35, los_days = 2, diabetes = 0, hf = 0, copd = 0, patient_id = "PT-00289",
+       label = "Low-risk young patient"),
+  list(age = 200, los_days = 5, diabetes = 0, hf = 0, copd = 0, patient_id = "PT-bad",
+       label = "Invalid age"),
+  list(age = 65, los_days = 10, diabetes = 2, hf = 0, copd = 0, patient_id = "PT-bad2",
+       label = "Invalid diabetes")
+)
+
+cat("plumber endpoint simulation (validation + prediction):\n")
+cat(sprintf("%-35s %-8s %-8s %s\n", "Patient", "Status", "Prob", "Risk Tier"))
+cat(strrep("-", 70), "\n")
+for (tc in test_cases) {
+  label <- tc$label
+  tc$label <- NULL
+  tryCatch({
+    pt <- do.call(PatientFeatures, tc)
+    result <- predict_patient(pt, model)
+    cat(sprintf("  %-33s OK       %.4f  %s\n", label, result$readmission_probability, result$risk_tier))
+  }, error = function(e) {
+    cat(sprintf("  %-33s ERROR    %s\n", label, substr(e$message, 1, 35)))
+  })
+}
+```
+
+## 5. API Test Suite
+
+```{r}
+simulate_api_call <- function(endpoint, payload, model_obj) {
+  t0 <- proc.time()[["elapsed"]]
+  on.exit(cat(sprintf("  [%s] %.1fms\n", endpoint, (proc.time()[["elapsed"]] - t0) * 1000)))
+  tryCatch({
+    if (endpoint == "/health") {
+      return(list(status = "healthy", timestamp = "2024-01-15T10:30:00"))
+    } else if (endpoint == "/predict") {
+      needed <- c("age", "los_days", "diabetes", "hf", "copd")
+      if (!all(needed %in% names(payload))) stop("Missing required fields")
+      pt <- do.call(PatientFeatures, payload[intersect(names(payload), c(needed, "patient_id"))])
+      return(predict_patient(pt, model_obj))
+    } else if (endpoint == "/predict/batch") {
+      results <- lapply(payload$patients, function(p) {
+        pt <- do.call(PatientFeatures, p[intersect(names(p), c("age", "los_days", "diabetes", "hf", "copd", "patient_id"))])
+        predict_patient(pt, model_obj)
+      })
+      return(list(predictions = results, count = length(results)))
+    }
+  }, error = function(e) list(error = e$message))
+}
+
+cat("API test suite simulation:\n\n")
+cat("Test 1: Health check\n")
+r <- simulate_api_call("/health", list(), model)
+cat("  Response:", toJSON(r, auto_unbox = TRUE), "\n")
+
+cat("\nTest 2: Single prediction (high-risk)\n")
+r <- simulate_api_call("/predict",
+  list(age = 72, los_days = 12, diabetes = 1, hf = 1, copd = 0, patient_id = "PT-00142"), model)
+cat("  Response:\n")
+cat(toJSON(r, pretty = TRUE, auto_unbox = TRUE), "\n")
+
+cat("\nTest 3: Batch prediction (3 patients)\n")
+r <- simulate_api_call("/predict/batch", list(patients = list(
+  list(age = 72, los_days = 12, diabetes = 1, hf = 1, copd = 0, patient_id = "PT-001"),
+  list(age = 45, los_days = 3, diabetes = 0, hf = 0, copd = 0, patient_id = "PT-002"),
+  list(age = 68, los_days = 7, diabetes = 1, hf = 0, copd = 1, patient_id = "PT-003")
+)), model)
+for (pred in r$predictions) {
+  cat(sprintf("  %s: prob=%.4f | tier=%s\n", pred$patient_id, pred$readmission_probability, pred$risk_tier))
+}
+```
+
+## 6. Docker Deployment
+
+```{r}
+DOCKER_COMPOSE <- paste(
+  c(
+    "version: '3.8'",
+    "services:",
+    "  api:",
+    "    build: .",
+    "    ports:",
+    "      - '8000:8000'",
+    "    environment:",
+    "      - MODEL_PATH=/app/models/readmission_model.rds",
+    "      - LOG_LEVEL=INFO",
+    "      - ALLOWED_ORIGINS=https://dashboard.healthsystem.org",
+    "    volumes:",
+    "      - ./models:/app/models:ro  # read-only model mount",
+    "    healthcheck:",
+    "      test: ['CMD','curl','-f','http://localhost:8000/health']",
+    "      interval: 30s",
+    "      timeout: 10s",
+    "      retries: 3",
+    "    restart: unless-stopped",
+    "",
+    "  nginx:",
+    "    image: nginx:alpine",
+    "    ports:",
+    "      - '443:443'",
+    "    volumes:",
+    "      - ./nginx.conf:/etc/nginx/nginx.conf:ro",
+    "      - /etc/ssl/certs:/etc/ssl/certs:ro",
+    "    depends_on: [api]"
+  ),
+  collapse = "\n"
+)
+
+DOCKERFILE <- paste(
+  c(
+    "FROM rocker/r-ver:4.3.1",
+    "WORKDIR /app",
+    "COPY packages.R .",
+    "RUN Rscript packages.R",
+    "COPY plumber.R .",
+    "COPY models/ models/",
+    "RUN useradd -m appuser && chown -R appuser /app",
+    "USER appuser",
+    "EXPOSE 8000",
+    "CMD [\"Rscript\", \"-e\", \"plumber::pr('plumber.R') |> plumber::pr_run(host='0.0.0.0', port=8000)\"]"
+  ),
+  collapse = "\n"
+)
+
+cat("Dockerfile:\n")
+cat(DOCKERFILE, "\n")
+cat("\ndocker-compose.yml:\n")
+cat(DOCKER_COMPOSE, "\n")
+
+writeLines(DOCKERFILE, file.path(mod08_dir, "Dockerfile"))
+writeLines(DOCKER_COMPOSE, file.path(mod08_dir, "docker-compose.yml"))
+cat("Files written to", mod08_dir, "\n")
+```
+
+## 7. API Performance & Clinical Considerations
+
+```{r}
+BATCH_SIZES <- c(1, 10, 50, 100, 500)
+test_patient <- c(age = 65, los_days = 7, diabetes = 1, hf = 0, copd = 0)
+
+latencies <- sapply(BATCH_SIZES, function(batch_size) {
+  X_batch <- matrix(rep(test_patient, batch_size), nrow = batch_size, byrow = TRUE,
+                    dimnames = list(NULL, FEATURES))
+  t0 <- proc.time()[["elapsed"]]
+  for (i in 1:20) predict(model, X_batch)
+  (proc.time()[["elapsed"]] - t0) / 20 * 1000
+})
+
+lat_df <- tibble(batch = BATCH_SIZES, ms = as.numeric(latencies))
+p_lat <- ggplot(lat_df, aes(batch, ms)) +
+  geom_line(colour = col_blue, linewidth = 1.1) +
+  geom_point(colour = col_blue, size = 3) +
+  geom_text(aes(label = sprintf("%.1fms", ms)), vjust = -0.8, size = 3) +
+  labs(
+    x = "Batch size (# patients)", y = "Latency (ms)",
+    title = "API Prediction Latency by Batch Size\n(xgboost model, simulated endpoint)"
+  )
+print(p_lat)
+ggsave(file.path(mod08_dir, "api_latency.png"), p_lat, width = 9, height = 4, dpi = 150, bg = "white")
+
+cat("Clinical API requirements:\n")
+cat("  EHR integration    : < 500ms (synchronous calls within order workflow)\n")
+cat("  Batch discharge    : < 5s for 500 patients (overnight discharge planning)\n")
+cat("  Model loading      : one-time at startup, NOT per request (readRDS once in plumber.R)\n")
+cat("  Rate limiting      : typically 100 req/min per client IP\n")
+cat("  PHI handling       : patient_id in request is optional; never log PHI in plaintext\n")
+```
+
+## 8. Knowledge Check
+1. A clinician enters `age=-5` in the EHR interface. What HTTP status code should your API return and why?
+2. Your batch endpoint receives 10,000 patients. How do you handle this without blocking other requests?
+3. The API is integrated into the EHR. A code deploy breaks the `/predict` endpoint. What should your health check return?
+4. A researcher wants to use the API for a study pulling 500,000 predictions. What rate limiting approach protects the production system?
+5. Add an `/explain` endpoint that returns the top 3 SHAP feature contributions for a single patient prediction.
+
+```{r}
+# Exercise 5 — /explain endpoint with DALEX / feature importance
+explain_prediction <- function(patient_dict, model_obj, features = FEATURES) {
+  X <- matrix(
+    unlist(patient_dict[features]), nrow = 1,
+    dimnames = list(NULL, features)
+  )
+  prob <- as.numeric(predict(model_obj, X))
+  imp <- tryCatch({
+    xgb.importance(model = model_obj)
+  }, error = function(e) {
+    tibble(Feature = features, Gain = rep(1 / length(features), length(features)))
+  })
+  top3 <- head(imp, 3)
+  list(
+    patient_id = patient_dict$patient_id,
+    readmission_probability = round(prob, 4),
+    risk_tier = if (prob > 0.35) "High" else if (prob > 0.20) "Moderate" else "Low",
+    top_3_drivers = lapply(seq_len(nrow(top3)), function(i) {
+      list(
+        feature = as.character(top3$Feature[i]),
+        importance = round(as.numeric(top3$Gain[i]), 4),
+        direction = "increases risk"
+      )
+    })
+  )
+}
+
+pt <- list(age = 72, los_days = 12, diabetes = 1, hf = 1, copd = 0, patient_id = "PT-00142")
+result <- explain_prediction(pt, model)
+cat("POST /explain response:\n")
+cat(toJSON(result, pretty = TRUE, auto_unbox = TRUE), "\n")
+```
+
+***
+**Next → NB-06: Testing, CI/CD & Code Quality**

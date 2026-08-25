@@ -1,0 +1,581 @@
+---
+title: "Shiny Dashboards"
+subtitle: "Module 08 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 08: Reproducible Research & Deployment
+***
+**Learning objectives**
+- Build a multi-tab clinical analytics Shiny dashboard
+- Use `bindCache()` and `reactiveValues()` for performance
+- Create interactive filters, KPI metrics, and downloadable tables
+- Implement patient risk alerting with adjustable thresholds
+- Apply authentication and multi-page navigation patterns
+- Deploy Shiny apps via Docker, shinyapps.io, and Posit Connect
+
+**Estimated time:** 3 hours | **Level:** Intermediate | **Libraries:** `shiny`, `shinydashboard`, `ggplot2`, `tidymodels`
+
+## 1. Setup & Synthetic Dashboard Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(patchwork)
+library(pROC)
+library(rsample)
+library(xgboost)
+library(fs)
+
+mod08_dir <- file.path(tempdir(), "mod08")
+app_dir <- file.path(mod08_dir, "shiny_app")
+dir.create(file.path(app_dir, "data", "processed"), recursive = TRUE, showWarnings = FALSE)
+
+col_blue <- "#2563EB"
+col_red  <- "#DC2626"
+col_green <- "#16A34A"
+col_gold <- "#D4A017"
+col_purple <- "#B47CC7"
+
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.line        = element_line(colour = "grey40")
+    )
+)
+
+set.seed(42)
+N <- 3000
+sigmoid <- function(x) 1 / (1 + exp(-x))
+df <- tibble(
+  patient_id = sprintf("PT-%05d", seq_len(N) - 1),
+  age        = as.integer(pmin(pmax(rnorm(N, 60, 15), 18), 90)),
+  sex        = sample(c("M", "F"), N, replace = TRUE, prob = c(0.48, 0.52)),
+  payer      = sample(
+    c("Medicare", "Medicaid", "Private", "Self-pay"),
+    N, replace = TRUE, prob = c(0.40, 0.22, 0.28, 0.10)
+  ),
+  unit       = sample(c("Cardiology", "Pulmonology", "Medicine", "Surgery"), N, replace = TRUE),
+  los_days   = as.integer(pmin(pmax(rgamma(N, 2.5, scale = 1.8), 1), 30)),
+  diabetes   = rbinom(N, 1, 0.35),
+  hf         = rbinom(N, 1, 0.22),
+  copd       = rbinom(N, 1, 0.18)
+)
+logit <- -3.2 + 0.6 * df$hf + 0.5 * df$diabetes + 0.02 * (df$age - 60) +
+  0.2 * as.integer(df$los_days > 7)
+df$readmit_prob <- sigmoid(logit)
+df$readmitted   <- rbinom(N, 1, df$readmit_prob)
+df$admit_date   <- seq(as.POSIXct("2023-01-01"), by = "6 hours", length.out = N)
+saveRDS(df, file.path(app_dir, "data", "processed", "features.rds"))
+write_csv(df, file.path(app_dir, "data", "processed", "features.csv"))
+cat(sprintf("Dashboard dataset: %d x %d | Readmission: %.1f%%\n",
+            nrow(df), ncol(df), mean(df$readmitted) * 100))
+```
+
+## 2. Shiny Architecture for Clinical Dashboards
+
+```
+app.R                    <- Single-file entry point
+# or
+ui.R + server.R          <- Multi-file Shiny
+R/
+  model.R                <- load_model(), predict_risk()
+  data.R                 <- load_data(), filter_data()
+  plots.R                <- reusable ggplot2 helpers
+```
+
+**Key Shiny concepts for clinical apps:**
+- `bindCache()` / `reactive()`: cache expensive data loads (invalidate on input change)
+- `reactiveValues()`: persist user selections across tabs
+- `sidebarPanel()`: filters that update all tabs simultaneously
+- `shinydashboard::valueBox()` / KPI cards with delta indicators
+- `downloadHandler()`: export high-risk patient lists to CSV
+
+## 3. Complete app.R
+
+```{r}
+SHINY_APP <- paste(
+  c(
+    "# app.R -- Clinical Readmission Dashboard",
+    "library(shiny)",
+    "library(ggplot2)",
+    "library(dplyr)",
+    "library(readr)",
+    "library(pROC)",
+    "",
+    "FEATURES_PATH <- 'data/processed/features.rds'",
+    "",
+    "ui <- fluidPage(",
+    "  titlePanel('30-Day Readmission Analytics Dashboard'),",
+    "  sidebarLayout(",
+    "    sidebarPanel(",
+    "      h3('Filters'),",
+    "      hr(),",
+    "      checkboxGroupInput(",
+    "        'units', 'Hospital Unit',",
+    "        choices = c('Cardiology', 'Pulmonology', 'Medicine', 'Surgery'),",
+    "        selected = c('Cardiology', 'Pulmonology', 'Medicine', 'Surgery')",
+    "      ),",
+    "      sliderInput('age_range', 'Age Range', min = 18, max = 90, value = c(30, 80)),",
+    "      sliderInput(",
+    "        'risk_threshold', 'Risk Alert Threshold',",
+    "        min = 0.10, max = 0.50, value = 0.25, step = 0.01",
+    "      ),",
+    "      helpText('Flag patients above this predicted readmission probability'),",
+    "      uiOutput('alert_badge'),",
+    "      width = 3",
+    "    ),",
+    "    mainPanel(",
+    "      fluidRow(",
+    "        column(3, uiOutput('kpi_n')),",
+    "        column(3, uiOutput('kpi_rate')),",
+    "        column(3, uiOutput('kpi_los')),",
+    "        column(3, uiOutput('kpi_high'))",
+    "      ),",
+    "      tabsetPanel(",
+    "        id = 'tabs',",
+    "        tabPanel('Overview',",
+    "          fluidRow(",
+    "            column(6, plotOutput('unit_rates')),",
+    "            column(6, plotOutput('risk_dist'))",
+    "          )",
+    "        ),",
+    "        tabPanel('Patient Risk List',",
+    "          h4(textOutput('risk_title')),",
+    "          downloadButton('download_high_risk', 'Download High-Risk List'),",
+    "          hr(),",
+    "          DT::dataTableOutput('risk_table')",
+    "        ),",
+    "        tabPanel('Model Performance',",
+    "          h4('Model Performance Metrics'),",
+    "          uiOutput('kpi_auc'),",
+    "          plotOutput('roc_plot')",
+    "        )",
+    "      ),",
+    "      width = 9",
+    "    )",
+    "  )",
+    ")",
+    "",
+    "server <- function(input, output, session) {",
+    "  load_data <- reactive({",
+    "    readRDS(FEATURES_PATH)",
+    "  }) %>% bindCache(FEATURES_PATH)",
+    "",
+    "  df_filtered <- reactive({",
+    "    load_data() %>%",
+    "      filter(unit %in% input$units,",
+    "             age >= input$age_range[1],",
+    "             age <= input$age_range[2])",
+    "  })",
+    "",
+    "  high_risk <- reactive({",
+    "    df_filtered() %>%",
+    "      filter(readmit_prob >= input$risk_threshold) %>%",
+    "      arrange(desc(readmit_prob))",
+    "  })",
+    "",
+    "  output$kpi_n <- renderUI({",
+    "    wellPanel(h3(format(nrow(df_filtered()), big.mark = ',')), p('Total Patients'))",
+    "  })",
+    "  output$kpi_rate <- renderUI({",
+    "    rate <- mean(df_filtered()$readmitted) * 100",
+    "    overall <- mean(load_data()$readmitted) * 100",
+    "    delta <- rate - overall",
+    "    wellPanel(",
+    "      h3(sprintf('%.1f%%', rate)),",
+    "      p('Readmission Rate'),",
+    "      p(sprintf('%+.1fpp vs overall', delta))",
+    "    )",
+    "  })",
+    "  output$kpi_los <- renderUI({",
+    "    wellPanel(h3(sprintf('%.1f', mean(df_filtered()$los_days))), p('Mean LOS (days)'))",
+    "  })",
+    "  output$kpi_high <- renderUI({",
+    "    wellPanel(",
+    "      h3(format(nrow(high_risk()), big.mark = ',')),",
+    "      p('High-Risk Patients')",
+    "    )",
+    "  })",
+    "  output$alert_badge <- renderUI({",
+    "    n <- nrow(high_risk())",
+    "    div(style = 'background:#DC2626;color:white;padding:12px;border-radius:8px;text-align:center;',",
+    "        h2(n), p('High Risk Alerts'))",
+    "  })",
+    "  output$unit_rates <- renderPlot({",
+    "    unit_rates <- df_filtered() %>%",
+    "      group_by(unit) %>%",
+    "      summarise(rate = mean(readmitted) * 100, .groups = 'drop')",
+    "    ggplot(unit_rates, aes(unit, rate)) +",
+    "      geom_col(fill = '#2563EB', alpha = 0.85) +",
+    "      labs(title = 'Readmission Rate by Unit', y = 'Rate (%)', x = NULL) +",
+    "      theme_minimal()",
+    "  })",
+    "  output$risk_dist <- renderPlot({",
+    "    ggplot(df_filtered(), aes(readmit_prob)) +",
+    "      geom_histogram(bins = 20, fill = '#2563EB', alpha = 0.85, colour = 'white') +",
+    "      geom_vline(xintercept = input$risk_threshold, linetype = 'dashed') +",
+    "      labs(title = 'Risk Score Distribution', x = 'Predicted probability', y = 'Count') +",
+    "      theme_minimal()",
+    "  })",
+    "  output$risk_title <- renderText({",
+    "    sprintf('High-Risk Patients (probability >= %.0f%%)', input$risk_threshold * 100)",
+    "  })",
+    "  output$risk_table <- DT::renderDataTable({",
+    "    high_risk() %>%",
+    "      select(patient_id, age, unit, los_days, readmit_prob)",
+    "  }, options = list(pageLength = 15, order = list(list(4, 'desc'))))",
+    "  output$download_high_risk <- downloadHandler(",
+    "    filename = function() 'high_risk_patients.csv',",
+    "    content = function(file) readr::write_csv(high_risk(), file)",
+    "  )",
+    "  output$kpi_auc <- renderUI({",
+    "    d <- df_filtered()",
+    "    auc <- as.numeric(pROC::auc(d$readmitted, d$readmit_prob, quiet = TRUE))",
+    "    wellPanel(h3(sprintf('%.3f', auc)), p('AUC-ROC'))",
+    "  })",
+    "  output$roc_plot <- renderPlot({",
+    "    d <- df_filtered()",
+    "    roc_obj <- pROC::roc(d$readmitted, d$readmit_prob, quiet = TRUE)",
+    "    roc_df <- data.frame(fpr = 1 - roc_obj$specificities, tpr = roc_obj$sensitivities)",
+    "    ggplot(roc_df, aes(fpr, tpr)) +",
+    "      geom_line(colour = '#DC2626', linewidth = 1.1) +",
+    "      geom_abline(linetype = 'dashed') +",
+    "      labs(x = '1 - Specificity', y = 'Sensitivity', title = 'ROC Curve') +",
+    "      theme_minimal()",
+    "  })",
+    "}",
+    "",
+    "shinyApp(ui, server)"
+  ),
+  collapse = "\n"
+)
+
+cat("Shiny application code (app.R):\n")
+cat(substr(SHINY_APP, 1, 1800), "\n")
+app_path <- file.path(app_dir, "app.R")
+writeLines(SHINY_APP, app_path)
+cat("\nApp saved to:", app_path, "\n")
+cat("\nTo run: shiny::runApp('", app_dir, "')\n", sep = "")
+```
+
+```{r}
+# Multi-file pattern: ui.R + server.R (same teaching goals)
+SHINY_UI <- paste(
+  c(
+    "# ui.R -- Clinical Readmission Dashboard",
+    "library(shiny)",
+    "fluidPage(",
+    "  titlePanel('30-Day Readmission Analytics Dashboard'),",
+    "  sidebarLayout(",
+    "    sidebarPanel(",
+    "      checkboxGroupInput('units', 'Hospital Unit',",
+    "        choices = c('Cardiology','Pulmonology','Medicine','Surgery'),",
+    "        selected = c('Cardiology','Pulmonology','Medicine','Surgery')),",
+    "      sliderInput('age_range', 'Age Range', 18, 90, c(30, 80)),",
+    "      sliderInput('risk_threshold', 'Risk Alert Threshold', 0.10, 0.50, 0.25, 0.01),",
+    "      uiOutput('alert_badge')",
+    "    ),",
+    "    mainPanel(",
+    "      fluidRow(",
+    "        column(3, uiOutput('kpi_n')), column(3, uiOutput('kpi_rate')),",
+    "        column(3, uiOutput('kpi_los')), column(3, uiOutput('kpi_high'))",
+    "      ),",
+    "      tabsetPanel(",
+    "        tabPanel('Overview', plotOutput('unit_rates'), plotOutput('risk_dist')),",
+    "        tabPanel('Patient Risk List',",
+    "          downloadButton('download_high_risk', 'Download High-Risk List'),",
+    "          DT::dataTableOutput('risk_table')),",
+    "        tabPanel('Model Performance', uiOutput('kpi_auc'), plotOutput('roc_plot'))",
+    "      )",
+    "    )",
+    "  )",
+    ")"
+  ),
+  collapse = "\n"
+)
+
+SHINY_SERVER <- paste(
+  c(
+    "# server.R -- Clinical Readmission Dashboard",
+    "library(shiny); library(dplyr); library(ggplot2); library(pROC)",
+    "function(input, output, session) {",
+    "  load_data <- reactive(readRDS('data/processed/features.rds')) %>% bindCache(TRUE)",
+    "  df_filtered <- reactive({",
+    "    load_data() %>% filter(unit %in% input$units,",
+    "      age >= input$age_range[1], age <= input$age_range[2])",
+    "  })",
+    "  high_risk <- reactive({",
+    "    df_filtered() %>% filter(readmit_prob >= input$risk_threshold) %>%",
+    "      arrange(desc(readmit_prob))",
+    "  })",
+    "  output$kpi_n <- renderUI(wellPanel(h3(nrow(df_filtered())), p('Total Patients')))",
+    "  output$kpi_rate <- renderUI({",
+    "    wellPanel(h3(sprintf('%.1f%%', mean(df_filtered()$readmitted)*100)), p('Readmission Rate'))",
+    "  })",
+    "  output$kpi_los <- renderUI(wellPanel(h3(sprintf('%.1f', mean(df_filtered()$los_days))), p('Mean LOS (days)')))",
+    "  output$kpi_high <- renderUI(wellPanel(h3(nrow(high_risk())), p('High-Risk Patients')))",
+    "  output$alert_badge <- renderUI({",
+    "    div(style='background:#DC2626;color:white;padding:12px;text-align:center;',",
+    "        h2(nrow(high_risk())), p('High Risk Alerts'))",
+    "  })",
+    "  output$unit_rates <- renderPlot({",
+    "    d <- df_filtered() %>% group_by(unit) %>% summarise(rate = mean(readmitted)*100, .groups='drop')",
+    "    ggplot(d, aes(unit, rate)) + geom_col(fill='#2563EB') + theme_minimal()",
+    "  })",
+    "  output$risk_dist <- renderPlot({",
+    "    ggplot(df_filtered(), aes(readmit_prob)) + geom_histogram(bins=20, fill='#2563EB') + theme_minimal()",
+    "  })",
+    "  output$risk_table <- DT::renderDataTable({",
+    "    high_risk() %>% select(patient_id, age, unit, los_days, readmit_prob)",
+    "  })",
+    "  output$download_high_risk <- downloadHandler(",
+    "    filename = function() 'high_risk_patients.csv',",
+    "    content = function(file) readr::write_csv(high_risk(), file)",
+    "  )",
+    "  output$kpi_auc <- renderUI({",
+    "    d <- df_filtered()",
+    "    wellPanel(h3(sprintf('%.3f', as.numeric(pROC::auc(d$readmitted, d$readmit_prob, quiet=TRUE)))), p('AUC-ROC'))",
+    "  })",
+    "  output$roc_plot <- renderPlot({",
+    "    d <- df_filtered(); r <- pROC::roc(d$readmitted, d$readmit_prob, quiet=TRUE)",
+    "    ggplot(data.frame(fpr=1-r$specificities, tpr=r$sensitivities), aes(fpr,tpr)) +",
+    "      geom_line(colour='#DC2626') + geom_abline(linetype='dashed') + theme_minimal()",
+    "  })",
+    "}"
+  ),
+  collapse = "\n"
+)
+
+writeLines(SHINY_UI, file.path(app_dir, "ui.R"))
+writeLines(SHINY_SERVER, file.path(app_dir, "server.R"))
+cat("Multi-file Shiny written:\n")
+cat(" ", file.path(app_dir, "ui.R"), "\n")
+cat(" ", file.path(app_dir, "server.R"), "\n")
+```
+
+## 4. Dashboard Preview (ggplot2 simulation)
+
+```{r}
+# Demonstrate Shiny component patterns without running the server
+set.seed(42)
+split <- initial_split(df, prop = 0.8, strata = readmitted)
+train <- training(split)
+test  <- testing(split)
+feat <- c("age", "los_days", "diabetes", "hf", "copd")
+dtrain <- xgb.DMatrix(as.matrix(train[feat]), label = train$readmitted)
+bst <- xgb.train(
+  params = list(objective = "binary:logistic", max_depth = 4, eta = 0.05,
+                eval_metric = "auc"),
+  data = dtrain, nrounds = 200, verbose = 0
+)
+df$readmit_prob <- predict(bst, as.matrix(df[feat]))
+prob_te <- predict(bst, as.matrix(test[feat]))
+auc <- as.numeric(pROC::auc(test$readmitted, prob_te, quiet = TRUE))
+
+kpi_data <- tibble(
+  label = c("Total Patients", "Readmission Rate", "Mean LOS", "High Risk (>25%)", "Model AUC"),
+  value = c(
+    format(nrow(df), big.mark = ","),
+    sprintf("%.1f%%", mean(df$readmitted) * 100),
+    sprintf("%.1f days", mean(df$los_days)),
+    format(sum(df$readmit_prob > 0.25), big.mark = ","),
+    sprintf("%.3f", auc)
+  ),
+  col = c(col_blue, col_red, col_green, col_gold, col_purple)
+)
+p_kpi <- ggplot(kpi_data, aes(label, 1, fill = col)) +
+  geom_tile(alpha = 0.25, colour = kpi_data$col, linewidth = 1.2) +
+  geom_text(aes(label = value, colour = col), fontface = "bold", size = 5, vjust = -0.4) +
+  geom_text(aes(label = label), colour = "grey40", size = 3, vjust = 1.6) +
+  scale_fill_identity() + scale_colour_identity() +
+  labs(title = "KPI Header Row") +
+  theme_void() + theme(plot.title = element_text(hjust = 0, size = 11))
+
+unit_r <- df %>%
+  group_by(unit) %>%
+  summarise(rate = mean(readmitted) * 100, .groups = "drop") %>%
+  mutate(col = if_else(rate > mean(df$readmitted) * 100, col_red, col_blue))
+p_a <- ggplot(unit_r, aes(unit, rate, fill = col)) +
+  geom_col(alpha = 0.85, colour = "white") +
+  geom_hline(yintercept = mean(df$readmitted) * 100, linetype = "dashed") +
+  scale_fill_identity() +
+  labs(y = "Readmission rate (%)", title = "Tab 1: Rate by Unit") +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
+
+p_b <- ggplot(df, aes(readmit_prob, fill = factor(readmitted,
+                   labels = c("Not readmitted", "Readmitted")))) +
+  geom_histogram(aes(y = after_stat(density)), bins = 25, alpha = 0.6,
+                 position = "identity") +
+  geom_vline(xintercept = 0.25, linetype = "dashed") +
+  scale_fill_manual(values = c(col_blue, col_red)) +
+  labs(x = "Predicted probability", y = "Density",
+       title = "Tab 1: Risk Score Distribution", fill = NULL)
+
+roc_obj <- pROC::roc(test$readmitted, prob_te, quiet = TRUE)
+roc_df <- tibble(fpr = 1 - roc_obj$specificities, tpr = roc_obj$sensitivities)
+p_c <- ggplot(roc_df, aes(fpr, tpr)) +
+  geom_ribbon(aes(ymin = 0, ymax = tpr), fill = col_red, alpha = 0.10) +
+  geom_line(colour = col_red, linewidth = 1.1) +
+  geom_abline(linetype = "dashed") +
+  labs(x = "1-Specificity", y = "Sensitivity",
+       title = sprintf("Tab 3: Model Performance (AUC=%.3f)", auc))
+
+preview <- p_kpi / (p_a | p_b | p_c) +
+  plot_annotation(title = "Shiny Dashboard Preview: Clinical Readmission Analytics")
+print(preview)
+ggsave(file.path(mod08_dir, "shiny_preview.png"), preview,
+       width = 18, height = 10, dpi = 150, bg = "white")
+cat("Dashboard preview figure saved.\n")
+```
+
+## 5. Advanced Shiny Patterns
+
+```{r}
+ADVANCED_PATTERNS <- paste(
+  c(
+    "# Pattern 1: Caching for expensive computations",
+    "load_scores <- reactive({",
+    "  df <- readRDS(features_path)",
+    "  model <- readRDS(model_path)",
+    "  predict(model, as.matrix(df[FEATURES]))",
+    "}) %>% bindCache(features_path, model_path)",
+    "",
+    "# Pattern 2: reactiveValues for multi-tab apps",
+    "rv <- reactiveValues(selected_patient = NULL)",
+    "observeEvent(input$risk_table_rows_selected, {",
+    "  rv$selected_patient <- high_risk()[input$risk_table_rows_selected, ]",
+    "})",
+    "",
+    "# Pattern 3: Real-time updates with invalidateLater",
+    "output$processed <- renderText({",
+    "  invalidateLater(500, session)",
+    "  paste('Patients Processed', isolate(rv$count))",
+    "})",
+    "",
+    "# Pattern 4: plotly for interactive charts",
+    "library(plotly)",
+    "output$scatter <- renderPlotly({",
+    "  ggplot(df, aes(age, readmit_prob, colour = unit,",
+    "                 text = paste(patient_id, los_days))) +",
+    "    geom_point(alpha = 0.6) +",
+    "    labs(title = 'Risk by Age and Unit') +",
+    "    theme_minimal()",
+    "}) %>% bindCache(df)",
+    "",
+    "# Pattern 5: Authentication",
+    "# install.packages('shinymanager')",
+    "library(shinymanager)",
+    "credentials <- data.frame(",
+    "  user = c('clinician', 'analyst'),",
+    "  password = c('change-me', 'change-me'),",
+    "  stringsAsFactors = FALSE",
+    ")",
+    "ui <- secure_app(ui)",
+    "server <- function(input, output, session) {",
+    "  auth <- secure_server(check_credentials(credentials))",
+    "}",
+    "",
+    "# Pattern 6: Multi-page navigation (bslib navset / shiny modules)",
+    "# R/",
+    "#   mod_overview.R",
+    "#   mod_patients.R",
+    "#   mod_model.R",
+    "# shiny::runApp()  # app.R calls moduleServer() per page"
+  ),
+  collapse = "\n"
+)
+cat("Advanced Shiny Patterns:\n")
+cat(ADVANCED_PATTERNS, "\n")
+```
+
+## 6. Deployment Options
+
+```{r}
+deploy_options <- list(
+  `shinyapps.io / Posit Connect` = list(
+    requirements = "renv.lock or packages.R in repo root",
+    steps = c(
+      "1. Push code to GitHub",
+      "2. rsconnect::deployApp() or Posit Connect publish",
+      "3. Specify app.R path",
+      "4. Click Deploy"
+    ),
+    cost = "Free tier for public shinyapps.io; Posit Connect is licensed",
+    best_for = "Demo/teaching apps and internal clinical dashboards"
+  ),
+  `Docker + AWS/GCP/Azure` = list(
+    dockerfile = paste(
+      c(
+        "FROM rocker/shiny:4.3.1",
+        "WORKDIR /app",
+        "COPY packages.R .",
+        "RUN Rscript packages.R",
+        "COPY . .",
+        "EXPOSE 3838",
+        "CMD [\"R\", \"-e\", \"shiny::runApp('/app', host='0.0.0.0', port=3838)\"]"
+      ),
+      collapse = "\n"
+    ),
+    cost = "Variable (~$50-200/month)",
+    best_for = "Production clinical use"
+  ),
+  `Kubernetes (enterprise)` = list(
+    best_for = "High-availability clinical systems",
+    features = c("Auto-scaling", "Health checks", "Rolling updates", "Secrets management")
+  )
+)
+
+for (platform in names(deploy_options)) {
+  config <- deploy_options[[platform]]
+  cat("\n", strrep("=", 50), "\n", sep = "")
+  cat("Platform:", platform, "\n")
+  if (!is.null(config$steps)) {
+    cat("Steps:\n")
+    walk(config$steps, ~ cat(" ", .x, "\n"))
+  }
+  if (!is.null(config$dockerfile)) {
+    cat("Dockerfile:\n")
+    cat(config$dockerfile, "\n")
+  }
+  cat("Best for:", config$best_for %||% "", "\n")
+  if (!is.null(config$cost)) cat("Cost:", config$cost, "\n")
+}
+```
+
+## 7. Knowledge Check
+1. `bindCache()` with a 1-hour TTL analogue. Your model is re-trained daily. How do you ensure the dashboard uses the latest model?
+2. A clinician wants to sort the high-risk patient list by `los_days`. How do you make the table column-sortable?
+3. Your Shiny app uses PHI (patient names, MRNs). What security measures are needed before deployment?
+4. The dashboard loads 50,000 patients and is slow. Describe three strategies to improve performance.
+5. Build a clinical alert system: show a red badge in the sidebar showing the count of patients above the risk threshold.
+
+```{r}
+# Exercise 5 — Alert count simulation
+RISK_THRESHOLD <- 0.25
+high_risk_count <- sum(df$readmit_prob >= RISK_THRESHOLD)
+high_risk_pct   <- high_risk_count / nrow(df) * 100
+
+alert_df <- tibble(x = 0.5, y = 0.6, n = high_risk_count)
+p_alert <- ggplot(alert_df, aes(x, y)) +
+  annotate("point", x = 0.5, y = 0.6, size = 40, colour = col_red) +
+  annotate("text", x = 0.5, y = 0.6, label = high_risk_count,
+           colour = "white", fontface = "bold", size = 8) +
+  annotate("text", x = 0.5, y = 0.28, label = "High Risk Alerts", size = 4) +
+  annotate("text", x = 0.5, y = 0.15,
+           label = sprintf("(>%.0f%% predicted readmission)", RISK_THRESHOLD * 100),
+           colour = "grey40", size = 3) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+  labs(title = "Shiny Sidebar Alert Badge") +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "#f8f9fa", colour = NA))
+print(p_alert)
+cat(sprintf("High-risk patients (>%.0f%%): %d (%.1f%%)\n",
+            RISK_THRESHOLD * 100, high_risk_count, high_risk_pct))
+```
+
+***
+**Next → NB-04: MLflow Model Tracking & Registry**

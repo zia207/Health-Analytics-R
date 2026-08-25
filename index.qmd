@@ -1,0 +1,56 @@
+---
+title: "Health Analytics with R"
+subtitle: "From Raw EHR Data to Production-Ready Clinical Models"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+Welcome to **Health Analytics with R** — a comprehensive tutorial series for health informatics professionals, clinical data scientists, epidemiologists, and graduate students who want to apply R rigorously to healthcare problems.
+
+R remains the language of choice for many epidemiologists and biostatisticians because of its unmatched ecosystem for statistics, reproducible reporting, geospatial analysis, and causal inference. This series takes you from foundational EHR data handling through statistical inference, machine learning, clinical NLP, causal inference, geospatial epidemiology, and production deployment.
+
+**Modules:** 8 modules · 62 notebooks · ~450 code cells  
+**Level:** Intermediate to Advanced · Healthcare data science background assumed  
+**Language:** R 4.3+ · Quarto-compatible  
+**Dataset:** Synthetic (MIMIC-III inspired) · seed = 42 throughout  
+**Author:** Dr. Zia U. Ahmed · [Upatta Analytics](https://github.com/zia207)
+
+## Why Health Analytics with R?
+
+Healthcare generates more data per person than almost any other industry — electronic health records, claims databases, imaging, genomics, wearables, and administrative files — yet much of it remains under-analysed. **This series bridges three gaps that most textbooks leave open:**
+
+1. **Clinically meaningful examples** — every dataset, model, and metric is grounded in real healthcare problems: readmission prediction, drug optimisation, spatial health inequities, and causal treatment effects.
+2. **End-to-end thinking** — notebooks do not stop at model accuracy. They continue through calibration, fairness, explainability, API serving, monitoring, and clinical governance.
+3. **Reproducibility by design** — code is written as it would be in a health system data science team: version-pinned environments, SHA-256 data manifests, logged pipelines, and CI/CD-ready test suites.
+
+## Series Architecture
+
+The eight modules form two learning tracks that can be taken independently or sequentially.
+
+| Track | Modules | Focus |
+|-------|---------|-------|
+| **Track A — Pharmacy & Clinical Analytics** | 01–05 | R foundations → EDA → statistical inference → machine learning → clinical NLP |
+| **Track B — Population Health & Deployment** | 06–08 | Causal inference → geospatial epidemiology → reproducible research and deployment |
+
+Each module contains multiple notebooks following a consistent arc: **Concepts → Core method → Case study → Extension → Capstone**.
+
+## Getting Started
+
+1. Browse notebooks using the **sidebar** on the left — modules are organised by track.
+2. Clone the repository and install packages with `source("packages.R")`.
+3. Start with the [Series Overview](MOD00_NTRO_HealthR_Tutorial_Series.qmd) notebook for the full module guide.
+4. **Module 07 applied case study:** [NB-09 · Spatial ML — LBC Mortality (Northeast)](MOD07_NB09_Spatial_ML_LBC_Northeast.qmd) — real county data, hot-spot analysis, GWR, and GW-RF.
+
+```bash
+git clone https://github.com/zia207/Health-Analytics-with-Python.git
+cd Health-Analytics-with-Python/Health-Analytics-R
+Rscript packages.R
+```
+
+Open any `.qmd` file in RStudio or VS Code and render with Quarto.
+
+## Who Is This For?
+
+> Health informatics professionals, clinical data scientists, epidemiologists, public health researchers, and graduate students who know R basics and want to apply it rigorously to healthcare problems.
+
+If you are new to R, you may want to start with an introductory R course before diving into this series.

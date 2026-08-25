@@ -1,0 +1,431 @@
+---
+title: "Difference-in-Differences & Event Studies"
+subtitle: "Module 06 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 06: Causal Inference in Health Research
+***
+**Learning objectives**
+- Understand the parallel trends assumption and when DiD is valid
+- Implement classic 2×2 DiD and extend to panel data
+- Test pre-treatment parallel trends with event study plots
+- Apply Callaway-Sant'Anna staggered adoption DiD
+- Handle heterogeneous treatment effects across cohorts
+- Test the parallel trends assumption with placebo regressions
+
+**Estimated time:** 3 hours | **Level:** Advanced | **Libraries:** `fixest`, `lmtest`, `sandwich`, `dplyr`, `ggplot2`
+
+## 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(ggplot2)
+library(broom)
+library(patchwork)
+library(fixest)
+library(lmtest)
+library(sandwich)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+mod06_dir <- file.path(tempdir(), "mod06")
+dir.create(mod06_dir, showWarnings = FALSE, recursive = TRUE)
+
+col_blue  <- "#2563EB"
+col_red   <- "#DC2626"
+col_green <- "#16A34A"
+
+set.seed(42)
+cat("Setup complete.\n")
+```
+
+## 2. Classic 2×2 DiD — Medicaid Expansion Example
+
+**Scenario:** State Medicaid expansion under ACA (2014). Some states expanded (treated), others did not (control). Outcome: uninsured rate per county.
+
+**DiD Estimator:**
+```
+DiD = (Y_treat_post - Y_treat_pre) - (Y_ctrl_post - Y_ctrl_pre)
+```
+
+**Assumption:** *Parallel trends* — absent the policy, treated and control states would have followed the same trend in the outcome.
+
+```{r}
+# Simulate Medicaid expansion data (state-level panel, 2012-2017)
+set.seed(42)
+N_states    <- 50
+T_periods   <- 6      # 2012-2017
+POLICY_YEAR <- 2014   # ACA Medicaid expansion
+years       <- 2012:2017
+
+# 25 states expand, 25 don't
+expanded <- c(rep(1, 25), rep(0, 25))
+state_fe <- rnorm(N_states, 0, 2)  # state fixed effects
+# True ATT: expansion reduces uninsured rate by 4 percentage points
+TRUE_ATT <- -4.0
+
+records <- vector("list", N_states * length(years))
+idx <- 1
+for (s in seq_len(N_states)) {
+  for (yr in years) {
+    post  <- as.integer(yr >= POLICY_YEAR)
+    treat <- expanded[s]
+    # Pre-trend (same slope for both)
+    trend <- -0.8 * (yr - 2012)  # national trend: uninsured falling
+    # Treatment effect only for treated states after policy
+    effect <- TRUE_ATT * treat * post
+    # Base uninsured rate + state FE + trend + effect + noise
+    uninsured <- (18 + state_fe[s] + trend + effect + 3 * treat
+                  + rnorm(1, 0, 1.5))
+    records[[idx]] <- tibble(
+      state = s, year = yr, expanded = treat,
+      post = post, uninsured_pct = uninsured
+    )
+    idx <- idx + 1
+  }
+}
+df_did <- bind_rows(records)
+
+cat(sprintf("DiD panel: %d state-years | %d states | %d years\n",
+            nrow(df_did), N_states, T_periods))
+cat(sprintf("Expansion states: %d | Non-expansion: %d\n",
+            sum(expanded), sum(1 - expanded)))
+
+# 2x2 DiD table
+dd_table <- df_did |>
+  group_by(expanded, post) |>
+  summarise(mean_unins = mean(uninsured_pct), .groups = "drop") |>
+  mutate(
+    group = if_else(expanded == 1, "Expansion", "Non-expansion"),
+    period = if_else(post == 1, "Post-policy (2014-17)", "Pre-policy (2012-13)")
+  ) |>
+  select(group, period, mean_unins) |>
+  tidyr::pivot_wider(names_from = period, values_from = mean_unins)
+
+cat("\n2x2 DiD Table:\n")
+print(dd_table |> mutate(across(where(is.numeric), ~ round(.x, 2))))
+
+y_t_post <- dd_table[["Post-policy (2014-17)"]][dd_table$group == "Expansion"]
+y_t_pre  <- dd_table[["Pre-policy (2012-13)"]][dd_table$group == "Expansion"]
+y_c_post <- dd_table[["Post-policy (2014-17)"]][dd_table$group == "Non-expansion"]
+y_c_pre  <- dd_table[["Pre-policy (2012-13)"]][dd_table$group == "Non-expansion"]
+DiD_est <- (y_t_post - y_t_pre) - (y_c_post - y_c_pre)
+cat(sprintf("\nDiD estimate: %.3f pp | True ATT: %.1f pp\n", DiD_est, TRUE_ATT))
+```
+
+## 3. Regression DiD with Fixed Effects
+
+```{r}
+# Regression DiD: Y = alpha + beta1*Treat + beta2*Post + beta3*(Treat*Post) + FE + e
+# beta3 is the DiD estimator
+
+# Two-Way Fixed Effects (TWFE) with fixest (clustered by state)
+model_twfe <- feols(
+  uninsured_pct ~ expanded:post | state + year,
+  data = df_did,
+  cluster = ~state
+)
+
+did_coef <- coef(model_twfe)[["expanded:post"]]
+did_ci   <- confint(model_twfe)["expanded:post", ]
+did_se   <- se(model_twfe)[["expanded:post"]]
+
+cat("Two-Way Fixed Effects DiD (fixest):\n")
+cat(sprintf("  DiD estimate   : %.3f pp\n", did_coef))
+cat(sprintf("  SE (clustered) : %.3f\n", did_se))
+cat(sprintf("  95%% CI         : (%.3f, %.3f)\n", did_ci[1], did_ci[2]))
+cat(sprintf("  True ATT       : %.1f pp\n", TRUE_ATT))
+cat(sprintf("  Bias           : %+.3f pp\n", did_coef - TRUE_ATT))
+
+# Same TWFE with lm + sandwich clustered SEs
+model_lm <- lm(
+  uninsured_pct ~ expanded:post + factor(state) + factor(year),
+  data = df_did
+)
+ct_lm <- coeftest(model_lm, vcov. = vcovCL(model_lm, cluster = df_did$state))
+cat("\nTWFE via lm + sandwich (clustered by state):\n")
+print(ct_lm["expanded:post", , drop = FALSE])
+
+# Visualise parallel trends
+agg <- df_did |>
+  group_by(year, expanded) |>
+  summarise(uninsured_pct = mean(uninsured_pct), .groups = "drop") |>
+  mutate(group = if_else(expanded == 1, "Expansion", "Non-expansion"))
+
+# Counterfactual: treat 2013 expansion level + control post-trend
+post_years <- years[years >= POLICY_YEAR]
+ctrl_post <- agg |> filter(group == "Non-expansion", year >= POLICY_YEAR) |>
+  arrange(year)
+post_trend_ctrl <- mean(diff(ctrl_post$uninsured_pct))
+y_exp_2013 <- agg$uninsured_pct[agg$group == "Expansion" & agg$year == 2013]
+cf <- tibble(
+  year = post_years,
+  uninsured_pct = y_exp_2013 + post_trend_ctrl * (post_years - 2013),
+  group = "Counterfactual (no expansion)"
+)
+
+p_trends <- ggplot(agg, aes(x = year, y = uninsured_pct, colour = group)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2.5) +
+  geom_line(
+    data = cf, aes(x = year, y = uninsured_pct, colour = group),
+    linetype = "dashed", linewidth = 1, inherit.aes = FALSE
+  ) +
+  geom_vline(xintercept = POLICY_YEAR - 0.5, colour = "black",
+             linetype = "dashed", linewidth = 0.8) +
+  scale_colour_manual(
+    values = c(
+      "Non-expansion" = col_blue,
+      "Expansion" = col_red,
+      "Counterfactual (no expansion)" = col_red
+    )
+  ) +
+  labs(
+    x = "Year", y = "Uninsured rate (%)", colour = NULL,
+    title = "DiD: Parallel Trends Plot (both groups track together pre-policy)"
+  )
+
+gap <- agg |>
+  select(year, group, uninsured_pct) |>
+  tidyr::pivot_wider(names_from = group, values_from = uninsured_pct) |>
+  mutate(
+    diff = Expansion - `Non-expansion`,
+    period = if_else(year < POLICY_YEAR, "Pre", "Post")
+  )
+
+p_gap <- ggplot(gap, aes(x = year, y = diff, fill = period)) +
+  geom_col(alpha = 0.85, width = 0.7) +
+  geom_hline(yintercept = 0, colour = "black", linewidth = 0.4) +
+  geom_vline(xintercept = POLICY_YEAR - 0.5, colour = "black",
+             linetype = "dashed", linewidth = 0.8) +
+  scale_fill_manual(values = c(Pre = "#93C5FD", Post = col_red)) +
+  labs(
+    x = "Year", y = "Treated - Control gap (pp)", fill = NULL,
+    title = "Pre-trends check + Treatment effect by year"
+  )
+
+p_did <- p_trends + p_gap
+print(p_did)
+ggsave(file.path(mod06_dir, "did_parallel_trends.png"), p_did,
+       width = 14, height = 5, dpi = 120)
+```
+
+## 4. Event Study Regression (Dynamic DiD)
+
+```{r}
+# Event study: estimate treatment effect at each time relative to policy
+# Yi,t = alpha_i + lambda_t + sum_k(beta_k * D_i * 1[t=k]) + e
+# k = time relative to treatment (k=-1 is reference period)
+
+df_did <- df_did |>
+  mutate(
+    rel_year = year - POLICY_YEAR,
+    rel_cat  = pmin(pmax(rel_year, -3), 3)
+  )
+
+dk_name <- function(k) {
+  if (k < 0) paste0("d_km", abs(k)) else paste0("d_k", k)
+}
+
+for (k in -3:3) {
+  if (k != -1) {
+    col <- dk_name(k)
+    df_did[[col]] <- as.integer(df_did$expanded == 1 & df_did$rel_cat == k)
+  }
+}
+
+# TWFE event study with fixest (omit k = -1; k = -3 has no observations)
+model_es <- feols(
+  uninsured_pct ~ d_km2 + d_k0 + d_k1 + d_k2 + d_k3 | state + year,
+  data = df_did,
+  cluster = ~state
+)
+
+# Extract event study coefficients
+event_rows <- lapply(-3:3, function(k) {
+  if (k == -1) {
+    tibble(k = k, coef = 0, ci_lo = 0, ci_hi = 0)
+  } else {
+    param <- dk_name(k)
+    if (param %in% names(coef(model_es))) {
+      ci <- as.numeric(confint(model_es)[param, ])
+      tibble(k = k, coef = as.numeric(coef(model_es)[[param]]),
+             ci_lo = ci[1], ci_hi = ci[2])
+    } else {
+      tibble(k = k, coef = NA_real_, ci_lo = NA_real_, ci_hi = NA_real_)
+    }
+  }
+})
+event_df <- bind_rows(event_rows) |> filter(!is.na(coef))
+
+p_es <- ggplot(event_df, aes(x = k, y = coef)) +
+  geom_ribbon(aes(ymin = ci_lo, ymax = ci_hi), fill = col_red, alpha = 0.2) +
+  geom_line(colour = col_red, linewidth = 1) +
+  geom_point(colour = col_red, size = 3) +
+  geom_hline(yintercept = 0, colour = "black", linetype = "dashed",
+             linewidth = 0.4) +
+  geom_vline(xintercept = -0.5, colour = "grey40", linetype = "dashed",
+             linewidth = 0.6) +
+  labs(
+    x = "Years relative to Medicaid expansion",
+    y = "Effect on uninsured rate (pp)",
+    title = "Event Study: Dynamic Treatment Effects (pre-treatment coefficients should be ~0 if parallel trends hold)"
+  )
+
+print(p_es)
+ggsave(file.path(mod06_dir, "event_study.png"), p_es,
+       width = 10, height = 5, dpi = 120)
+
+pre_trend <- event_df |> filter(k < -1)
+cat("Pre-treatment event study coefficients (should be near 0):\n")
+for (i in seq_len(nrow(pre_trend))) {
+  flag <- if (abs(pre_trend$coef[i]) < 1) "OK" else "CONCERNING"
+  cat(sprintf("  k=%d: %.3f  %s\n", pre_trend$k[i], pre_trend$coef[i], flag))
+}
+```
+
+## 5. Staggered Adoption — Callaway-Sant'Anna
+
+```{r}
+# When treatment rolls out at different times, naive TWFE gives
+# a weighted average that can be negative even when all cohort ATTs are positive
+# Callaway-Sant'Anna (2021) estimates cohort-specific ATTs
+
+set.seed(42)
+N_states2 <- 60
+cohorts <- c(2014, 2015, 2016, NA)  # NA = never-treated
+cohort_assign <- rep(cohorts, each = 15)
+TRUE_COHORT_ATT <- c(`2014` = -5.0, `2015` = -4.0, `2016` = -3.0)  # heterogeneous effects
+
+state_fe2 <- rnorm(N_states2, 0, 2)
+records2 <- vector("list", N_states2 * length(2012:2019))
+idx <- 1
+for (s in seq_len(N_states2)) {
+  cohort <- cohort_assign[s]
+  for (yr in 2012:2019) {
+    post <- !is.na(cohort) && yr >= cohort
+    effect <- if (post) unname(TRUE_COHORT_ATT[as.character(cohort)]) else 0
+    unins <- (18 + state_fe2[s] - 0.8 * (yr - 2012) + effect
+              + rnorm(1, 0, 1.5))
+    records2[[idx]] <- tibble(
+      state = s, year = yr,
+      cohort = if (is.na(cohort)) "None" else as.character(cohort),
+      treated = as.integer(!is.na(cohort)),
+      post = as.integer(post),
+      uninsured_pct = unins
+    )
+    idx <- idx + 1
+  }
+}
+df_staggered <- bind_rows(records2)
+
+# Simple cohort-specific DiD (Callaway-Sant'Anna principle)
+# Compare each treated cohort to never-treated states in the relevant period
+never_treated <- df_staggered |> filter(cohort == "None")
+cs_results <- list()
+ri <- 1
+for (g in c("2014", "2015", "2016")) {
+  g_int <- as.integer(g)
+  cohort_data <- df_staggered |> filter(cohort == g)
+  for (t in g_int:2019) {
+    mu_g_t     <- mean(cohort_data$uninsured_pct[cohort_data$year == t])
+    mu_g_base  <- mean(cohort_data$uninsured_pct[cohort_data$year == g_int - 1])
+    mu_nt_t    <- mean(never_treated$uninsured_pct[never_treated$year == t])
+    mu_nt_base <- mean(never_treated$uninsured_pct[never_treated$year == g_int - 1])
+    att_gt <- (mu_g_t - mu_g_base) - (mu_nt_t - mu_nt_base)
+    cs_results[[ri]] <- tibble(
+      cohort = g, year = t, att = att_gt,
+      true_att = unname(TRUE_COHORT_ATT[g])
+    )
+    ri <- ri + 1
+  }
+}
+df_cs <- bind_rows(cs_results)
+
+true_lines <- tibble(
+  cohort = names(TRUE_COHORT_ATT),
+  true_att = unname(TRUE_COHORT_ATT)
+)
+
+p_cs <- ggplot(df_cs, aes(x = year, y = att, colour = cohort)) +
+  geom_hline(yintercept = 0, colour = "black", linewidth = 0.4) +
+  geom_hline(
+    data = true_lines, aes(yintercept = true_att, colour = cohort),
+    linetype = "dotted", linewidth = 0.8, alpha = 0.7
+  ) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2.5) +
+  scale_colour_manual(values = c("2014" = col_red, "2015" = col_blue,
+                                 "2016" = col_green)) +
+  labs(
+    x = "Calendar year",
+    y = "ATT(g,t) — pp reduction in uninsured rate",
+    colour = "Cohort",
+    title = "Callaway-Sant'Anna: Cohort-specific ATTs (dotted = true effect for each cohort)"
+  )
+
+print(p_cs)
+ggsave(file.path(mod06_dir, "cs_did.png"), p_cs,
+       width = 11, height = 5, dpi = 120)
+
+# Aggregate ATT
+agg_att <- df_cs |>
+  group_by(cohort) |>
+  summarise(att = mean(att), .groups = "drop")
+
+cat("Callaway-Sant'Anna Aggregate ATTs:\n")
+for (g in c("2014", "2015", "2016")) {
+  est <- agg_att$att[agg_att$cohort == g]
+  cat(sprintf("  Cohort %s: Est=%.2f pp | True=%.1f pp\n",
+              g, est, TRUE_COHORT_ATT[g]))
+}
+```
+
+## 6. Knowledge Check
+1. The event study shows a pre-trend coefficient of -1.2 pp at k=-2. What does this imply for the parallel trends assumption?
+2. Why does naive TWFE DiD fail with staggered adoption and heterogeneous effects?
+3. A colleague proposes using the "always-treated" states as controls for never-treated states. What problem does this create?
+4. Your DiD estimate is -4.2 pp but the 95% CI is (-8.1, -0.3). Is this statistically significant? What drives the wide CI?
+5. Implement a placebo test: re-run the DiD using 2012 as the fake policy year. What should the placebo estimate be?
+
+```{r}
+# Exercise 5 — Placebo DiD test
+df_placebo <- df_did |>
+  mutate(
+    post_placebo = as.integer(year >= 2013),  # fake 2013 cutoff
+    treat_post_placebo = expanded * post_placebo
+  )
+# Restrict to pre-policy data only
+df_pre <- df_placebo |> filter(year < POLICY_YEAR)
+
+model_placebo <- feols(
+  uninsured_pct ~ expanded:post_placebo | state + year,
+  data = df_pre,
+  cluster = ~state
+)
+placebo_coef <- coef(model_placebo)[["expanded:post_placebo"]]
+placebo_ci   <- confint(model_placebo)["expanded:post_placebo", ]
+placebo_p    <- pvalue(model_placebo)[["expanded:post_placebo"]]
+
+cat("Placebo DiD Test (fake policy year = 2013, pre-period data only):\n")
+cat(sprintf("  Placebo estimate: %.3f pp\n", placebo_coef))
+cat(sprintf("  95%% CI: (%.3f, %.3f)\n", placebo_ci[1], placebo_ci[2]))
+cat(sprintf("  p-value: %.4f\n", placebo_p))
+passes <- abs(placebo_coef) < 1.5 && placebo_ci[1] < 0 && 0 < placebo_ci[2]
+cat(sprintf("  Parallel trends test: %s\n",
+            if (passes) "PASS (no pre-trend)" else "FAIL (pre-trend detected)"))
+```
+
+***
+**Next -> NB-04: Interrupted Time Series (ITS) & CausalImpact**

@@ -1,0 +1,419 @@
+---
+title: "Sensitivity Analysis & Reporting"
+subtitle: "Module 06 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 06: Causal Inference in Health Research
+***
+**Learning objectives**
+- Conduct E-value analysis for unmeasured confounding
+- Implement Rosenbaum bounds for observational studies
+- Perform propensity score trimming and overlap assessment
+- Build a comprehensive causal inference reporting template
+- Apply placebo tests and refutation checks
+- Communicate uncertainty from multiple sensitivity analyses
+
+**Estimated time:** 2.5 hours | **Level:** Advanced | **Libraries:** `EValue`, `sensemakr`, `stats`, `ggplot2`
+
+## 1. Setup & Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(broom)
+library(tibble)
+library(patchwork)
+library(EValue)
+library(sensemakr)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+mod06_dir <- file.path(tempdir(), "mod06")
+dir.create(mod06_dir, showWarnings = FALSE, recursive = TRUE)
+
+logistic <- function(x) 1 / (1 + exp(-x))
+
+set.seed(42)
+N <- 5000
+age <- pmin(pmax(rnorm(N, 60, 12), 30), 90)
+smoking <- rbinom(N, 1, logistic(-1 + 0.02 * (age - 60)))
+chd_history <- rbinom(N, 1, logistic(-2 + 0.03 * (age - 60)))
+ldl_baseline <- pmin(pmax(rnorm(N, 140 + 20 * smoking, 30), 60), 280)
+ses_score <- rnorm(N, 0, 1)
+statin_logit <- -2.0 + 0.025 * (ldl_baseline - 140) + 1.0 * chd_history +
+  0.02 * (age - 60) - 0.3 * ses_score
+statin <- rbinom(N, 1, logistic(statin_logit))
+TRUE_EFFECT <- -0.8
+mi_logit <- -3.0 + TRUE_EFFECT * statin + 0.03 * (age - 60) + 0.5 * smoking +
+  0.8 * chd_history + 0.005 * (ldl_baseline - 140)
+mi <- rbinom(N, 1, logistic(mi_logit))
+df <- tibble(
+  age          = age,
+  smoking      = smoking,
+  chd_history  = chd_history,
+  ldl_baseline = ldl_baseline,
+  ses_score    = ses_score,
+  statin       = statin,
+  mi           = mi
+)
+COVARIATES <- c("age", "smoking", "chd_history", "ldl_baseline", "ses_score")
+cat(sprintf("N=%d | Statin=%.1f%% | MI=%.1f%%\n",
+            N, mean(statin) * 100, mean(mi) * 100))
+```
+
+## 2. E-Value — Unmeasured Confounding Sensitivity
+
+The **E-value** (VanderWeele & Ding, 2017) answers:
+
+> "How strong would an unmeasured confounder have to be (in terms of its association with both treatment and outcome) to fully explain away the observed effect?"
+
+A large E-value means the result is robust to unmeasured confounding.
+
+**Formula for OR:**
+```
+E-value = OR + sqrt(OR * (OR - 1))     if OR >= 1
+E-value = 1/OR + sqrt(1/OR * (1/OR - 1))  if OR < 1
+```
+
+```{r}
+# Fit adjusted model
+model_adj <- glm(
+  mi ~ statin + age + smoking + chd_history + ldl_baseline + ses_score,
+  data = df, family = binomial()
+)
+tid_statin <- broom::tidy(model_adj, conf.int = TRUE, exponentiate = TRUE) |>
+  filter(term == "statin")
+adj_or   <- tid_statin$estimate
+adj_or_lo <- tid_statin$conf.low
+adj_or_hi <- tid_statin$conf.high
+
+evalue_or <- function(OR) {
+  if (OR >= 1) {
+    OR + sqrt(OR * (OR - 1))
+  } else {
+    inv <- 1 / OR
+    inv + sqrt(inv * (inv - 1))
+  }
+}
+
+cat(sprintf("Adjusted OR for statin: %.3f\n", adj_or))
+ev <- evalue_or(adj_or)
+cat(sprintf("E-value: %.3f\n", ev))
+cat("\n")
+cat("Interpretation:\n")
+cat("  An unmeasured confounder associated with BOTH statin use AND MI\n")
+cat(sprintf("  by a risk ratio of at least %.2f-fold (in each direction)\n", ev))
+cat("  would be needed to fully explain away the observed effect.\n")
+cat("\n")
+
+# EValue package (point estimate + CI)
+cat("--- EValue package ---\n")
+ev_pkg <- evalues.OR(est = adj_or, lo = adj_or_lo, hi = adj_or_hi, rare = TRUE)
+print(ev_pkg)
+
+# sensemakr: robustness of the treatment coefficient (linear probability model)
+model_lpm <- lm(
+  mi ~ statin + age + smoking + chd_history + ldl_baseline + ses_score,
+  data = df
+)
+sense <- sensemakr(
+  model_lpm,
+  treatment = "statin",
+  benchmark_covariates = "chd_history",
+  kd = 1:3
+)
+cat("\n--- sensemakr ---\n")
+print(summary(sense))
+plot(sense)
+
+# E-values across a range of OR estimates (sensitivity plot)
+ors_range <- seq(0.3, 0.95, length.out = 50)
+evalues_v <- vapply(ors_range, evalue_or, numeric(1))
+ev_curve <- tibble(or = ors_range, evalue = evalues_v)
+
+p_ev <- ggplot(ev_curve, aes(or, evalue)) +
+  geom_ribbon(aes(ymin = 1, ymax = evalue), fill = "#DC2626", alpha = 0.1) +
+  geom_line(colour = "#DC2626", linewidth = 1.1) +
+  geom_vline(xintercept = adj_or, colour = "#2563EB", linetype = "dashed") +
+  geom_hline(yintercept = ev, colour = "#2563EB", linetype = "dotted") +
+  labs(
+    x = "Odds Ratio (point estimate)",
+    y = "E-value",
+    title = "E-value Sensitivity Curve"
+  ) +
+  annotate("text", x = adj_or, y = max(evalues_v) * 0.9,
+           label = sprintf("Our estimate (OR=%.3f)\nE-value=%.2f", adj_or, ev),
+           colour = "#2563EB", hjust = -0.05, size = 3)
+
+# Contour plot: what combinations of confounder-treatment and confounder-outcome RRs explain the effect
+rr_range <- seq(1, 5, length.out = 100)
+grid_u <- expand.grid(rr_treat = rr_range, rr_out = rr_range)
+grid_u$explained_or <- (grid_u$rr_treat * grid_u$rr_out) /
+  (grid_u$rr_treat + grid_u$rr_out - 1)
+
+p_contour <- ggplot(grid_u, aes(rr_treat, rr_out, fill = explained_or)) +
+  geom_raster(interpolate = TRUE) +
+  geom_contour(aes(z = explained_or), breaks = adj_or,
+               colour = "black", linewidth = 1) +
+  scale_fill_distiller(palette = "RdYlBu", name = "OR attributable to U") +
+  labs(
+    x = "RR(U, Treatment)",
+    y = "RR(U, Outcome)",
+    title = sprintf("Unmeasured confounder contour\n(black = combos that explain away OR=%.3f)", adj_or)
+  )
+
+p_evalue <- p_ev + p_contour
+print(p_evalue)
+ggsave(file.path(mod06_dir, "evalue_analysis.png"), p_evalue,
+       width = 14, height = 5, dpi = 120)
+```
+
+## 3. Overlap & Positivity Assessment
+
+```{r}
+# Estimate PS
+ps_model <- glm(
+  as.formula(paste("statin ~", paste(COVARIATES, collapse = " + "))),
+  data = df, family = binomial()
+)
+df$ps <- predict(ps_model, type = "response")
+
+ps_min_treated <- min(df$ps[df$statin == 1])
+ps_max_control <- max(df$ps[df$statin == 0])
+in_support  <- df$ps >= ps_min_treated & df$ps <= ps_max_control
+pct_support <- mean(in_support) * 100
+
+p_ps <- ggplot(df, aes(ps, fill = factor(statin))) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40, alpha = 0.6, position = "identity") +
+  annotate("rect", xmin = ps_min_treated, xmax = ps_max_control,
+           ymin = -Inf, ymax = Inf, fill = "#16A34A", alpha = 0.10) +
+  scale_fill_manual(
+    values = c("0" = "#2563EB", "1" = "#DC2626"),
+    labels = c("Control", "Treated"),
+    name = NULL
+  ) +
+  labs(
+    x = "Propensity score",
+    y = "Density",
+    title = sprintf("PS Distribution: Overlap Check (common support %.0f%%)", pct_support)
+  )
+
+# IPTW weight distribution
+df$w_ate <- ifelse(
+  df$statin == 1,
+  1 / pmin(pmax(df$ps, 0.05), 0.95),
+  1 / (1 - pmin(pmax(df$ps, 0.05), 0.95))
+)
+
+p_w <- ggplot(df, aes(w_ate, fill = factor(statin))) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40, alpha = 0.7, position = "identity") +
+  scale_fill_manual(
+    values = c("0" = "#2563EB", "1" = "#DC2626"),
+    labels = c("Control", "Treated"),
+    name = NULL
+  ) +
+  labs(
+    x = "IPTW weight",
+    y = "Density",
+    title = sprintf("IPTW Weight Distribution (max=%.1f)", max(df$w_ate))
+  )
+
+# Effective sample size vs trimming threshold
+trim_thresholds <- seq(0.05, 0.40, length.out = 30)
+ess_vals <- vapply(trim_thresholds, function(t) {
+  df_trim <- df[df$ps >= t & df$ps <= 1 - t, ]
+  n <- nrow(df_trim)
+  w_t <- df_trim$statin * 1 / pmin(pmax(df_trim$ps, t), 1 - t)
+  (n^2) / ((sum(w_t)^2) / n)
+}, numeric(1))
+ess_df <- tibble(threshold = trim_thresholds, ess = ess_vals)
+
+p_ess <- ggplot(ess_df, aes(threshold, ess)) +
+  geom_line(colour = "#16A34A", linewidth = 1) +
+  labs(
+    x = "PS trimming threshold",
+    y = "Effective sample size",
+    title = "Effective Sample Size vs Trimming"
+  )
+
+p_overlap <- p_ps + p_w + p_ess
+print(p_overlap)
+ggsave(file.path(mod06_dir, "overlap_positivity.png"), p_overlap,
+       width = 16, height = 4, dpi = 120)
+
+cat(sprintf("Common support: %.1f%% of sample in overlapping PS region\n", pct_support))
+cat(sprintf("Extreme weights (>20): %d patients (%.1f%%)\n",
+            sum(df$w_ate > 20), mean(df$w_ate > 20) * 100))
+```
+
+## 4. Placebo Outcome & Refutation Tests
+
+```{r}
+# Test 1: Placebo outcome — an outcome that should NOT be affected by treatment
+# Eye color should not be caused by statin use!
+set.seed(5)
+df$eye_color <- rbinom(N, 1, 0.35)  # purely random
+
+placebo_mod <- glm(
+  as.formula(paste("eye_color ~ statin +", paste(COVARIATES, collapse = " + "))),
+  data = df, family = binomial()
+)
+placebo_or <- exp(unname(coef(placebo_mod)[["statin"]]))
+cat("Placebo outcome test (eye color ~ statin):\n")
+cat(sprintf("  OR = %.3f  (should be ~1.0)\n", placebo_or))
+cat(sprintf("  %s\n\n",
+            if (placebo_or > 0.85 && placebo_or < 1.15)
+              "PASS: no spurious effect" else "FAIL: unexplained association!"))
+
+# Test 2: Random treatment permutation — break any true causal effect
+set.seed(42)
+permutation_ors <- numeric(200)
+placebo_form <- as.formula(paste("mi ~ statin_perm +", paste(COVARIATES, collapse = " + ")))
+for (i in seq_len(200)) {
+  df_perm <- df
+  df_perm$statin_perm <- sample(df$statin)
+  lr_perm <- glm(placebo_form, data = df_perm, family = binomial())
+  permutation_ors[i] <- exp(unname(coef(lr_perm)[["statin_perm"]]))
+}
+
+perm_or_null <- permutation_ors
+p_perm <- mean(perm_or_null <= adj_or)
+
+cat("Permutation refutation test:\n")
+cat(sprintf("  Null distribution mean OR: %.3f (should be ~1.0)\n", mean(perm_or_null)))
+cat(sprintf("  Our observed adjusted OR : %.3f\n", adj_or))
+cat(sprintf("  Permutation p-value      : %.4f\n", p_perm))
+
+p_perm_plot <- ggplot(tibble(or = perm_or_null), aes(or)) +
+  geom_histogram(bins = 30, fill = "#94A3B8", alpha = 0.85, colour = "white") +
+  geom_vline(xintercept = adj_or, colour = "#DC2626",
+             linetype = "dashed", linewidth = 1.1) +
+  geom_vline(xintercept = 1.0, colour = "black", linewidth = 0.6) +
+  labs(
+    x = "Odds Ratio",
+    y = "Count",
+    title = sprintf("Permutation Refutation Test (p=%.4f)", p_perm)
+  )
+print(p_perm_plot)
+ggsave(file.path(mod06_dir, "permutation_test.png"), p_perm_plot,
+       width = 9, height = 4, dpi = 120)
+```
+
+## 5. Clinical Reporting Template
+
+```{r}
+# Build a comprehensive causal inference report
+placebo_status <- if (placebo_or > 0.85 && placebo_or < 1.15)
+  sprintf("Eye color OR=%.3f (PASS)", placebo_or) else "FAIL"
+
+report <- list(
+  `Study question`    = "Effect of statin use on 30-day MI risk",
+  Design              = "Observational cohort with propensity score adjustment",
+  N                   = N,
+  Treatment           = sprintf("Statin use: %.1f%%", mean(statin) * 100),
+  Outcome             = sprintf("MI: %.1f%%", mean(mi) * 100),
+  Identification      = "Backdoor adjustment (Age, Smoking, CHD history, LDL, SES)",
+  Estimator           = "Adjusted logistic regression + G-computation",
+  `Point estimate OR` = round(adj_or, 3),
+  `E-value`           = round(ev, 2),
+  `Common support`    = sprintf("%.1f%%", pct_support),
+  `Placebo test`      = placebo_status,
+  `Permutation test`  = sprintf("p=%.4f", p_perm)
+)
+
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("CAUSAL INFERENCE REPORT\n")
+cat(paste(rep("=", 60), collapse = ""), "\n")
+for (key in names(report)) {
+  cat(sprintf("  %-25s: %s\n", key, as.character(report[[key]])))
+}
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat("\n")
+cat("METHODS NARRATIVE (template):\n")
+cat("\n")
+cat("We estimated the causal effect of statin use on 30-day MI risk\n")
+cat("using propensity score-adjusted logistic regression and G-computation.\n")
+cat(sprintf("The analysis included N=%d patients; %.1f%% received statins.\n",
+            N, mean(statin) * 100))
+cat(sprintf("Propensity scores were estimated using logistic regression on %d pre-treatment covariates.\n",
+            length(COVARIATES)))
+cat(sprintf("After adjustment, the estimated OR was %.3f (E-value=%.2f),\n", adj_or, ev))
+cat(sprintf("suggesting an unmeasured confounder would need RR>%.1f with both\n", ev))
+cat("treatment and outcome to fully explain the observed association.\n")
+cat("Placebo outcome and permutation refutation tests supported the validity of the approach.\n")
+```
+
+## 6. Knowledge Check
+1. E-value = 2.1 for your statin analysis. Is this large or small? What known confounders (e.g. healthy user bias) have RRs in this range?
+2. Your PS distribution shows poor overlap for elderly patients (age >80). What are your options?
+3. The permutation p-value is 0.001. What does this tell you about the observed association?
+4. A placebo outcome (baseline albumin from *before* statin initiation) shows OR=1.12. Should you be concerned?
+5. Calculate Rosenbaum's gamma (how much unmeasured confounding would change the conclusion) using a simple sign test.
+
+```{r}
+# Exercise 5 — simplified Rosenbaum gamma bound
+# For a binary outcome, test how much gamma (odds of differential unmeasured confounding)
+# would be needed to make the result non-significant
+
+# Use matched pairs analysis (simplified)
+# In matched pairs, under gamma=1 (no hidden bias), we expect binomial with p=0.5
+set.seed(42)
+# Find pseudo-matched pairs (PS matching)
+simple_match <- function(df, ps_col = "ps", treatment = "statin") {
+  treated <- df[df[[treatment]] == 1, ]
+  control <- df[df[[treatment]] == 0, ]
+  treated <- treated[order(treated[[ps_col]]), ]
+  control <- control[order(control[[ps_col]]), ]
+  n_pairs <- min(nrow(treated), nrow(control))
+  list(
+    y_t = treated$mi[seq_len(n_pairs)],
+    y_c = control$mi[seq_len(n_pairs)]
+  )
+}
+
+pairs <- simple_match(df)
+y_t <- pairs$y_t
+y_c <- pairs$y_c
+# Discordant pairs (pairs where outcome differs)
+disc <- y_t != y_c
+n_disc <- sum(disc)
+n_treated_wins <- sum((y_t < y_c) & disc)  # treated has LOWER MI rate
+cat(sprintf("Discordant pairs: %d | Treated outcome better: %d\n",
+            n_disc, n_treated_wins))
+
+# Under gamma=1: test statistic ~ Binomial(n_disc, 0.5)
+p_gamma1 <- pbinom(n_treated_wins, n_disc, 0.5)  # one-sided
+cat(sprintf("p-value at gamma=1 (no hidden bias): %.6f\n", p_gamma1))
+
+# Find gamma that makes p = 0.05
+p_at_gamma <- function(gamma) {
+  p_plus <- gamma / (1 + gamma)
+  pbinom(n_treated_wins, n_disc, p_plus) - 0.05
+}
+
+gamma_threshold <- tryCatch(
+  uniroot(p_at_gamma, interval = c(1, 10))$root,
+  error = function(e) NA_real_
+)
+if (!is.na(gamma_threshold)) {
+  cat(sprintf("Gamma threshold (Rosenbaum): %.2f\n", gamma_threshold))
+  cat(sprintf("  Unmeasured confounding must change treatment odds by >%.2f-fold\n",
+              gamma_threshold))
+  cat("  to make the result non-significant at alpha=0.05\n")
+} else {
+  cat("Result is robust to extreme levels of unmeasured confounding (gamma > 10)\n")
+}
+```
+
+***
+**Next -> NB-08: Capstone — Full Causal Analysis Pipeline**

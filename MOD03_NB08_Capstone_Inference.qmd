@@ -1,0 +1,571 @@
+---
+title: "Capstone · Multivariable Inference Pipeline"
+subtitle: "Module 03 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 03: Statistical Inference
+***
+**This capstone integrates NB-01 through NB-07 into a single publication-quality inference pipeline.**
+
+**Research question:** What patient-level, clinical, and socioeconomic factors are independently associated with 30-day hospital readmission, and does heart failure modify the effect of diabetes?
+
+**Pipeline stages:**
+1. Descriptive analysis & Table 1
+2. Unadjusted effect estimates (RR, OR) with forest plot
+3. Survival analysis (KM curves + log-rank)
+4. Logistic regression — confounding assessment & adjusted ORs
+5. Test for effect modification (diabetes × HF interaction)
+6. Count outcome model (ED visits — NB regression)
+7. Sensitivity analysis (E-values, multiple comparisons)
+8. Methods narrative & publication figure
+
+**Estimated time:** 4 hours | **Level:** Advanced
+
+## 0. Analysis Plan & Data Assembly
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(broom)
+library(MASS, exclude = "select")
+library(survival)
+library(survminer)
+library(epitools)
+library(pROC)
+library(tibble)
+library(patchwork)
+
+SEED <- 42
+set.seed(SEED)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+mod03_dir <- file.path(tempdir(), "mod03")
+dir.create(mod03_dir, showWarnings = FALSE, recursive = TRUE)
+
+logistic <- function(x) 1 / (1 + exp(-x))
+N <- 2500
+base <- matrix(rnorm(N * 4), ncol = 4)
+
+set.seed(99)
+
+# ── Covariates ────────────────────────────────────────────────────────────────
+age           <- as.integer(pmin(pmax(rnorm(N, 62, 15), 18), 92))
+sex           <- sample(c("M", "F"), N, replace = TRUE, prob = c(0.48, 0.52))
+payer         <- sample(
+  c("Medicare", "Medicaid", "Private", "Self-pay", "Other"),
+  N, replace = TRUE, prob = c(0.40, 0.22, 0.28, 0.07, 0.03)
+)
+diabetes      <- rbinom(N, 1, logistic(0.6 * base[, 1] - 0.5 + 0.02 * (age - 62) / 15))
+hypertension  <- rbinom(N, 1, logistic(0.7 * base[, 1] - 0.2))
+hf            <- rbinom(N, 1, logistic(0.4 * base[, 2] + 0.5 * hypertension - 1.5))
+copd          <- rbinom(N, 1, logistic(0.5 * base[, 3] - 1.0))
+los_days      <- as.integer(pmin(pmax(rgamma(N, shape = 2.5, scale = 1.8), 1), 30))
+admit_type    <- sample(c("Emergency", "Elective", "Urgent"), N, replace = TRUE,
+                        prob = c(0.52, 0.30, 0.18))
+n_comorb      <- diabetes + hypertension + hf + copd
+
+# ── Outcomes ──────────────────────────────────────────────────────────────────
+readmit_logit <- (-3.0 + 0.5 * diabetes + 0.7 * hf + 0.8 * diabetes * hf  # interaction
+                  + 0.3 * copd + 0.02 * (age - 62) / 15
+                  + 0.3 * as.integer(admit_type == "Emergency")
+                  + 0.25 * as.integer(payer == "Medicaid")
+                  + 0.2 * as.integer(los_days > 7) + rnorm(N, 0, 0.25))
+readmitted    <- rbinom(N, 1, logistic(readmit_logit))
+
+# Survival: time to readmission
+hazard      <- exp(-3.8 + 0.5 * hf + 0.3 * diabetes + 0.15 * (los_days > 7))
+surv_days   <- as.integer(pmin(pmax(rexp(N, rate = hazard), 1), 365))
+censor_time <- as.integer(round(runif(N, 30, 365)))
+event_obs   <- as.integer(surv_days <= censor_time)
+duration    <- ifelse(event_obs == 1, surv_days, censor_time)
+
+# ED visits (NB distributed)
+log_mu_ed <- (-0.3 + 0.5 * diabetes + 0.8 * hf + 0.4 * copd + 0.02 * (age - 62) / 15 + log(2))
+ed_visits <- rnbinom(N, size = 2, mu = exp(log_mu_ed))
+
+df <- tibble(
+  patient_id     = sprintf("PT-%05d", seq_len(N)),
+  age            = age,
+  age_std        = (age - 62) / 15,
+  sex            = sex,
+  payer          = relevel(factor(payer), ref = "Private"),
+  admit_type     = relevel(factor(admit_type), ref = "Elective"),
+  los_days       = los_days,
+  los_gt7        = as.integer(los_days > 7),
+  diabetes       = diabetes,
+  hypertension   = hypertension,
+  hf             = hf,
+  copd           = copd,
+  n_comorb       = n_comorb,
+  readmitted     = readmitted,
+  duration_days  = duration,
+  event_observed = event_obs,
+  ed_visits      = ed_visits,
+  log_follow_up  = log(2)
+) |>
+  mutate(
+    age_group = cut(age, breaks = c(17, 44, 64, 74, 95),
+                    labels = c("18-44", "45-64", "65-74", "75+"))
+  )
+
+cat(sprintf("Capstone dataset: %d x %d\n", nrow(df), ncol(df)))
+cat(sprintf("Readmission rate : %.1f%%\n", mean(readmitted) * 100))
+cat(sprintf("Event rate (surv): %.1f%%\n", mean(event_obs) * 100))
+cat(sprintf("Mean ED visits   : %.2f  (var=%.2f)\n", mean(ed_visits), var(ed_visits)))
+```
+
+## 1. Table 1 — Baseline Characteristics
+
+```{r}
+wilson_ci <- function(k, n) {
+  z <- qnorm(0.975); p <- k / n; den <- 1 + z^2 / n
+  mid <- (p + z^2 / (2 * n)) / den
+  hw  <- (z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2))) / den
+  c(round((mid - hw) * 100, 1), round((mid + hw) * 100, 1))
+}
+
+skewness <- function(x) mean((x - mean(x, na.rm = TRUE))^3, na.rm = TRUE) /
+  sd(x, na.rm = TRUE)^3
+
+g0 <- df |> filter(readmitted == 0)
+g1 <- df |> filter(readmitted == 1)
+cat(sprintf("TABLE 1 — Baseline characteristics by 30-day readmission (N=%d)\n", N))
+cat(sprintf("%-30s %20s %20s %8s\n", "Variable", "Not readmitted", "Readmitted", "p"))
+cat(paste(rep("=", 82), collapse = ""), "\n")
+cat(sprintf("%-30s %20s %20s\n", "N", format(nrow(g0), big.mark = ","),
+            format(nrow(g1), big.mark = ",")))
+
+for (pair in list(c("age", "Age (years)"), c("los_days", "LOS (days)"),
+                  c("n_comorb", "N comorbidities"))) {
+  col <- pair[[1]]; label <- pair[[2]]
+  sk <- skewness(df[[col]])
+  if (abs(sk) > 0.8) {
+    s0 <- sprintf("%.1f [%.1f–%.1f]", median(g0[[col]]),
+                  quantile(g0[[col]], 0.25), quantile(g0[[col]], 0.75))
+    s1 <- sprintf("%.1f [%.1f–%.1f]", median(g1[[col]]),
+                  quantile(g1[[col]], 0.25), quantile(g1[[col]], 0.75))
+    p  <- wilcox.test(g0[[col]], g1[[col]], alternative = "two.sided")$p.value
+  } else {
+    s0 <- sprintf("%.1f ± %.1f", mean(g0[[col]]), sd(g0[[col]]))
+    s1 <- sprintf("%.1f ± %.1f", mean(g1[[col]]), sd(g1[[col]]))
+    p  <- t.test(g0[[col]], g1[[col]])$p.value
+  }
+  cat(sprintf("%-30s %20s %20s %8.4f\n", label, s0, s1, p))
+}
+
+for (pair in list(
+  c("sex", "Female sex"), c("payer", "Payer"), c("admit_type", "Admit type"),
+  c("diabetes", "Diabetes"), c("hf", "Heart failure"), c("copd", "COPD")
+)) {
+  col <- pair[[1]]; label <- pair[[2]]
+  ct <- table(df[[col]], df$readmitted)
+  p  <- if (nrow(ct) >= 2) chisq.test(ct)$p.value else 1
+  cat(sprintf("\n%-30s %20s %20s %8.4f\n", label, "", "", p))
+  cats <- unique(na.omit(df[[col]]))
+  cats <- cats[seq_len(min(4, length(cats)))]
+  for (catv in cats) {
+    n0 <- sum(g0[[col]] == catv); p0 <- n0 / nrow(g0) * 100
+    n1 <- sum(g1[[col]] == catv); p1 <- n1 / nrow(g1) * 100
+    cat(sprintf("  %-28s %5d (%4.1f%%)       %5d (%4.1f%%)\n",
+                as.character(catv), n0, p0, n1, p1))
+  }
+}
+```
+
+## 2. Unadjusted Forest Plot — All Exposures
+
+```{r}
+EXPOSURES <- list(
+  c("diabetes", "Diabetes"), c("hf", "Heart failure"),
+  c("copd", "COPD"), c("hypertension", "Hypertension"),
+  c("los_gt7", "LOS > 7 days")
+)
+
+fp_df <- bind_rows(lapply(EXPOSURES, function(pair) {
+  col <- pair[[1]]; label <- pair[[2]]
+  a <- sum(df[[col]] == 1 & df$readmitted == 1)
+  b <- sum(df[[col]] == 1 & df$readmitted == 0)
+  c <- sum(df[[col]] == 0 & df$readmitted == 1)
+  d <- sum(df[[col]] == 0 & df$readmitted == 0)
+  OR <- if (b * c > 0) (a * d) / (b * c) else NA_real_
+  se <- sqrt(1 / a + 1 / b + 1 / c + 1 / d)
+  p  <- chisq.test(matrix(c(a, b, c, d), nrow = 2, byrow = TRUE))$p.value
+  tibble(label = label, OR = OR,
+         lo = exp(log(OR) - 1.96 * se), hi = exp(log(OR) + 1.96 * se), p = p)
+}))
+
+p_fp <- ggplot(fp_df, aes(OR, reorder(label, OR),
+                          colour = ifelse(OR > 1 & p < 0.05, "#DC2626", "#2563EB"))) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0.2, linewidth = 1) +
+  geom_point(size = 3) +
+  geom_text(aes(x = hi, label = sprintf("OR=%.2f (%.2f–%.2f), p=%.3f", OR, lo, hi, p)),
+            hjust = -0.05, size = 3, colour = "grey20") +
+  scale_colour_identity() +
+  labs(x = "Odds Ratio (95% CI)", y = NULL,
+       title = "Unadjusted ORs for 30-day readmission") +
+  theme(plot.margin = margin(5, 140, 5, 5))
+
+print(p_fp)
+ggsave(file.path(mod03_dir, "capstone_forest.png"), p_fp,
+       width = 10, height = 5, dpi = 120)
+```
+
+## 3. Survival Analysis
+
+```{r}
+df <- df |>
+  mutate(
+    hf_lab = factor(hf, levels = c(0, 1), labels = c("No HF", "Heart failure")),
+    dm_lab = factor(diabetes, levels = c(0, 1), labels = c("No diabetes", "Diabetes"))
+  )
+
+km_hf <- survfit(Surv(duration_days, event_observed) ~ hf_lab, data = df)
+km_dm <- survfit(Surv(duration_days, event_observed) ~ dm_lab, data = df)
+lr_hf <- survdiff(Surv(duration_days, event_observed) ~ hf, data = df)
+lr_dm <- survdiff(Surv(duration_days, event_observed) ~ diabetes, data = df)
+p_lr_hf <- 1 - pchisq(lr_hf$chisq, length(lr_hf$n) - 1)
+p_lr_dm <- 1 - pchisq(lr_dm$chisq, length(lr_dm$n) - 1)
+
+p_km_hf <- ggsurvplot(
+  km_hf, data = df, conf.int = TRUE, palette = c("#2563EB", "#DC2626"),
+  xlab = "Days post-discharge", ylab = "Readmission-free S(t)",
+  title = "Time to readmission by HF", legend.title = "", ggtheme = theme_minimal()
+)
+p_km_hf$plot <- p_km_hf$plot +
+  annotate("label", x = Inf, y = 0.15, hjust = 1.05,
+           label = sprintf("Log-rank p = %.4f", p_lr_hf), size = 3.3) +
+  coord_cartesian(ylim = c(0, 1.05))
+
+p_km_dm <- ggsurvplot(
+  km_dm, data = df, conf.int = TRUE, palette = c("#16A34A", "#7C3AED"),
+  xlab = "Days post-discharge", ylab = "Readmission-free S(t)",
+  title = "Time to readmission by diabetes", legend.title = "", ggtheme = theme_minimal()
+)
+p_km_dm$plot <- p_km_dm$plot +
+  annotate("label", x = Inf, y = 0.15, hjust = 1.05,
+           label = sprintf("Log-rank p = %.4f", p_lr_dm), size = 3.3) +
+  coord_cartesian(ylim = c(0, 1.05))
+
+p_km <- p_km_hf$plot + p_km_dm$plot
+print(p_km)
+ggsave(file.path(mod03_dir, "capstone_km.png"), p_km, width = 14, height = 5, dpi = 120)
+
+cox_fit <- coxph(Surv(duration_days, event_observed) ~ hf + diabetes + copd, data = df)
+cat("\nCox PH (capstone):\n")
+print(broom::tidy(cox_fit, exponentiate = TRUE, conf.int = TRUE))
+```
+
+## 4. Multivariable Logistic Regression + Interaction Test
+
+```{r}
+# Main effects model
+model_main <- glm(
+  readmitted ~ diabetes + hf + copd + hypertension + los_gt7 +
+    age_std + sex + payer + admit_type,
+  data = df, family = binomial()
+)
+
+# Model with diabetes × HF interaction
+model_int <- glm(
+  readmitted ~ diabetes * hf + copd + hypertension + los_gt7 +
+    age_std + sex + payer + admit_type,
+  data = df, family = binomial()
+)
+
+lr <- anova(model_main, model_int, test = "LRT")
+lr_stat <- lr$Deviance[2]
+lr_p    <- lr$`Pr(>Chi)`[2]
+
+cat("Likelihood ratio test — diabetes × HF interaction:\n")
+cat(sprintf("  LR = %.3f, df=1, p = %.4f\n\n", lr_stat, lr_p))
+
+# Report adjusted ORs from best model
+best_model <- if (!is.na(lr_p) && lr_p < 0.05) model_int else model_main
+OR_table <- broom::tidy(best_model, conf.int = TRUE, exponentiate = TRUE) |>
+  filter(term != "(Intercept)") |>
+  transmute(term, adj_OR = round(estimate, 3),
+            CI_lo = round(conf.low, 3), CI_hi = round(conf.high, 3),
+            p = round(p.value, 3)) |>
+  arrange(desc(adj_OR))
+cat("Adjusted ORs from best model:\n")
+print(OR_table)
+```
+
+## 5. Model Evaluation
+
+```{r}
+df$pred_prob <- predict(best_model, type = "response")
+roc_obj <- pROC::roc(df$readmitted, df$pred_prob, quiet = TRUE)
+auc   <- as.numeric(pROC::auc(roc_obj))
+brier <- mean((df$readmitted - df$pred_prob)^2)
+coords_y <- pROC::coords(roc_obj, "best", ret = c("threshold", "specificity", "sensitivity"),
+                         best.method = "youden")
+opt_thr <- as.numeric(coords_y$threshold[1])
+opt_fpr <- 1 - as.numeric(coords_y$specificity[1])
+opt_tpr <- as.numeric(coords_y$sensitivity[1])
+roc_df <- tibble(fpr = 1 - roc_obj$specificities, tpr = roc_obj$sensitivities)
+
+calib_df <- tibble(y = df$readmitted, p = df$pred_prob) |>
+  mutate(bin = ntile(p, 10)) |>
+  group_by(bin) |>
+  summarise(prob_pred = mean(p), prob_true = mean(y), .groups = "drop")
+
+p_roc <- ggplot(roc_df, aes(fpr, tpr)) +
+  geom_ribbon(aes(ymin = 0, ymax = tpr), fill = "#2563EB", alpha = 0.1) +
+  geom_line(colour = "#1E3A8A", linewidth = 1) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_point(aes(x = opt_fpr, y = opt_tpr), colour = "#DC2626", size = 3) +
+  labs(x = "1-Specificity", y = "Sensitivity",
+       title = sprintf("ROC Curve  (AUC=%.3f)", auc)) +
+  coord_equal()
+
+p_cal <- ggplot(calib_df, aes(prob_pred, prob_true)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_line(colour = "#DC2626", linewidth = 1) +
+  geom_point(colour = "#DC2626", size = 2.5) +
+  labs(x = "Predicted", y = "Observed fraction", title = "Calibration Plot") +
+  annotate("label", x = 0.05, y = 0.90, hjust = 0,
+           label = sprintf("Brier = %.3f", brier), size = 3.3)
+
+p_eval <- p_roc + p_cal
+print(p_eval)
+ggsave(file.path(mod03_dir, "capstone_model_eval.png"), p_eval,
+       width = 12, height = 5, dpi = 120)
+cat(sprintf("AUC: %.3f  |  Brier: %.3f\n", auc, brier))
+```
+
+## 6. Count Model — NB Regression for ED Visits
+
+```{r}
+df$log_follow <- log(2)
+model_pois_ed <- glm(
+  ed_visits ~ diabetes + hf + copd + age_std + payer,
+  data = df, family = poisson(), offset = log_follow
+)
+disp_ratio <- model_pois_ed$deviance / model_pois_ed$df.residual
+cat(sprintf("Poisson overdispersion (deviance/df): %.2f\n", disp_ratio))
+
+model_nb <- MASS::glm.nb(
+  ed_visits ~ diabetes + hf + copd + age_std + payer + offset(log_follow),
+  data = df
+)
+
+irr_nb <- broom::tidy(model_nb, conf.int = TRUE, exponentiate = TRUE) |>
+  filter(!term %in% c("(Intercept)")) |>
+  transmute(term, IRR = round(estimate, 3),
+            CI_lo = round(conf.low, 3), CI_hi = round(conf.high, 3),
+            p = round(p.value, 3)) |>
+  arrange(desc(IRR))
+cat("NB regression — ED visits IRR:\n")
+print(irr_nb)
+cat(sprintf("AIC Poisson: %.1f  |  AIC NB: %.1f\n", AIC(model_pois_ed), AIC(model_nb)))
+```
+
+## 7. Sensitivity Analysis — E-Values
+
+```{r}
+e_value <- function(RR) {
+  if (RR < 1) RR <- 1 / RR
+  RR + sqrt(RR * (RR - 1))
+}
+or_to_rr <- function(OR, prev) OR / ((1 - prev) + prev * OR)
+prev <- mean(df$readmitted)
+
+get_or <- function(model, name) {
+  cf <- coef(model)
+  if (name %in% names(cf)) exp(unname(cf[[name]])) else NA_real_
+}
+
+cat("E-value sensitivity analysis\n")
+cat(paste(rep("=", 60), collapse = ""), "\n")
+for (pair in list(
+  list("Diabetes (adj OR)", get_or(best_model, "diabetes")),
+  list("HF (adj OR)", get_or(best_model, "hf")),
+  list("diabetes:hf (adj OR)", get_or(best_model, "diabetes:hf"))
+)) {
+  label <- pair[[1]]; OR_val <- pair[[2]]
+  if (is.na(OR_val) || OR_val <= 0) next
+  rr <- or_to_rr(OR_val, prev)
+  ev <- e_value(rr)
+  cat(sprintf("  %-30s: adj OR=%.2f, E-value=%.2f\n", label, OR_val, ev))
+}
+
+# Multiple comparisons across five comorbidities (BH FDR)
+raw_p <- vapply(c("diabetes", "hf", "copd", "hypertension", "los_gt7"), function(v) {
+  chisq.test(table(df[[v]], df$readmitted))$p.value
+}, numeric(1))
+cat("\nBH FDR-corrected comorbidity tests:\n")
+print(round(p.adjust(raw_p, method = "BH"), 4))
+```
+
+## 8. Publication Summary Figure
+
+```{r fig.height=12, fig.width=18}
+# Panel A — Unadjusted ORs
+p_a <- ggplot(fp_df, aes(OR, reorder(label, OR),
+                         colour = ifelse(OR > 1 & p < 0.05, "#DC2626", "#2563EB"))) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0.2) +
+  geom_point(size = 2.5) +
+  geom_text(aes(x = hi, label = sprintf("%.2f", OR)), hjust = -0.15, size = 2.8, colour = "grey20") +
+  scale_colour_identity() +
+  labs(x = "Unadjusted OR (95% CI)", y = NULL, title = "A  Unadjusted effect estimates") +
+  theme(plot.title = element_text(face = "bold"))
+
+# Panel B — Comorbidity prevalence by readmission
+comorb_long <- df |>
+  select(readmitted, diabetes, hf, copd, hypertension) |>
+  pivot_longer(-readmitted, names_to = "comorb", values_to = "flag") |>
+  group_by(readmitted, comorb) |>
+  summarise(prev = mean(flag) * 100, .groups = "drop") |>
+  mutate(grp = if_else(readmitted == 1, "Readmitted", "Not readmitted"))
+
+p_b <- ggplot(comorb_long, aes(comorb, prev, fill = grp)) +
+  geom_col(position = position_dodge(0.7), width = 0.65, alpha = 0.85) +
+  scale_fill_manual(values = c("Not readmitted" = "#2563EB", "Readmitted" = "#DC2626")) +
+  labs(x = NULL, y = "Prevalence (%)", fill = NULL, title = "B  Comorbidities by outcome") +
+  theme(plot.title = element_text(face = "bold"), legend.position = "bottom",
+        axis.text.x = element_text(angle = 25, hjust = 1, size = 8))
+
+# Panel C — ROC
+p_c <- ggplot(roc_df, aes(fpr, tpr)) +
+  geom_ribbon(aes(ymin = 0, ymax = tpr), fill = "#2563EB", alpha = 0.1) +
+  geom_line(colour = "#1E3A8A", linewidth = 1) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", linewidth = 0.4) +
+  labs(x = "1-Specificity", y = "Sensitivity",
+       title = "C  ROC Curve", subtitle = sprintf("AUC=%.3f", auc)) +
+  theme(plot.title = element_text(face = "bold")) +
+  coord_equal()
+
+# Panel D — Calibration
+p_d <- ggplot(calib_df, aes(prob_pred, prob_true)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  geom_line(colour = "#DC2626", linewidth = 1) +
+  geom_point(colour = "#DC2626", size = 2) +
+  labs(x = "Predicted prob", y = "Observed fraction", title = "D  Calibration") +
+  annotate("text", x = 0.05, y = 0.92, hjust = 0, size = 3,
+           label = sprintf("Brier=%.3f", brier)) +
+  theme(plot.title = element_text(face = "bold"))
+
+# Panel E — Interaction
+int_rates <- df |>
+  group_by(hf, diabetes) |>
+  summarise(rate = mean(readmitted) * 100, .groups = "drop") |>
+  mutate(hf_lab = if_else(hf == 1, "HF", "No HF"))
+
+p_e <- ggplot(int_rates, aes(diabetes, rate, colour = hf_lab, group = hf_lab)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = c(0, 1), labels = c("No DM", "Diabetes")) +
+  scale_colour_manual(values = c("No HF" = "#2563EB", "HF" = "#DC2626")) +
+  labs(x = NULL, y = "Readmission rate (%)", colour = NULL,
+       title = "E  DM × HF interaction") +
+  annotate("text", x = 0, y = Inf, hjust = 0, vjust = 1.4, size = 3,
+           label = sprintf("LR-test p=%.3f", lr_p)) +
+  theme(plot.title = element_text(face = "bold"))
+
+# Panel F — NB IRR
+p_f <- ggplot(irr_nb, aes(IRR, reorder(term, IRR),
+                          colour = ifelse(IRR > 1 & p < 0.05, "#DC2626", "#2563EB"))) +
+  geom_vline(xintercept = 1, linetype = "dashed") +
+  geom_errorbarh(aes(xmin = CI_lo, xmax = CI_hi), height = 0.2) +
+  geom_point(size = 2.5) +
+  geom_text(aes(x = CI_hi, label = sprintf("IRR=%.2f", IRR)),
+            hjust = -0.1, size = 2.8, colour = "grey20") +
+  scale_colour_identity() +
+  labs(x = "IRR (95% CI)", y = NULL, title = "F  NB regression — ED visits IRR") +
+  theme(plot.title = element_text(face = "bold"), plot.margin = margin(5, 70, 5, 5))
+
+# Panel G — Risk stratification
+df$risk_tier <- cut(
+  df$pred_prob, breaks = c(0, 0.10, 0.20, 0.35, 1.0),
+  labels = c("Low\n(<10%)", "Moderate\n(10-20%)", "High\n(20-35%)", "Very high\n(>35%)"),
+  include.lowest = TRUE
+)
+tier_df <- df |>
+  group_by(risk_tier) |>
+  summarise(rate = mean(readmitted) * 100, n = n(), .groups = "drop")
+
+p_g <- ggplot(tier_df, aes(risk_tier, rate, fill = risk_tier)) +
+  geom_col(colour = "white") +
+  geom_text(aes(label = sprintf("%.0f%%\n(n=%d)", rate, n)), vjust = -0.1, size = 2.8) +
+  scale_fill_manual(values = c("#2563EB", "#16A34A", "#D4A017", "#DC2626"), guide = "none") +
+  labs(x = "Predicted risk tier", y = "Actual readmission rate (%)",
+       title = "G  Risk stratification") +
+  theme(plot.title = element_text(face = "bold"))
+
+p_pub <- (p_a | p_b) /
+  (p_c | p_d | p_e) /
+  (p_f | p_g) +
+  plot_annotation(
+    title = "Statistical Inference Pipeline — 30-Day Readmission Cohort (N=2,500)"
+  )
+print(p_pub)
+ggsave(file.path(mod03_dir, "capstone_summary_figure.png"), p_pub,
+       width = 18, height = 12, dpi = 300)
+cat("Saved at 300 dpi: capstone_summary_figure.png\n")
+```
+
+## 9. Methods Narrative Draft
+
+> **Statistical Methods (Module 03 Capstone)**
+>
+> Continuous variables were summarised as mean ± SD or median [IQR] based on the D'Agostino skewness test; categorical variables as N (%). Group differences were assessed with Mann-Whitney U (skewed continuous) or chi-square tests (categorical).
+>
+> Unadjusted odds ratios (OR) with 95% confidence intervals (CI) were derived from 2×2 contingency tables using the log method. Multivariable-adjusted ORs were estimated via logistic regression. Model selection followed the 10% change rule for confounding: a predictor was retained as a confounder if its inclusion changed the exposure OR by ≥10%. A likelihood ratio test was used to assess the diabetes × heart failure interaction.
+>
+> Survival analysis used the Kaplan-Meier estimator with log-rank tests for group comparisons. Emergency department visit counts were modelled with negative binomial regression with a person-time offset; overdispersion was confirmed by the Cameron-Trivedi auxiliary test.
+>
+> Model discrimination was assessed by the C-statistic (AUC-ROC); calibration by the Hosmer-Lemeshow test and calibration plot. Sensitivity to unmeasured confounding was quantified via E-values (VanderWeele & Ding, 2017). Multiple comparisons across five comorbidities were corrected using the Benjamini-Hochberg false discovery rate. All analyses were conducted in R 4.3+ (dplyr, stats, broom, survival, survminer, MASS).
+
+## 10. Final Knowledge Check
+
+1. The interaction LR test gives p = 0.004. Write two sentences interpreting this for a clinical audience.
+2. AUC = 0.73. Is this model ready for clinical decision support? What additional validation steps are needed?
+3. You have 15 predictors in your logistic model with N = 2,500. Is this overfitting? Use EPV (events per variable) to assess.
+4. The HF IRR in the NB model is 2.1. How does this differ from the HF OR in the logistic model, and why?
+5. An E-value of 3.1 for the diabetes OR. Explain this to a non-statistician colleague.
+
+```{r}
+# Exercise 3 — EPV calculation
+n_events <- sum(df$readmitted)
+n_params <- length(coef(best_model)) - 1  # exclude intercept
+EPV <- n_events / n_params
+cat(sprintf("Events (readmissions) : %d\n", n_events))
+cat(sprintf("Model parameters      : %d\n", n_params))
+cat(sprintf("EPV (events per var)  : %.1f\n\n", EPV))
+if (EPV >= 10) {
+  cat("EPV ≥ 10: Model is adequately powered (rule of thumb).\n")
+} else if (EPV >= 5) {
+  cat("EPV 5–10: Borderline — consider penalised regression (Ridge/LASSO).\n")
+} else {
+  cat("EPV < 5: Overfitting risk — reduce predictors or use penalised logistic.\n")
+}
+```
+
+***
+## Module 03 Complete ✓
+
+You have built the full statistical inference toolkit:
+- **NB-01** Hypothesis tests: chi-square, Fisher's, t-test, ANOVA, Mann-Whitney, multiple comparisons
+- **NB-02** Effect measures: RR, OR, ARR, NNT, bootstrap CIs, forest plots, Mantel-Haenszel
+- **NB-03** Survival analysis: Kaplan-Meier, log-rank, RMST, crossing curves, at-risk tables
+- **NB-04** Linear regression: OLS, diagnostics (QQ, Cook's D, residuals), log-transformation
+- **NB-05** Logistic regression: adjusted ORs, VIF, ROC, calibration, risk stratification
+- **NB-06** Count regression: Poisson, overdispersion test, negative binomial, zero-inflated models
+- **NB-07** Confounding & effect modification: DAGs, 10% change rule, interaction tests, E-values
+- **NB-08** Capstone: full inference pipeline + publication figure
+
+**Next → Module 04: Machine Learning for Clinical Prediction**

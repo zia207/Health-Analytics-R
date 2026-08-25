@@ -1,0 +1,712 @@
+---
+title: "Spatial Machine Learning — LBC Mortality in the Northeast"
+subtitle: "Module 07 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+***
+**Learning objectives**
+- Load county-level lung & bronchus cancer (LBC) mortality data and join to US county boundaries
+- Conduct exploratory data analysis (EDA) for Northeast (NE) counties, 1998–2010
+- Map yearly and period-mean LBC mortality rates (`RATE`) with choropleths
+- Detect hot/cold spots with Getis-Ord Gi\*
+- Compute bivariate Local Moran's I (LBC mortality vs poverty)
+- Fit models with spatially lagged exogenous (SLX) and endogenous (SAR) terms
+- Compare spatial lag (SAR) and spatial error (SEM) specifications
+- Estimate geographically weighted correlation (GWCORR)
+- Fit Geographically Weighted OLS (GW-OLS) and map local coefficients
+- Fit Geographically Weighted Random Forest (GW-RF) and map global/local feature importance
+
+**Data:** `Data/data_1998_2010_long_lbc.csv`, `Data/US_COUNTY.shp` (+ sidecar files), `Data/2025 County Health Rankings Data - v4.xlsx`  
+**Region:** Northeast US counties only · **Period:** 1998–2010 (period means for modelling)  
+**Estimated time:** 4 hours | **Level:** Advanced  
+**Libraries:** `sf`, `spdep`, `spatialreg`, `GWmodel`, `ranger`, `readxl`, `ggplot2`
+
+## 1. Setup & Data Loading
+
+We use county FIPS codes to join longitudinal LBC mortality and environmental covariates to the US county shapefile, subset to the **Northeast** census region, and compute **1998–2010 period means** for spatial modelling. Contemporary County Health Rankings (CHR 2025) measures are joined as a supplementary SES/access layer.
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(sf)
+library(sp)
+library(spdep)
+library(spatialreg)
+library(GWmodel)
+library(ranger)
+library(readxl)
+library(patchwork)
+library(broom)
+
+set.seed(42)
+DATA_DIR <- "Data"
+OUT_DIR <- file.path(tempdir(), "mod07_spatial_ml")
+dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
+
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.text = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks = element_blank()
+    )
+)
+
+YEAR_MIN <- 1998
+YEAR_MAX <- 2010
+COVARIATES <- c("SMOKING", "POVERTY", "PM25", "NO2", "SO2")
+TARGET <- "RATE"  # lung & bronchus cancer mortality rate (per 100k)
+```
+
+```{r}
+# Load longitudinal LBC data
+lbc <- read_csv(file.path(DATA_DIR, "data_1998_2010_long_lbc.csv"), show_col_types = FALSE)
+lbc <- lbc %>% filter(Year >= YEAR_MIN, Year <= YEAR_MAX) %>% mutate(FIPS = as.integer(FIPS))
+cat(sprintf("Long format rows: %s | Years: %d–%d\n",
+            format(nrow(lbc), big.mark = ","), min(lbc$Year), max(lbc$Year)))
+print(head(lbc, 3))
+
+# Period means by county
+mean_df <- lbc %>%
+  group_by(FIPS) %>%
+  summarise(across(all_of(c(TARGET, COVARIATES)), ~ mean(.x, na.rm = TRUE)),
+            .groups = "drop") %>%
+  rename(RATE_mean = RATE)
+
+# Yearly county means (for temporal maps)
+yearly <- lbc %>%
+  group_by(FIPS, Year) %>%
+  summarise(RATE = mean(RATE, na.rm = TRUE), .groups = "drop")
+
+# County boundaries
+counties <- st_read(file.path(DATA_DIR, "US_COUNTY.shp"), quiet = TRUE)
+counties$FIPS_int <- as.integer(counties$FIPS)
+cat(sprintf("\nShapefile counties: %s | CRS: %s\n",
+            format(nrow(counties), big.mark = ","), st_crs(counties)$input))
+print(table(counties$REGION))
+```
+
+```{r}
+# Subset Northeast and join period means
+ne <- counties %>% filter(REGION == "Northeast")
+gdf <- ne %>%
+  left_join(mean_df, by = c("FIPS_int" = "FIPS")) %>%
+  filter(!is.na(RATE_mean))
+# US Albers Equal Area for mapping & distances
+if (is.na(st_crs(gdf))) st_crs(gdf) <- 5070
+gdf <- st_transform(gdf, 5070)
+gdf$centroid_x <- st_coordinates(st_centroid(gdf))[, 1]
+gdf$centroid_y <- st_coordinates(st_centroid(gdf))[, 2]
+coords <- cbind(gdf$centroid_x, gdf$centroid_y)
+
+cat(sprintf("Northeast counties with data: %d\n", nrow(gdf)))
+print(st_drop_geometry(gdf) %>%
+        select(STATE, COUNTY, RATE_mean, all_of(COVARIATES)) %>%
+        summary())
+```
+
+```{r}
+# County Health Rankings 2025 — contemporary smoking, uninsured, PM2.5, poverty
+chr_sel <- read_excel(
+  file.path(DATA_DIR, "2025 County Health Rankings Data - v4.xlsx"),
+  sheet = "Select Measure Data", skip = 1
+) %>%
+  transmute(
+    FIPS = as.integer(FIPS),
+    chr_uninsured = `% Uninsured`,
+    chr_pm25      = `Average Daily PM2.5`,
+    chr_child_pov = `% Children in Poverty`,
+    chr_pcp_rate  = `Primary Care Physicians Rate`
+  ) %>%
+  filter(!is.na(FIPS), FIPS %% 1000 != 0)  # drop state totals (xx000)
+
+chr_add <- read_excel(
+  file.path(DATA_DIR, "2025 County Health Rankings Data - v4.xlsx"),
+  sheet = "Additional Measure Data", skip = 1
+) %>%
+  transmute(
+    FIPS = as.integer(FIPS),
+    chr_smoking = `% Adults Reporting Currently Smoking`,
+    chr_income  = `Median Household Income`,
+    chr_obesity = `% Adults with Obesity`
+  ) %>%
+  filter(!is.na(FIPS), FIPS %% 1000 != 0)
+
+gdf <- gdf %>%
+  left_join(chr_sel, by = c("FIPS_int" = "FIPS")) %>%
+  left_join(chr_add, by = c("FIPS_int" = "FIPS"))
+
+cat(sprintf("CHR join: smoking available for %d / %d NE counties\n",
+            sum(!is.na(gdf$chr_smoking)), nrow(gdf)))
+print(st_drop_geometry(gdf) %>%
+        select(chr_smoking, chr_uninsured, chr_pm25, chr_child_pov) %>%
+        summary())
+```
+
+## 2. Exploratory Data Analysis
+
+Distribution of LBC mortality and covariates, temporal trends, and bivariate relationships across NE counties.
+
+```{r}
+vars_plot <- c("RATE_mean", COVARIATES)
+long_eda <- st_drop_geometry(gdf) %>%
+  select(all_of(vars_plot)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "value")
+
+p_hist <- ggplot(long_eda, aes(value)) +
+  geom_histogram(bins = 25, fill = "#2563EB", colour = "white") +
+  geom_density(aes(y = after_stat(count) * 2), colour = "#DC2626") +
+  facet_wrap(~ variable, scales = "free") +
+  labs(title = "NE Counties — Period Mean Distributions (1998–2010)") +
+  theme(axis.text = element_text(size = 8), axis.title = element_text(size = 9))
+print(p_hist)
+ggsave(file.path(OUT_DIR, "eda_histograms.png"), p_hist, width = 14, height = 8, dpi = 150)
+```
+
+```{r}
+corr <- st_drop_geometry(gdf) %>% select(RATE_mean, all_of(COVARIATES)) %>% cor(use = "complete.obs")
+corr_df <- as.data.frame(corr) %>%
+  rownames_to_column("var1") %>%
+  pivot_longer(-var1, names_to = "var2", values_to = "r")
+
+p_corr <- ggplot(corr_df, aes(var1, var2, fill = r)) +
+  geom_tile(colour = "white") +
+  geom_text(aes(label = sprintf("%.2f", r)), size = 3) +
+  scale_fill_distiller(palette = "RdBu", direction = 1, limits = c(-1, 1)) +
+  labs(title = "Pearson Correlation — Period Means") +
+  theme(axis.text = element_text(size = 8), axis.title = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+print(p_corr)
+ggsave(file.path(OUT_DIR, "eda_correlation.png"), p_corr, width = 7, height = 6, dpi = 150)
+```
+
+```{r}
+ne_fips <- unique(gdf$FIPS_int)
+ne_yearly <- yearly %>% filter(FIPS %in% ne_fips)
+trend <- ne_yearly %>%
+  group_by(Year) %>%
+  summarise(mean = mean(RATE, na.rm = TRUE),
+            sd = sd(RATE, na.rm = TRUE),
+            count = n(), .groups = "drop")
+
+p_tr <- ggplot(trend, aes(Year, mean)) +
+  geom_ribbon(aes(ymin = mean - sd, ymax = mean + sd), fill = "#A23B72", alpha = 0.2) +
+  geom_line(colour = "#A23B72", linewidth = 1) +
+  geom_point(colour = "#A23B72", size = 2) +
+  labs(
+    x = "Year", y = "LBC mortality rate (per 100k)",
+    title = "NE Region — Mean LBC Rate Over Time (±1 SD across counties)"
+  ) +
+  theme(axis.text = element_text(size = 9), axis.title = element_text(size = 10))
+print(p_tr)
+ggsave(file.path(OUT_DIR, "eda_temporal_trend.png"), p_tr, width = 8, height = 4, dpi = 150)
+print(trend %>% mutate(across(where(is.numeric), ~ round(.x, 2))))
+```
+
+## 3. Choropleth Maps — Yearly & Period Mean LBC Rates
+
+Maps use the US county polygon layer (`US_COUNTY.shp`) for the Northeast region.
+
+```{r}
+choropleth <- function(gdf_in, column, title, pal = "YlOrRd",
+                       vmin = NULL, vmax = NULL) {
+  ggplot(gdf_in) +
+    geom_sf(aes(fill = .data[[column]]), colour = "grey70", linewidth = 0.15) +
+    scale_fill_distiller(
+      name = "Rate per 100k", palette = pal, direction = 1,
+      limits = if (!is.null(vmin)) c(vmin, vmax) else NULL,
+      na.value = "grey90"
+    ) +
+    labs(title = title) +
+    coord_sf()
+}
+
+p_mean <- choropleth(gdf, "RATE_mean", "NE Counties  Mean LBC Mortality (1998–2010)")
+print(p_mean)
+ggsave(file.path(OUT_DIR, "map_rate_mean.png"), p_mean, width = 9, height = 8, dpi = 150)
+```
+
+```{r}
+sample_years <- c(1998, 2002, 2006, 2010)
+ne_yearly_gdf <- counties %>%
+  filter(REGION == "Northeast") %>%
+  mutate(FIPS_int = as.integer(FIPS)) %>%
+  st_transform(5070)
+vmin <- min(ne_yearly$RATE, na.rm = TRUE)
+vmax <- max(ne_yearly$RATE, na.rm = TRUE)
+
+yr_maps <- lapply(sample_years, function(yr) {
+  yr_df <- ne_yearly %>% filter(Year == yr)
+  yr_gdf <- ne_yearly_gdf %>% left_join(yr_df, by = c("FIPS_int" = "FIPS"))
+  choropleth(yr_gdf, "RATE", sprintf("LBC Rate — %d", yr), vmin = vmin, vmax = vmax)
+})
+p_yrs <- wrap_plots(yr_maps, ncol = 2) +
+  plot_annotation(title = "Yearly LBC Mortality Rate — Northeast Counties")
+print(p_yrs)
+ggsave(file.path(OUT_DIR, "maps_yearly_rate.png"), p_yrs, width = 14, height = 12, dpi = 150)
+```
+
+## 4. Spatial Weights & Hot Spot Analysis (Getis-Ord Gi\*)
+
+**Queen contiguity** weights encode shared-boundary neighbours. The **Getis-Ord Gi\*** statistic compares each county’s rate to the mean rate within its local neighbourhood, identifying statistically significant hot spots (high-high) and cold spots (low-low).
+
+The Getis-Ord Gi\* statistic for location *i* is calculated as:
+
+$$
+G_i^* = \frac{\sum_j w_{i,j} x_j - \bar{X} \sum_j w_{i,j}}{S \sqrt{\frac{n \sum_j w_{i,j}^2 - \left(\sum_j w_{i,j}\right)^2}{n - 1}}}
+$$
+
+where  
+- **x<sub>j</sub>**: the attribute value at location *j*  
+- **w<sub>i,j</sub>**: the spatial weight between locations *i* and *j*  
+- **X̄**: the mean of all *x<sub>j</sub>*  
+- **S**: the standard deviation of all *x<sub>j</sub>*  
+- **n**: the total number of locations.
+
+> Nantucket County (MA) is an spatial *island* (no queen neighbours) and is excluded from inference requiring a full weights matrix.
+
+```{r}
+nb_q <- poly2nb(gdf, queen = TRUE)
+islands <- which(card(nb_q) == 0)
+if (length(islands)) {
+  island_names <- st_drop_geometry(gdf)[islands, c("STATE", "COUNTY")]
+  cat(sprintf("Removing %d island(s):\n", length(islands)))
+  print(island_names)
+  gdf_sp <- gdf[-islands, ]
+  coords_sp <- coords[-islands, , drop = FALSE]
+  nb_q <- poly2nb(gdf_sp, queen = TRUE)
+} else {
+  gdf_sp <- gdf
+  coords_sp <- coords
+}
+lw <- nb2listw(nb_q, style = "W", zero.policy = TRUE)
+cat(sprintf("Spatial analysis sample: N=%d counties\n", length(nb_q)))
+cat(sprintf("Average neighbours: %.1f\n", mean(card(nb_q))))
+```
+
+```{r}
+y_rate <- gdf_sp$RATE_mean
+lw_gstar <- nb2listw(include.self(nb_q), style = "B", zero.policy = TRUE)
+gi <- localG(y_rate, lw_gstar, zero.policy = TRUE)
+gdf_sp$Gi_Z <- as.numeric(gi)
+gdf_sp$Gi_p <- 2 * pnorm(-abs(gdf_sp$Gi_Z))
+gdf_sp$hotspot <- case_when(
+  gdf_sp$Gi_Z >  1.96 & gdf_sp$Gi_p <= 0.05 ~ "Hot spot",
+  gdf_sp$Gi_Z < -1.96 & gdf_sp$Gi_p <= 0.05 ~ "Cold spot",
+  TRUE                                      ~ "Not significant"
+)
+
+hs_colors <- c("Hot spot" = "#d73027", "Cold spot" = "#4575b4",
+               "Not significant" = "#ffffbf")
+p_hs <- ggplot(gdf_sp) +
+  geom_sf(aes(fill = hotspot), colour = "grey50", linewidth = 0.2) +
+  scale_fill_manual(values = hs_colors) +
+  labs(title = "Getis-Ord Gi* Hot/Cold Spots — Mean LBC Rate (p ≤ 0.05)", fill = NULL)
+print(p_hs)
+ggsave(file.path(OUT_DIR, "map_gi_star.png"), p_hs, width = 9, height = 8, dpi = 150)
+print(table(gdf_sp$hotspot))
+```
+
+## 5. Bivariate Local Moran's I
+
+The Bivariate Local Moran's I ($I_i^{XY}$) is a spatial statistic that quantifies the association between the value of variable $X$ at location $i$ and the spatial lag (weighted average in neighbors) of variable $Y$ around $i$.
+
+Mathematically, for each location $i$:
+
+$$
+I_i^{XY} = z_{X,i} \sum_j w_{ij} z_{Y,j}
+$$
+
+where:
+- $z_{X,i} = X_i - \bar{X}$ is the deviation of variable $X$ at location $i$ from its mean.
+- $z_{Y,j} = Y_j - \bar{Y}$ is the deviation of variable $Y$ at neighboring location $j$ from its mean.
+- $w_{ij}$ is the spatial weight between locations $i$ and $j$ (e.g., 1 if neighbors, 0 otherwise).
+
+This statistic tests whether, for example, a high value of LBC mortality rate in county $i$ ($X_i$) is associated with high or low values of poverty in adjacent counties ($Y_j$). Significance is assessed by permutation.
+
+Outcomes highlight clusters where areas with high LBC mortality are surrounded by high poverty ("high-high"), or low-low, as well as discordant patterns ("high-low", "low-high"). Statistically significant $I_i^{XY}$ indicates localized spatial relationships between two variables, aiding detection of meaningful spatial patterns.
+
+Bivariate LISA tests whether high LBC mortality in county *i* is associated with high poverty in neighbouring counties (and analogous low-low / discordant patterns).
+
+```{r}
+zx <- as.numeric(scale(gdf_sp$RATE_mean))
+zy <- as.numeric(scale(gdf_sp$POVERTY))
+lag_zy <- lag.listw(lw, zy, zero.policy = TRUE)
+Ii_xy <- zx * lag_zy
+
+# Conditional permutation p-values
+n_perm <- 999
+n_sp <- nrow(gdf_sp)
+I_perm <- replicate(n_perm, {
+  zy_p <- sample(zy)
+  zx * lag.listw(lw, zy_p, zero.policy = TRUE)
+})
+p_sim <- rowMeans(abs(I_perm) >= abs(Ii_xy))
+
+quadrant <- rep("NS", n_sp)
+q <- case_when(
+  zx > 0 & lag_zy > 0 ~ "HH",
+  zx < 0 & lag_zy > 0 ~ "LH",
+  zx < 0 & lag_zy < 0 ~ "LL",
+  TRUE                ~ "HL"
+)
+quadrant[p_sim < 0.05] <- q[p_sim < 0.05]
+gdf_sp$bivar_cluster <- quadrant
+
+bv_colors <- c(HH = "#d73027", LL = "#4575b4", HL = "#fdae61",
+               LH = "#abd9e9", NS = "#ffffbf")
+p_bv <- ggplot(gdf_sp) +
+  geom_sf(aes(fill = bivar_cluster), colour = "grey50", linewidth = 0.2) +
+  scale_fill_manual(values = bv_colors) +
+  labs(title = "Bivariate LISA: LBC Rate (i) × Poverty (neighbours)", fill = NULL)
+print(p_bv)
+ggsave(file.path(OUT_DIR, "map_bivar_moran.png"), p_bv, width = 9, height = 8, dpi = 150)
+print(table(quadrant))
+```
+
+## 6. Spatially Lagged Regressors
+
+Spatially lagged regressors capture the influence of covariates (independent variables) in neighboring spatial units on the outcome at each location. Mathematically, for a covariate vector $X$ (e.g., poverty), the spatially lagged covariate is computed as $WX$, where $W$ is the spatial weights matrix (defining neighbor relations), and:
+
+$$
+(WX)_i = \sum_{j} w_{ij} X_j
+$$
+
+Here, $(WX)_i$ is the average (or weighted sum) of covariate $X$ in the neighbors $j$ of region $i$. In the SLX (Spatial Lag of X) model, both the original covariate and its spatial lag are included as regressors:
+
+$$
+Y = X\beta + WX\theta + \varepsilon
+$$
+
+where:
+- $Y$: outcome variable (e.g., LBC mortality rate)
+- $X$: matrix of local covariate values,
+- $WX$: matrix of spatially lagged covariate values,
+- $\beta$: coefficients for local effects,
+- $\theta$: coefficients for neighboring effects,
+- $\varepsilon$: error term.
+
+This formulation allows us to distinguish between effects due to an area's own characteristics ($\beta$) and effects from neighboring characteristics ($\theta$).
+
+Comparisons with other spatial econometric models:
+- **SAR (Spatial Lag of Y / SLM)**: Models spatial dependence in the outcome itself:
+  $$
+  Y = \rho W Y + X\beta + \varepsilon
+  $$
+  where $\rho$ measures spatial spillover of the outcome.
+- **SEM (Spatial Error Model)**: Models spatial correlation in the errors:
+  $$
+  Y = X\beta + u, \quad u = \lambda W u + \varepsilon
+  $$
+  where $\lambda$ represents spatial dependence in the unobserved factors.
+
+By comparing SLX, SAR, and SEM models, we can assess whether spatial processes arise from neighbors' covariates, spillovers in the outcome, or unmeasured spatially correlated shocks.
+
+| Model | Specification | Interpretation |
+|-------|---------------|----------------|
+| **SLX** (lagged exogenous) | `Y = Xβ + WXθ + ε` | Neighbours' covariates affect local outcome |
+| **SAR / SLM** (lagged endogenous) | `Y = ρWY + Xβ + ε` | Outcome spillovers across neighbours |
+| **SEM** | `Y = Xβ + u`, `u = λWu + ε` | Unobserved spatially correlated shocks |
+
+We compare OLS, SLX, spatial lag (SAR), and spatial error (SEM) using `spatialreg`.
+
+```{r}
+dat <- st_drop_geometry(gdf_sp)
+ols <- lm(RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + SO2, data = dat)
+cat("OLS summary (coefficients):\n")
+print(tidy(ols))
+
+# Spatially lagged exogenous regressors (SLX)
+for (v in COVARIATES) {
+  dat[[paste0("W_", v)]] <- lag.listw(lw, dat[[v]], zero.policy = TRUE)
+}
+slx <- lm(
+  RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + SO2 +
+    W_SMOKING + W_POVERTY + W_PM25 + W_NO2 + W_SO2,
+  data = dat
+)
+cat("\nSLX (spatially lagged X) — selected coefficients:\n")
+print(tidy(slx) %>% mutate(across(where(is.numeric), ~ round(.x, 3))))
+
+sar <- lagsarlm(RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + SO2,
+                data = dat, listw = lw, zero.policy = TRUE)
+cat(sprintf("\nSAR (spatial lag of Y): rho = %.4f\n", sar$rho))
+print(summary(sar, Nagelkerke = TRUE))
+```
+
+```{r}
+sem <- errorsarlm(RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + SO2,
+                  data = dat, listw = lw, zero.policy = TRUE)
+cat(sprintf("SEM: lambda = %.4f\n", sem$lambda))
+print(summary(sem, Nagelkerke = TRUE))
+
+cmp <- tibble(
+  model  = c("OLS", "SLX", "SAR", "SEM"),
+  AIC    = c(AIC(ols), AIC(slx), AIC(sar), AIC(sem)),
+  LogLik = c(as.numeric(logLik(ols)), as.numeric(logLik(slx)), sar$LL, sem$LL)
+) %>% arrange(AIC)
+cat("\nModel comparison (lower AIC preferred):\n")
+print(cmp %>% mutate(across(where(is.numeric), ~ round(.x, 2))))
+```
+
+## 7. Geographically Weighted Correlation (GWCORR)
+
+At each county *i*, we compute a **local Pearson correlation** between LBC rate and poverty that is *geographically weighted*.
+
+Specifically, for each location *i*, we compute the local (weighted) Pearson correlation coefficient $r_i$ as follows:
+
+Let $y_1$ be the vector of LBC rates, $y_2$ be the vector of poverty rates, each of length $n$.
+
+For location $i$, assign a Gaussian weight:
+
+$$
+w_{ij} = \exp\left(-\frac{d_{ij}^2}{2 h^2}\right)
+$$
+
+where $d_{ij}$ is the distance between locations $i$ and $j$, and $h$ is the bandwidth (chosen as in GWR).
+
+Then, the weighted means:
+
+$$
+\mu_{1,i} = \sum_j w_{ij} y_{1j}
+$$
+
+$$
+\mu_{2,i} = \sum_j w_{ij} y_{2j}
+$$
+
+The weighted covariance at $i$:
+
+$$
+\mathrm{Cov}_i(y_1, y_2) = \sum_j w_{ij} (y_{1j} - \mu_{1,i})(y_{2j} - \mu_{2,i})
+$$
+
+The weighted standard deviations at $i$:
+
+$$
+\sigma_{1,i} = \sqrt{\sum_j w_{ij} (y_{1j} - \mu_{1,i})^2}
+$$
+
+$$
+\sigma_{2,i} = \sqrt{\sum_j w_{ij} (y_{2j} - \mu_{2,i})^2}
+$$
+
+The **local weighted Pearson correlation** at $i$ is:
+
+$$
+r_i = \frac{\mathrm{Cov}_i(y_1, y_2)}{\sigma_{1,i} \, \sigma_{2,i}}
+$$
+
+This gives a spatial map of local (smoothed) correlations between LBC rate and poverty.
+
+```{r}
+gw_corr <- function(y1, y2, coords, bandwidth = NULL) {
+  n <- length(y1)
+  d <- as.matrix(dist(coords))
+  if (is.null(bandwidth)) bandwidth <- as.numeric(quantile(d[d > 0], 0.30))
+  local_r <- numeric(n)
+  for (i in seq_len(n)) {
+    w_i <- exp(-d[i, ]^2 / (2 * bandwidth^2))
+    w_i <- w_i / sum(w_i)
+    mu1 <- sum(w_i * y1); mu2 <- sum(w_i * y2)
+    num <- sum(w_i * (y1 - mu1) * (y2 - mu2))
+    den <- sqrt(sum(w_i * (y1 - mu1)^2) * sum(w_i * (y2 - mu2)^2))
+    local_r[i] <- if (den > 0) num / den else NA_real_
+  }
+  list(r = local_r, bandwidth = bandwidth)
+}
+
+gw <- gw_corr(gdf_sp$RATE_mean, gdf_sp$POVERTY, coords_sp)
+gdf_sp$gw_corr_rate_poverty <- gw$r
+cat(sprintf("GWCORR bandwidth: %.0f m | mean r = %.3f\n", gw$bandwidth, mean(gw$r, na.rm = TRUE)))
+
+p_gwc <- ggplot(gdf_sp) +
+  geom_sf(aes(fill = gw_corr_rate_poverty), colour = "grey50", linewidth = 0.2) +
+  scale_fill_distiller(name = "Local r", palette = "RdBu", direction = 1,
+                       limits = c(-1, 1)) +
+  labs(title = "GWCORR: LBC Rate vs Poverty (local Pearson r)")
+print(p_gwc)
+ggsave(file.path(OUT_DIR, "map_gwcorr.png"), p_gwc, width = 9, height = 8, dpi = 150)
+```
+
+## 8. Geographically Weighted OLS (GW-OLS)
+
+Geographically Weighted OLS (GW-OLS) extends traditional linear regression by estimating **location-specific regression coefficients** $\boldsymbol{\beta}(u, v)$ at spatial coordinates $(u,v)$. The GW-OLS model at each location $i$ is:
+
+$$
+y_i = \beta_0(u_i, v_i) + \sum_{j=1}^p \beta_j(u_i, v_i) X_{ij} + \varepsilon_i
+$$
+
+where:
+- $y_i$ is the response (e.g., LBC rate at location $i$)
+- $X_{ij}$ is the value of predictor $j$ at location $i$ (e.g., smoking, poverty, PM2.5)
+- $\beta_j(u_i,v_i)$ is the spatially varying coefficient for each covariate at location $i$
+- $\varepsilon_i$ is the error term
+
+At each location, coefficients are estimated by minimizing the **locally weighted least squares**:
+
+$$
+\min_{\boldsymbol{\beta}} \sum_{k=1}^{n} w_{ik} (y_k - \beta_0 - \sum_{j=1}^p \beta_j X_{kj})^2
+$$
+
+Here, $w_{ik}$ is a spatial weight (usually Gaussian) measuring the proximity of location $k$ to $i$. The bandwidth parameter (selected via AICc) controls the degree of locality.
+
+We use the `GWmodel` package to fit GW-OLS, select optimal bandwidth, and map the local effects of key predictors (smoking, poverty, PM2.5).
+
+```{r}
+spdf <- st_drop_geometry(gdf_sp)
+spdf$x <- coords_sp[, 1]
+spdf$y <- coords_sp[, 2]
+coordinates(spdf) <- ~ x + y
+proj4string(spdf) <- CRS(st_crs(gdf_sp)$proj4string)
+
+bw_gwr <- tryCatch(
+  bw.gwr(RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + SO2,
+         data = spdf, kernel = "gaussian", adaptive = FALSE),
+  error = function(e) as.numeric(quantile(as.matrix(dist(coords_sp))[as.matrix(dist(coords_sp)) > 0], 0.3))
+)
+gwr_model <- gwr.basic(
+  RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + SO2,
+  data = spdf, bw = bw_gwr, kernel = "gaussian", adaptive = FALSE
+)
+cat(sprintf("GW-OLS bandwidth (AICc): %.0f m\n", bw_gwr))
+print(gwr_model)
+
+local_b <- as.data.frame(gwr_model$SDF)
+gdf_sp$gw_beta_Intercept <- local_b$Intercept
+for (v in COVARIATES) gdf_sp[[paste0("gw_beta_", v)]] <- local_b[[v]]
+```
+
+```{r}
+map_vars <- c("POVERTY", "SMOKING", "PM25")
+p_gwr <- wrap_plots(lapply(map_vars, function(var) {
+  ggplot(gdf_sp) +
+    geom_sf(aes(fill = .data[[paste0("gw_beta_", var)]]), colour = "grey50", linewidth = 0.2) +
+    scale_fill_distiller(palette = "RdBu", direction = 1) +
+    labs(title = paste("GW-OLS β —", var), fill = NULL)
+}), ncol = 3) +
+  plot_annotation(title = "Spatially Varying Coefficients (GW-OLS)")
+print(p_gwr)
+ggsave(file.path(OUT_DIR, "map_gwr_coefficients.png"), p_gwr, width = 16, height = 5, dpi = 150)
+```
+
+## 9. Geographically Weighted Random Forest (GW-RF)
+
+Geographically Weighted Random Forest (GW-RF) adapts the standard Random Forest (RF) regression to account for spatial heterogeneity by fitting a locally weighted RF model at each location.
+
+For each county/location $i$, we assign a spatial weight to each sample $k$ using a Gaussian kernel:
+$$
+w_{ik} = \exp\left(- \frac{d_{ik}^2}{2b^2}\right)
+$$
+where $d_{ik}$ is the distance between locations $i$ and $k$, and $b$ is the bandwidth parameter controlling the degree of locality.
+
+For location $i$, the locally weighted RF is trained by maximizing the weighted likelihood:
+$$
+\text{Train RF}_i: \ \{ (X_k, y_k), w_{ik} \}_{k=1}^n
+$$
+that is, for each tree split and for the tree ensemble, each sample $(X_k, y_k)$ is included with weight $w_{ik}$.
+
+After fitting RF$_i$, we extract the **local variable importance** scores:
+$$
+\text{Importance}_i(j) = \text{RF}_i \text{ feature importance for variable } j
+$$
+which quantifies, for each location $i$, the contribution of predictor $j$ to explaining local variation.
+
+For comparison, a **global RF** on the full dataset (all weights equal) provides a benchmark feature importance:
+$$
+\text{Importance}_{\text{global}}(j) = \text{RF}_{\text{global}} \text{ feature importance for variable } j
+$$
+
+```{r}
+gw_random_forest <- function(X, y, coords, bandwidth = NULL, n_estimators = 200, seed = 42) {
+  n <- nrow(X); p <- ncol(X)
+  d <- as.matrix(dist(coords))
+  if (is.null(bandwidth)) bandwidth <- as.numeric(quantile(d[d > 0], 0.30))
+  local_imp <- matrix(0, n, p)
+  local_pred <- numeric(n)
+  colnames(X) <- colnames(X)
+  df_rf <- as.data.frame(X)
+  df_rf$y <- y
+  for (i in seq_len(n)) {
+    w_i <- exp(-d[i, ]^2 / (2 * bandwidth^2))
+    w_i <- w_i / max(w_i)
+    rf <- ranger(
+      y ~ ., data = df_rf, num.trees = n_estimators, seed = seed,
+      importance = "impurity", case.weights = w_i,
+      min.node.size = max(3, floor(n / 20))
+    )
+    local_imp[i, ] <- rf$variable.importance[colnames(X)]
+    local_pred[i] <- predict(rf, data = df_rf[i, , drop = FALSE])$predictions
+  }
+  list(imp = local_imp, pred = local_pred, bandwidth = bandwidth)
+}
+
+X_rf <- as.matrix(st_drop_geometry(gdf_sp)[, COVARIATES])
+y_rf <- gdf_sp$RATE_mean
+
+rf_global <- ranger(
+  RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + SO2,
+  data = st_drop_geometry(gdf_sp), num.trees = 300, seed = 42,
+  importance = "impurity"
+)
+global_imp <- sort(rf_global$variable.importance, decreasing = TRUE)
+cat("Global RF feature importance:\n")
+print(round(global_imp, 3))
+
+gwrf <- gw_random_forest(X_rf, y_rf, coords_sp, n_estimators = 150)
+cat(sprintf("\nGW-RF bandwidth: %.0f m | mean local R² proxy: %.3f\n",
+            gwrf$bandwidth,
+            1 - mean((y_rf - gwrf$pred)^2) / var(y_rf)))
+for (j in seq_along(COVARIATES)) {
+  gdf_sp[[paste0("gwrf_imp_", COVARIATES[j])]] <- gwrf$imp[, j]
+}
+```
+
+```{r}
+imp_df <- tibble(variable = names(global_imp), importance = as.numeric(global_imp))
+p_imp <- ggplot(imp_df, aes(reorder(variable, importance), importance)) +
+  geom_col(fill = "#F18F01", colour = "white") +
+  coord_flip() +
+  labs(x = NULL, y = "Mean decrease impurity",
+       title = "Global Random Forest — Feature Importance") +
+  theme(axis.text = element_text(size = 9), axis.title = element_text(size = 10))
+print(p_imp)
+ggsave(file.path(OUT_DIR, "gwr_rf_global_importance.png"), p_imp, width = 7, height = 4, dpi = 150)
+
+p_loc <- wrap_plots(lapply(COVARIATES, function(var) {
+  ggplot(gdf_sp) +
+    geom_sf(aes(fill = .data[[paste0("gwrf_imp_", var)]]), colour = "grey50", linewidth = 0.2) +
+    scale_fill_distiller(palette = "YlOrRd", direction = 1) +
+    labs(title = paste("GW-RF importance —", var), fill = NULL)
+}), ncol = 3) +
+  plot_annotation(title = "Local Feature Importance (GW-RF)")
+print(p_loc)
+ggsave(file.path(OUT_DIR, "map_gwrf_local_importance.png"), p_loc, width = 15, height = 9, dpi = 150)
+```
+
+## 10. Summary & Clinical Interpretation
+
+**Key findings (Northeast, 1998–2010):**
+- Period-mean LBC mortality shows clear spatial structure; Gi\* identifies significant hot and cold spots.
+- Bivariate LISA links local mortality clusters with neighbourhood poverty patterns.
+- SAR/SEM models indicate spatial dependence beyond standard OLS; compare AIC to choose specification.
+- GW-OLS reveals **spatially varying** associations — e.g., poverty effects may strengthen in urban corridors.
+- GW-RF highlights which environmental and behavioural drivers matter **locally** vs **globally**.
+- CHR 2025 covariates provide a contemporary SES/access overlay for the same county geography.
+
+**Caveats:** Ecological (county-level) inference; rate smoothing not applied; island counties excluded from spatial weights; GW-RF is computationally intensive and should be validated with cross-validation in production workflows.
+
+**Extensions:** BYM disease mapping, spatial cross-validation, GW-RF with spatial lag features, policy simulations.
+
+## Knowledge Check
+
+1. Why is Nantucket excluded from queen-contiguity analyses?
+2. Gi\* hot spots vs LISA High-High clusters — when would they disagree?
+3. If SAR ρ is significant but SEM λ is not (or vice versa), which model do you report?
+4. A GW-OLS poverty coefficient turns negative in one sub-region. Is that necessarily a data error?
+5. GW-RF ranks PM2.5 higher locally than globally in coastal counties. What policy hypothesis does that suggest?

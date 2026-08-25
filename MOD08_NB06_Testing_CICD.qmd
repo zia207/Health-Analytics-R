@@ -1,0 +1,401 @@
+---
+title: "Testing, CI/CD & Code Quality"
+subtitle: "Module 08 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 08: Reproducible Research & Deployment
+***
+**Learning objectives**
+- Write unit tests for data pipeline and model functions with `testthat`
+- Build model performance tests (AUC thresholds, direction tests)
+- Implement property-based testing with random valid inputs
+- Configure GitHub Actions CI/CD for model training and deployment
+- Apply pre-commit hooks for code quality (styler, lintr)
+- Measure test coverage and enforce minimums in CI
+
+**Estimated time:** 2.5 hours | **Level:** Intermediate-Advanced | **Libraries:** `testthat`, `lintr`, `styler`
+
+## 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(pROC)
+library(rsample)
+library(xgboost)
+library(testthat)
+library(jsonlite)
+library(fs)
+
+mod08_dir <- file.path(tempdir(), "mod08")
+dir.create(file.path(mod08_dir, "tests"), recursive = TRUE, showWarnings = FALSE)
+
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.line        = element_line(colour = "grey40")
+    )
+)
+
+set.seed(42)
+N <- 2000
+sigmoid <- function(x) 1 / (1 + exp(-x))
+age  <- as.integer(pmin(pmax(rnorm(N, 60, 15), 18), 90))
+los  <- as.integer(pmin(pmax(rgamma(N, 2.5, scale = 1.8), 1), 30))
+dm   <- rbinom(N, 1, 0.35)
+hf   <- rbinom(N, 1, 0.22)
+copd <- rbinom(N, 1, 0.18)
+logit <- -3.2 + 0.6 * hf + 0.5 * dm + 0.3 * copd + 0.02 * (age - 60) +
+  0.2 * as.integer(los > 7)
+readmitted <- rbinom(N, 1, sigmoid(logit))
+df <- tibble(age = age, los_days = los, diabetes = dm, hf = hf, copd = copd,
+             readmitted = readmitted)
+FEATURES <- c("age", "los_days", "diabetes", "hf", "copd")
+split <- initial_split(df, prop = 0.8, strata = readmitted)
+train <- training(split)
+test  <- testing(split)
+X_tr <- train[FEATURES]; y_tr <- train$readmitted
+X_te <- test[FEATURES];  y_te <- test$readmitted
+model <- xgb.train(
+  params = list(objective = "binary:logistic", max_depth = 4, eta = 0.05,
+                eval_metric = "auc"),
+  data = xgb.DMatrix(as.matrix(X_tr), label = y_tr),
+  nrounds = 200, verbose = 0
+)
+auc <- as.numeric(pROC::auc(y_te, predict(model, as.matrix(X_te)), quiet = TRUE))
+cat(sprintf("Test dataset: %d patients | AUC=%.4f\n", N, auc))
+```
+
+## 2. Testing Pyramid for Health Analytics
+
+```
+         /\
+        /  \
+       / E2E \         <- End-to-end (1-5 tests: full pipeline smoke test)
+      /--------\
+     / Integration \   <- Integration (10-20: API endpoints, DB connections)
+    /--------------\
+   /   Unit Tests   \  <- Unit tests (100+: individual functions, classes)
+  /------------------\
+
+Clinical Model Testing Priorities:
+  1. Data validation (correct types, ranges, no PHI leakage)
+  2. Feature engineering (correct transforms, no data leakage)
+  3. Model direction (high-risk > low-risk scores)
+  4. Model performance (AUC above clinical minimum)
+  5. API contract (correct request/response schemas)
+  6. Reproducibility (same seed → same output)
+```
+
+## 3. Unit Tests: Data Pipeline
+
+```{r}
+# Unit tests for data pipeline and model functions
+validate_features <- function(df, required_cols, age_col = "age", target_col = "readmitted") {
+  errors <- character()
+  missing <- setdiff(required_cols, names(df))
+  if (length(missing)) errors <- c(errors, paste("Missing columns:", paste(missing, collapse = ", ")))
+  if (age_col %in% names(df) && !all(df[[age_col]] >= 18 & df[[age_col]] <= 90)) {
+    errors <- c(errors, paste(age_col, "values outside 18-90 range"))
+  }
+  if (target_col %in% names(df) && !all(df[[target_col]] %in% c(0, 1))) {
+    errors <- c(errors, paste(target_col, "must be binary 0/1"))
+  }
+  errors
+}
+
+compute_positive_rate <- function(y) mean(y)
+
+compute_smr <- function(observed, expected) {
+  if (expected <= 0) stop("Expected must be positive")
+  observed / expected
+}
+
+clean_age <- function(age_series, min_age = 18, max_age = 90) {
+  pmin(pmax(age_series, min_age), max_age)
+}
+
+df_valid <- tibble(
+  age = c(65, 45, 72), los_days = c(5, 3, 12),
+  diabetes = c(1, 0, 1), hf = c(0, 0, 1), copd = c(0, 0, 1), readmitted = c(0, 0, 1)
+)
+df_invalid <- df_valid
+df_invalid$age[1] <- 150
+
+pipeline_results <- test_that("data pipeline validation", {
+  expect_equal(validate_features(df_valid, c(FEATURES, "readmitted")), character(0))
+  expect_true(any(grepl("age", validate_features(df_invalid, FEATURES), ignore.case = TRUE)))
+  df_missing <- df_valid %>% select(-hf)
+  expect_true(any(grepl("hf", validate_features(df_missing, FEATURES))))
+  y <- c(0, 0, 1, 1, 0)
+  rate <- compute_positive_rate(y)
+  expect_gte(rate, 0)
+  expect_lte(rate, 1)
+  expect_equal(rate, 0.4, tolerance = 1e-5)
+  expect_equal(compute_smr(observed = 8, expected = 5.0), 1.6, tolerance = 1e-5)
+  expect_error(compute_smr(observed = 3, expected = 0))
+  cleaned <- clean_age(c(15, 50, 100))
+  expect_equal(min(cleaned), 18)
+  expect_equal(max(cleaned), 90)
+})
+print(pipeline_results)
+cat(sprintf("\nTests: pipeline unit tests executed via testthat\n"))
+```
+
+```{r}
+# Write testthat files (same pattern as writing tests/ to disk)
+TEST_PIPELINE <- paste(
+  c(
+    "# tests/testthat/test-data-pipeline.R",
+    "library(testthat)",
+    "library(dplyr)",
+    "",
+    "test_that('validate_features passes on valid data', {",
+    "  df_valid <- tibble::tibble(",
+    "    age = c(65, 45, 72), los_days = c(5, 3, 12),",
+    "    diabetes = c(1, 0, 1), hf = c(0, 0, 1), copd = c(0, 0, 1), readmitted = c(0, 0, 1)",
+    "  )",
+    "  expect_equal(validate_features(df_valid, FEATURES), character(0))",
+    "})",
+    "",
+    "test_that('validate_features flags invalid age', {",
+    "  df_invalid <- tibble::tibble(age = 150, los_days = 5, diabetes = 0, hf = 0, copd = 0)",
+    "  errors <- validate_features(df_invalid, FEATURES)",
+    "  expect_true(any(grepl('age', errors, ignore.case = TRUE)))",
+    "})",
+    "",
+    "test_that('SMR rejects zero expected', {",
+    "  expect_error(compute_smr(observed = 3, expected = 0))",
+    "})"
+  ),
+  collapse = "\n"
+)
+test_dir <- file.path(mod08_dir, "tests", "testthat")
+dir.create(test_dir, recursive = TRUE, showWarnings = FALSE)
+writeLines(TEST_PIPELINE, file.path(test_dir, "test-data-pipeline.R"))
+cat("Wrote", file.path(test_dir, "test-data-pipeline.R"), "\n")
+```
+
+## 4. Model Performance Tests
+
+```{r}
+prob <- predict(model, as.matrix(X_te))
+model_auc <- as.numeric(pROC::auc(y_te, prob, quiet = TRUE))
+
+model_results <- tryCatch(
+  test_that("model performance contracts", {
+    expect_gt(model_auc, 0.65, label = sprintf("AUC %.4f below minimum 0.65", model_auc))
+    expect_true(all(prob >= 0) && all(prob <= 1), "Probabilities outside [0,1] range")
+    expect_gt(mean(prob[y_te == 1]), mean(prob[y_te == 0]))
+    expect_false(any(is.na(prob)), "NaN values in predictions")
+    expect_equal(ncol(X_te), length(FEATURES))
+    batch_size <- 50
+    preds <- predict(model, as.matrix(X_te[seq_len(batch_size), ]))
+    expect_equal(length(preds), batch_size)
+    X_high <- tibble(age = 80, los_days = 14, diabetes = 1, hf = 1, copd = 1)
+    X_low  <- tibble(age = 25, los_days = 1,  diabetes = 0, hf = 0, copd = 0)
+    prob_high <- as.numeric(predict(model, as.matrix(X_high)))
+    prob_low  <- as.numeric(predict(model, as.matrix(X_low)))
+    expect_gt(prob_high, prob_low)
+  }),
+  error = function(e) {
+    cat("Model performance tests reported a failure:\n", conditionMessage(e), "\n")
+    FALSE
+  }
+)
+print(model_results)
+cat(sprintf("\nModel tests executed | AUC=%.4f\n", model_auc))
+```
+
+## 5. CI/CD Pipeline — GitHub Actions
+
+```{r}
+GITHUB_ACTIONS_WORKFLOW <- paste(
+  c(
+    "# .github/workflows/ci.yml",
+    "name: Health Analytics CI/CD",
+    "",
+    "on:",
+    "  push:",
+    "    branches: [main, develop]",
+    "  pull_request:",
+    "    branches: [main]",
+    "  schedule:",
+    "    - cron: '0 6 * * 1'  # Weekly Monday 6am -- model drift check",
+    "",
+    "jobs:",
+    "  test:",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - uses: actions/checkout@v4",
+    "      - uses: r-lib/actions/setup-r@v2",
+    "        with:",
+    "          r-version: '4.3'",
+    "      - uses: r-lib/actions/setup-r-dependencies@v2",
+    "        with:",
+    "          extra-packages: any::testthat, any::covr, any::rcmdcheck",
+    "          needs: check",
+    "      - name: Verify data integrity",
+    "        run: Rscript src/data/validate.R --manifest data/MANIFEST.json",
+    "      - name: Run testthat",
+    "        run: Rscript -e 'testthat::test_dir(\"tests\")'",
+    "      - name: R CMD check",
+    "        uses: r-lib/actions/check-r-package@v2",
+    "      - name: Coverage report",
+    "        run: Rscript -e 'covr::codecov()'",
+    "",
+    "  build_and_push:",
+    "    needs: test",
+    "    if: github.ref == 'refs/heads/main'",
+    "    runs-on: ubuntu-latest",
+    "    steps:",
+    "      - uses: actions/checkout@v4",
+    "      - name: Build Docker image",
+    "        run: docker build -t readmission-api:${{ github.sha }} .",
+    "      - name: Push to registry",
+    "        run: |",
+    "          docker push ghcr.io/org/readmission-api:${{ github.sha }}",
+    "          docker push ghcr.io/org/readmission-api:latest",
+    "",
+    "  deploy_staging:",
+    "    needs: build_and_push",
+    "    environment: staging",
+    "    steps:",
+    "      - name: Deploy to staging",
+    "        run: |",
+    "          kubectl set image deployment/api api=ghcr.io/org/readmission-api:${{ github.sha }}",
+    "          kubectl rollout status deployment/api",
+    "      - name: Smoke test",
+    "        run: curl -f https://api-staging.health.org/health"
+  ),
+  collapse = "\n"
+)
+cat("GitHub Actions CI/CD Workflow:\n")
+cat(GITHUB_ACTIONS_WORKFLOW, "\n")
+workflow_path <- file.path(mod08_dir, ".github", "workflows", "ci.yml")
+dir.create(dirname(workflow_path), recursive = TRUE, showWarnings = FALSE)
+writeLines(GITHUB_ACTIONS_WORKFLOW, workflow_path)
+```
+
+## 6. Pre-commit Hooks & Code Quality
+
+```{r}
+PRE_COMMIT_CONFIG <- paste(
+  c(
+    "# .pre-commit-config.yaml",
+    "repos:",
+    "  - repo: https://github.com/lorenzwalthert/precommit",
+    "    rev: v0.4.2",
+    "    hooks:",
+    "      - id: style-files          # styler",
+    "      - id: lintr",
+    "      - id: parsable-R",
+    "      - id: no-browser-statement",
+    "      - id: deps-in-desc",
+    "",
+    "  - repo: https://github.com/pre-commit/pre-commit-hooks",
+    "    rev: v4.5.0",
+    "    hooks:",
+    "      - id: trailing-whitespace",
+    "      - id: end-of-file-fixer",
+    "      - id: check-yaml",
+    "",
+    "# Setup: install.packages('precommit'); precommit::use_precommit()",
+    "# Run manually: pre-commit run --all-files"
+  ),
+  collapse = "\n"
+)
+cat("Pre-commit configuration:\n")
+cat(PRE_COMMIT_CONFIG, "\n")
+
+compute_code_metrics <- function(source_code) {
+  parsed <- tryCatch(parse(text = source_code, keep.source = TRUE), error = function(e) e)
+  if (inherits(parsed, "error")) return(list(error = parsed$message))
+  pd <- getParseData(parsed)
+  n_fn <- sum(pd$token == "FUNCTION", na.rm = TRUE)
+  lines <- strsplit(source_code, "\n", fixed = TRUE)[[1]]
+  code_lines <- lines[nzchar(trimws(lines)) & !startsWith(trimws(lines), "#")]
+  list(
+    lines_of_code = length(code_lines),
+    num_functions = n_fn,
+    num_classes   = sum(grepl("R6Class|setClass", source_code)),
+    comment_lines = sum(startsWith(trimws(lines), "#"))
+  )
+}
+
+sample_path <- file.path(mod08_dir, "plumber.R")
+sample_code <- if (file.exists(sample_path)) {
+  paste(readLines(sample_path), collapse = "\n")
+} else {
+  "hello <- function() NULL\nworld <- function(x) x"
+}
+metrics <- compute_code_metrics(sample_code)
+cat("\nCode quality metrics:\n")
+walk(names(metrics), ~ cat(sprintf("  %-28s: %s\n", .x, metrics[[.x]])))
+```
+
+## 7. Property-Based Testing
+
+```{r}
+# Property-based testing: verify invariants hold for ALL valid inputs
+# R analogue of hypothesis: sample many random valid patients
+set.seed(99)
+cat("Property check (1000 random patients):\n")
+test_X <- tibble(
+  age      = sample(18:90, 1000, replace = TRUE),
+  los_days = sample(1:60, 1000, replace = TRUE),
+  diabetes = rbinom(1000, 1, 0.35),
+  hf       = rbinom(1000, 1, 0.22),
+  copd     = rbinom(1000, 1, 0.18)
+)
+probs <- predict(model, as.matrix(test_X))
+in_range <- all(probs >= 0 & probs <= 1)
+cat(sprintf("  All probabilities in [0,1]: %s\n", in_range))
+cat(sprintf("  Any NA: %s\n", any(is.na(probs))))
+cat(sprintf("  Min: %.6f | Max: %.6f\n", min(probs), max(probs)))
+stopifnot(in_range, !any(is.na(probs)))
+cat("[PASS] Predictions always in [0,1] for all valid inputs\n")
+```
+
+## 8. Knowledge Check
+1. A test checks `auc > 0.65`. The AUC is 0.66, so the test passes. Six months later a data bug makes AUC=0.67 look good but the data is corrupted. What additional tests would catch this?
+2. Your CI pipeline takes 45 minutes to run. 12 developers each push 5 times/day. What optimisations reduce this to <10 minutes?
+3. A property-based test found that `age=18, los_days=1` all zeros returns `prob=0.0001`. Is this a bug?
+4. Pre-commit hooks auto-format an R script (`styler`) and change 200 lines. How does this affect reproducibility?
+5. Write a test that verifies the model's AUC on a held-out test set is within 0.05 of the AUC logged in MLflow for the production model.
+
+```{r}
+# Exercise 5 — MLflow AUC consistency test
+test_model_auc_consistent_with_registry <- function(model_obj, X_test, y_test,
+                                                    registry_path = file.path(mod08_dir, "model_registry.json"),
+                                                    tolerance = 0.05) {
+  if (!file.exists(registry_path)) {
+    cat("SKIP: No model registry file found\n")
+    return(TRUE)
+  }
+  registry <- fromJSON(registry_path, simplifyVector = FALSE)
+  prod_versions <- Filter(function(v) identical(v$stage, "Production"), registry$version_history)
+  if (!length(prod_versions)) {
+    cat("SKIP: No production version in registry\n")
+    return(TRUE)
+  }
+  registered_auc <- prod_versions[[length(prod_versions)]]$auc
+  current_auc <- as.numeric(pROC::auc(y_test, predict(model_obj, as.matrix(X_test)), quiet = TRUE))
+  auc_diff <- abs(current_auc - registered_auc)
+  passed <- auc_diff <= tolerance
+  cat(sprintf("Registry AUC : %.4f\n", registered_auc))
+  cat(sprintf("Current AUC  : %.4f\n", current_auc))
+  cat(sprintf("Difference   : %.4f (tolerance=%.2f)\n", auc_diff, tolerance))
+  cat(sprintf("Test result  : %s\n", if (passed) "PASS" else "FAIL - model may have drifted!"))
+  passed
+}
+
+test_model_auc_consistent_with_registry(model, X_te, y_te)
+```
+
+***
+**Next → NB-07: Model Cards, Ethics & Clinical Governance**

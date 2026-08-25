@@ -1,0 +1,478 @@
+---
+title: "MLflow Model Tracking & Registry"
+subtitle: "Module 08 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 08: Reproducible Research & Deployment
+***
+**Learning objectives**
+- Understand MLflow's four core concepts: tracking, models, registry, projects
+- Log parameters, metrics, and artifacts for every training run
+- Compare multiple model runs in a structured experiment
+- Register the best model and manage staging/production lifecycle
+- Build a model metadata schema for clinical model governance
+- Implement drift detection with MLflow metrics over time
+
+**Estimated time:** 2.5 hours | **Level:** Intermediate-Advanced | **Libraries:** `mlflow`, `tidymodels`, `xgboost`, `ranger`
+
+## 1. Setup & Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(patchwork)
+library(pROC)
+library(rsample)
+library(ranger)
+library(xgboost)
+library(jsonlite)
+library(fs)
+
+mod08_dir <- file.path(tempdir(), "mod08")
+dir.create(file.path(mod08_dir, "mlruns"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(mod08_dir, "runs"), recursive = TRUE, showWarnings = FALSE)
+
+col_blue <- "#2563EB"
+col_red  <- "#DC2626"
+col_green <- "#16A34A"
+col_gold <- "#D4A017"
+col_navy <- "#1F4E79"
+
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank(),
+      axis.line        = element_line(colour = "grey40")
+    )
+)
+
+set.seed(42)
+N <- 3000
+sigmoid <- function(x) 1 / (1 + exp(-x))
+age  <- as.integer(pmin(pmax(rnorm(N, 60, 15), 18), 90))
+los  <- as.integer(pmin(pmax(rgamma(N, 2.5, scale = 1.8), 1), 30))
+dm   <- rbinom(N, 1, 0.35)
+hf   <- rbinom(N, 1, 0.22)
+copd <- rbinom(N, 1, 0.18)
+logit <- -3.2 + 0.6 * hf + 0.5 * dm + 0.3 * copd + 0.02 * (age - 60) +
+  0.2 * as.integer(los > 7) + rnorm(N, 0, 0.3)
+readmitted <- rbinom(N, 1, sigmoid(logit))
+df <- tibble(age = age, los_days = los, diabetes = dm, hf = hf, copd = copd,
+             readmitted = readmitted)
+FEATURES <- c("age", "los_days", "diabetes", "hf", "copd")
+TARGET <- "readmitted"
+split <- initial_split(df, prop = 0.80, strata = readmitted)
+train <- training(split)
+test  <- testing(split)
+X_tr <- train[FEATURES]; y_tr <- train[[TARGET]]
+X_te <- test[FEATURES];  y_te <- test[[TARGET]]
+cat(sprintf("Dataset: %d patients | Readmission: %.1f%%\n", N, mean(readmitted) * 100))
+cat(sprintf("Train: %d | Test: %d\n", nrow(X_tr), nrow(X_te)))
+```
+
+## 2. MLflow Architecture
+
+```
+MLflow Tracking Server
+├── Experiments (logical groupings)
+│   └── readmission_prediction/
+│       ├── Run 001: LogisticRegression (AUC=0.72)
+│       ├── Run 002: RandomForest       (AUC=0.76)
+│       └── Run 003: GradientBoosting  (AUC=0.78) ← BEST
+└── Artifacts
+    └── models/, figures/, feature_importance.csv
+
+MLflow Model Registry
+├── readmission_model (registered model)
+│   ├── Version 1: Staging  (AUC=0.72)
+│   ├── Version 2: Archived (AUC=0.76)
+│   └── Version 3: Production (AUC=0.78) ← SERVING
+```
+
+## 3. MLflow Tracking Setup
+
+```{r}
+mlflow_ok <- requireNamespace("mlflow", quietly = TRUE)
+if (mlflow_ok) {
+  cat("mlflow R package available — using mlflow:: API where shown.\n")
+  tracking_uri <- paste0("file:", file.path(mod08_dir, "mlruns"))
+  tryCatch({
+    mlflow::mlflow_set_tracking_uri(tracking_uri)
+    mlflow::mlflow_set_experiment("readmission_prediction")
+    cat("MLflow tracking URI:", tracking_uri, "\n")
+  }, error = function(e) {
+    cat("MLflow server not reachable; using JSON + RDS analogue.\n")
+    mlflow_ok <<- FALSE
+  })
+} else {
+  cat("install.packages('mlflow')  (proceeding with JSON + RDS tracking analogue)\n")
+}
+
+# JSON + RDS tracking analogue (always runs so the experiment is complete)
+tracker_env <- new.env(parent = emptyenv())
+tracker_env$experiment <- "readmission_prediction"
+tracker_env$runs <- list()
+tracker_env$tracking_dir <- file.path(mod08_dir, "runs")
+dir.create(tracker_env$tracking_dir, recursive = TRUE, showWarnings = FALSE)
+tracker_env$current_run <- NULL
+tracker <- list(
+  start_run = function(run_name) {
+    tracker_env$current_run <- list(
+      run_name = run_name, params = list(), metrics = list(), tags = list(),
+      start_time = proc.time()[["elapsed"]]
+    )
+  },
+  log_param = function(key, value) tracker_env$current_run$params[[key]] <<- value,
+  log_params = function(params) {
+    for (k in names(params)) tracker_env$current_run$params[[k]] <<- params[[k]]
+  },
+  log_metric = function(key, value) {
+    tracker_env$current_run$metrics[[key]] <<- round(as.numeric(value), 6)
+  },
+  log_metrics = function(metrics) {
+    for (k in names(metrics)) tracker$log_metric(k, metrics[[k]])
+  },
+  set_tag = function(key, value) {
+    tracker_env$current_run$tags[[key]] <<- as.character(value)
+  },
+  end_run = function() {
+    tracker_env$current_run$duration_s <- round(
+      proc.time()[["elapsed"]] - tracker_env$current_run$start_time, 2
+    )
+    tracker_env$runs[[length(tracker_env$runs) + 1]] <- tracker_env$current_run
+    write_json(
+      tracker_env$current_run,
+      file.path(tracker_env$tracking_dir, paste0(tracker_env$current_run$run_name, ".json")),
+      pretty = TRUE, auto_unbox = TRUE
+    )
+  },
+  get_runs_df = function() {
+    map_dfr(tracker_env$runs, function(r) {
+      params <- r$params; metrics <- r$metrics
+      names(params) <- paste0("param.", names(params))
+      names(metrics) <- paste0("metric.", names(metrics))
+      bind_cols(
+        tibble(run_name = r$run_name, duration_s = r$duration_s %||% 0),
+        as_tibble(params), as_tibble(metrics)
+      )
+    })
+  }
+)
+
+cat("Tracking initialised.\n")
+cat("MLflow concepts this notebook covers:\n")
+walk(
+  c(
+    "Experiments: group related runs",
+    "Runs: single model training",
+    "Parameters: hyperparameters logged",
+    "Metrics: AUC, AP, Brier",
+    "Artifacts: model files, figures, data",
+    "Tags: free-form metadata",
+    "Model Registry: versioned model store",
+    "UI: http://localhost:5000"
+  ),
+  ~ cat("  *", .x, "\n")
+)
+```
+
+```{r}
+# mlflow:: API (shown even if the local file store is awkward)
+MLFLOW_R_API <- paste(
+  c(
+    "library(mlflow)",
+    "mlflow_set_tracking_uri('file:mlruns')",
+    "mlflow_set_experiment('readmission_prediction')",
+    "with(mlflow_start_run(run_name = 'GBM_v3'), {",
+    "  mlflow_log_param('n_estimators', 200)",
+    "  mlflow_log_param('eta', 0.05)",
+    "  mlflow_log_metric('auc', 0.789)",
+    "  mlflow_log_model(model, 'model')",
+    "  mlflow_log_artifact('reports/figures/roc_curve.png')",
+    "})"
+  ),
+  collapse = "\n"
+)
+cat("Preferred mlflow:: tracking snippet:\n")
+cat(MLFLOW_R_API, "\n")
+```
+
+## 4. Model Comparison Experiment
+
+```{r}
+avg_precision <- function(y, p) {
+  ord <- order(p, decreasing = TRUE)
+  y <- y[ord]
+  tp <- cumsum(y)
+  prec <- tp / seq_along(y)
+  rec  <- tp / sum(y)
+  # step-wise PR-AUC
+  sum(diff(c(0, rec)) * prec)
+}
+brier_score <- function(y, p) mean((p - y)^2)
+
+predict_prob <- function(fit, X, type) {
+  if (type == "glm") {
+    as.numeric(predict(fit, newdata = X, type = "response"))
+  } else if (type == "ranger") {
+    pred <- predict(fit, data = X)$predictions
+    if (is.matrix(pred)) pred[, colnames(pred) == "1" | colnames(pred) == "TRUE"] else pred
+  } else if (type == "xgb") {
+    predict(fit, as.matrix(X))
+  }
+}
+
+train_glm <- function(C) {
+  w <- ifelse(y_tr == 1, sum(y_tr == 0) / max(sum(y_tr == 1), 1), 1)
+  glm(readmitted ~ age + los_days + diabetes + hf + copd,
+      data = bind_cols(X_tr, readmitted = y_tr),
+      family = binomial(), weights = w)
+}
+
+model_configs <- list(
+  list(
+    name = "LogisticRegression_L2", type = "glm",
+    train = function() train_glm(1),
+    params = list(model_type = "LogisticRegression", C = 1, max_iter = 500,
+                  class_weight = "balanced")
+  ),
+  list(
+    name = "LogisticRegression_strong", type = "glm",
+    train = function() train_glm(0.1),
+    params = list(model_type = "LogisticRegression", C = 0.1, max_iter = 500,
+                  class_weight = "balanced")
+  ),
+  list(
+    name = "RandomForest", type = "ranger",
+    train = function() {
+      ranger(
+        as.factor(readmitted) ~ age + los_days + diabetes + hf + copd,
+        data = bind_cols(X_tr, readmitted = y_tr),
+        probability = TRUE, num.trees = 200, max.depth = 6, seed = 42
+      )
+    },
+    params = list(model_type = "RandomForest", n_estimators = 200, max_depth = 6,
+                  class_weight = "balanced")
+  ),
+  list(
+    name = "GradientBoosting", type = "xgb",
+    train = function() {
+      xgb.train(
+        params = list(objective = "binary:logistic", max_depth = 4, eta = 0.05,
+                      eval_metric = "auc"),
+        data = xgb.DMatrix(as.matrix(X_tr), label = y_tr),
+        nrounds = 200, verbose = 0
+      )
+    },
+    params = list(model_type = "GradientBoosting", n_estimators = 200,
+                  max_depth = 4, learning_rate = 0.05)
+  )
+)
+
+cat("Running model comparison experiment...\n")
+cat(sprintf("%-35s %9s %10s %8s %9s\n", "Run Name", "AUC-ROC", "Avg Prec", "Brier", "Time(s)"))
+cat(strrep("-", 75), "\n")
+
+fitted_models <- list()
+for (config in model_configs) {
+  t0 <- proc.time()[["elapsed"]]
+  tracker$start_run(config$name)
+  tracker$log_params(config$params)
+  tracker$set_tag("dataset", "readmission_cohort")
+  tracker$set_tag("features", paste(FEATURES, collapse = ","))
+
+  fit <- config$train()
+  fitted_models[[config$name]] <- fit
+  prob <- predict_prob(fit, X_te, config$type)
+  metrics <- list(
+    auc_roc       = as.numeric(pROC::auc(y_te, prob, quiet = TRUE)),
+    avg_precision = avg_precision(y_te, prob),
+    brier_score   = brier_score(y_te, prob),
+    n_train       = nrow(X_tr),
+    n_test        = nrow(X_te),
+    positive_rate = mean(y_te)
+  )
+  tracker$log_metrics(metrics)
+
+  model_dir <- file.path(mod08_dir, "artifacts", config$name)
+  dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
+  saveRDS(fit, file.path(model_dir, "model.rds"))
+
+  elapsed <- proc.time()[["elapsed"]] - t0
+  tracker$end_run()
+  cat(sprintf("  %-33s %9.4f %10.4f %8.4f %9.2f\n",
+              config$name, metrics$auc_roc, metrics$avg_precision,
+              metrics$brier_score, elapsed))
+}
+
+runs_df <- tracker$get_runs_df()
+cat("\nRun summary:\n")
+print(runs_df %>% select(run_name, metric.auc_roc, metric.avg_precision, metric.brier_score))
+```
+
+## 5. Model Registry & Lifecycle
+
+```{r}
+best_run <- runs_df$run_name[which.max(runs_df$metric.auc_roc)]
+best_auc <- max(runs_df$metric.auc_roc)
+
+cat(sprintf("Best model: %s (AUC = %.4f)\n", best_run, best_auc))
+
+REGISTRY_WORKFLOW <- list(
+  Staging    = "Candidate model — integration tests passing",
+  Production = "Live model serving patient predictions",
+  Archived   = "Previous production versions (for rollback)"
+)
+
+registry <- list(
+  model_name      = "readmission_v1",
+  description     = "30-day readmission prediction - LR baseline",
+  current_stage   = "Production",
+  version_history = list(
+    list(version = 1, run_name = "LogisticRegression_L2", stage = "Archived",
+         auc = 0.71, promoted = "2023-06-01", note = "Initial baseline"),
+    list(version = 2, run_name = "RandomForest", stage = "Archived",
+         auc = 0.74, promoted = "2023-09-01", note = "RF improved AUC by 3pp"),
+    list(version = 3, run_name = best_run, stage = "Production",
+         auc = best_auc, promoted = "2024-01-15", note = "Current best model")
+  )
+)
+
+cat("\nModel Registry:\n")
+cat("  Name   :", registry$model_name, "\n")
+cat("  Stage  :", registry$current_stage, "\n")
+cat("\nVersion history:\n")
+for (v in registry$version_history) {
+  stage_icon <- list(Production = "[PROD]", Archived = "[ARCH]")[[v$stage]] %||% "[STAG]"
+  cat(sprintf("  v%d %s %-35s AUC=%.4f  %s\n",
+              v$version, stage_icon, v$run_name, v$auc, v$note))
+}
+
+registry_path <- file.path(mod08_dir, "model_registry.json")
+write_json(registry, registry_path, pretty = TRUE, auto_unbox = TRUE)
+saveRDS(fitted_models[[best_run]], file.path(mod08_dir, "artifacts", "production_model.rds"))
+cat("\nRegistry saved:", registry_path, "\n")
+cat("Production model RDS:", file.path(mod08_dir, "artifacts", "production_model.rds"), "\n")
+```
+
+## 6. Experiment Visualisation
+
+```{r}
+metrics_to_plot <- c("metric.auc_roc", "metric.avg_precision", "metric.brier_score")
+metric_labels   <- c("AUC-ROC", "Average Precision", "Brier Score")
+better          <- c("higher", "higher", "lower")
+colors <- c(col_red, col_blue, col_green, col_gold)
+
+plot_list <- map(seq_along(metrics_to_plot), function(i) {
+  metric <- metrics_to_plot[i]
+  vals <- runs_df[[metric]]
+  best_idx <- if (better[i] == "higher") which.max(vals) else which.min(vals)
+  bar_colors <- colors[seq_len(nrow(runs_df))]
+  bar_colors[best_idx] <- col_navy
+  tibble(run = runs_df$run_name, val = vals, col = bar_colors) %>%
+    ggplot(aes(run, val, fill = col)) +
+    geom_col(alpha = 0.85, colour = "white") +
+    geom_text(aes(label = sprintf("%.4f", val)), vjust = -0.3, size = 3) +
+    scale_fill_identity() +
+    labs(x = NULL, y = metric_labels[i],
+         title = sprintf("%s\n(best = %s)", metric_labels[i],
+                         if (better[i] == "higher") "max" else "min")) +
+    theme(axis.text.x = element_text(angle = 20, hjust = 1, size = 8))
+})
+
+fig <- wrap_plots(plot_list, ncol = 3) +
+  plot_annotation(title = "MLflow Experiment: Model Comparison")
+print(fig)
+ggsave(file.path(mod08_dir, "mlflow_comparison.png"), fig,
+       width = 15, height = 5, dpi = 150, bg = "white")
+cat("Run comparison figure saved.\n")
+```
+
+## 7. MLflow CLI Commands
+
+```{r}
+MLFLOW_COMMANDS <- paste(
+  c(
+    "# Start MLflow tracking server (default: http://localhost:5000)",
+    "mlflow server \\",
+    "  --backend-store-uri sqlite:///mlflow.db \\",
+    "  --default-artifact-root ./mlruns \\",
+    "  --host 0.0.0.0 --port 5000",
+    "",
+    "# With S3 artifact storage (production):",
+    "mlflow server \\",
+    "  --backend-store-uri postgresql://user:pass@db:5432/mlflow \\",
+    "  --default-artifact-root s3://your-bucket/mlflow-artifacts \\",
+    "  --host 0.0.0.0 --port 5000",
+    "",
+    "# R API tracking:",
+    "library(mlflow)",
+    "mlflow_set_tracking_uri('http://localhost:5000')",
+    "with(mlflow_start_run(run_name = 'GBM_v3'), {",
+    "  mlflow_log_param('n_estimators', 200)",
+    "  mlflow_log_param('lr', 0.05)",
+    "  mlflow_log_metric('auc', 0.789)",
+    "  mlflow_log_model(model, 'model')",
+    "  mlflow_log_artifact('reports/figures/roc_curve.png')",
+    "})",
+    "",
+    "# Promote model to production (MLflow client or REST); in R log stage in JSON registry:",
+    "# registry$current_stage <- 'Production'",
+    "",
+    "# Load production model:",
+    "model <- readRDS('models/readmission_model/Production.rds')",
+    "predictions <- predict(model, as.matrix(X_new))"
+  ),
+  collapse = "\n"
+)
+cat(MLFLOW_COMMANDS, "\n")
+```
+
+## 8. Knowledge Check
+1. You log 50 metrics per run. How do you decide which metrics are PRIMARY for model selection?
+2. MLflow Model Registry has three stages: Staging, Production, Archived. What process should gate promotion from Staging to Production in a clinical context?
+3. A new model has AUC=0.79 vs production model AUC=0.77. Should you always promote? What other factors matter?
+4. Your MLflow database grows to 10GB after 6 months. What's your data management strategy?
+5. Implement a model drift detector: log weekly AUC scores and alert when AUC drops >0.03 below the baseline.
+
+```{r}
+# Exercise 5 — Model drift detection
+set.seed(42)
+weeks <- 1:12
+baseline_auc <- 0.780
+weekly_aucs <- sapply(weeks, function(w) {
+  if (w <= 8) baseline_auc + rnorm(1, 0, 0.01)
+  else baseline_auc - 0.005 * (w - 8) + rnorm(1, 0, 0.01)
+})
+DRIFT_THRESHOLD <- baseline_auc - 0.03
+drift_weeks <- weeks[weekly_aucs < DRIFT_THRESHOLD]
+
+drift_df <- tibble(week = weeks, auc = weekly_aucs, drift = week %in% drift_weeks)
+p_drift <- ggplot(drift_df, aes(week, auc)) +
+  geom_rect(
+    data = filter(drift_df, drift),
+    aes(xmin = week - 0.4, xmax = week + 0.4, ymin = -Inf, ymax = Inf),
+    fill = col_red, alpha = 0.15, inherit.aes = FALSE
+  ) +
+  geom_line(colour = col_blue, linewidth = 1) +
+  geom_point(aes(shape = drift, colour = drift), size = 3) +
+  geom_hline(yintercept = baseline_auc, colour = col_green, linetype = "dashed") +
+  geom_hline(yintercept = DRIFT_THRESHOLD, colour = col_red, linetype = "dashed") +
+  scale_colour_manual(values = c("FALSE" = col_blue, "TRUE" = col_red)) +
+  scale_shape_manual(values = c("FALSE" = 16, "TRUE" = 6)) +
+  labs(
+    x = "Week", y = "AUC-ROC",
+    title = "Model Performance Drift Monitoring\n(red markers = drift alert triggered)",
+    colour = "Alert", shape = "Alert"
+  )
+print(p_drift)
+
+cat("Drift alerts triggered in weeks:", paste(drift_weeks, collapse = ", "), "\n")
+cat("Action required: investigate data pipeline and consider model retraining\n")
+```
+
+***
+**Next → NB-05: plumber for Clinical Model Serving**

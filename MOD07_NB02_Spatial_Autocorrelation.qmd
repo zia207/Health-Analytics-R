@@ -1,0 +1,335 @@
+---
+title: "Spatial Autocorrelation & Moran's I"
+subtitle: "Module 07 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+***
+**Learning objectives**
+- Understand spatial autocorrelation: Tobler's First Law of Geography
+- Build spatial weights matrices (queen contiguity, rook, distance-based, k-NN)
+- Compute Global Moran's I and its significance via permutation
+- Calculate Local Moran's I (LISA) to identify spatial clusters
+- Produce cluster maps: High-High, Low-Low, High-Low, Low-High quadrants
+- Interpret Moran scatterplots for health outcomes
+
+**Estimated time:** 3 hours | **Level:** Advanced  
+**Libraries:** `sf`, `spdep`, `ggplot2`, `dplyr`, `patchwork`
+
+## 1. Setup & Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(sf)
+library(spdep)
+library(patchwork)
+
+set.seed(42)
+out_dir <- file.path(tempdir(), "mod07")
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 2) {
+  grid <- matrix(0, nrow = nrow, ncol = ncol)
+  for (i in seq_along(values)) grid[row_idx[i], col_idx[i]] <- values[i]
+  k <- ceiling(3 * sigma)
+  xs <- (-k):k
+  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
+  kern <- kern / sum(kern)
+  pad <- k
+  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
+  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
+  out <- matrix(0, nrow, ncol)
+  for (r in seq_len(nrow)) {
+    for (c in seq_len(ncol)) {
+      out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
+    }
+  }
+  mapply(function(r, c) out[r, c], row_idx, col_idx)
+}
+
+NROW <- 10; NCOL <- 20; N <- NROW * NCOL
+row_idx <- rep(seq_len(NROW), each = NCOL)
+col_idx <- rep(seq_len(NCOL), times = NROW)
+lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
+lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
+pct_poverty   <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
+pct_uninsured <- 8 + 6 * rbeta(N, 2, 4) + 0.3 * pct_poverty
+pm25          <- 8 + 4 * rgamma(N, shape = 2, scale = 1)
+population    <- as.integer(rlnorm(N, 10.5, 1.0))
+spatial_risk  <- spatial_smooth(rnorm(N), row_idx, col_idx, NROW, NCOL, sigma = 2)
+cvd_rate <- (180 + 1.2 * pct_poverty + 0.8 * pct_uninsured + 0.5 * pm25 +
+               15 * spatial_risk + rnorm(N, 0, 12))
+expected <- (cvd_rate / 100000) * population * 5
+observed <- rpois(N, expected)
+smr <- observed / pmax(expected, 1)
+
+df <- tibble(
+  county_id = sprintf("C%03d", seq_len(N) - 1),
+  lon, lat, row = row_idx, col = col_idx,
+  pct_poverty, pct_uninsured, pm25, population, cvd_rate,
+  observed, expected, smr, spatial_risk
+)
+geoms <- Map(function(lo, la) {
+  st_polygon(list(matrix(
+    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
+      lo - 1.25, la + 1, lo - 1.25, la - 1),
+    ncol = 2, byrow = TRUE
+  )))
+}, df$lon, df$lat)
+gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
+cat(sprintf("N=%d counties | CVD=%.1f/100k | Poverty=%.1f%%\n",
+            N, mean(cvd_rate), mean(pct_poverty)))
+```
+
+## 2. Spatial Weights Matrix
+
+A **spatial weights matrix W** encodes the neighbourhood structure:
+- **Queen contiguity**: shares any boundary point or corner
+- **Rook contiguity**: shares an edge only
+- **Distance-based**: w_ij = 1 if distance < threshold
+- **k-NN**: each unit connected to its k nearest neighbours
+- **Inverse distance**: w_ij = 1/d_ij (continuous)
+
+Row-standardisation: W* where each row sums to 1 (so W*x = spatial lag of x)
+
+```{r}
+# Queen / rook from the regular grid indices
+build_grid_nb <- function(row_idx, col_idx, type = c("queen", "rook")) {
+  type <- match.arg(type)
+  n <- length(row_idx)
+  nb <- vector("list", n)
+  for (i in seq_len(n)) {
+    dr <- abs(row_idx - row_idx[i])
+    dc <- abs(col_idx - col_idx[i])
+    if (type == "queen") {
+      nbrs <- which(dr <= 1 & dc <= 1 & !(dr == 0 & dc == 0))
+    } else {
+      nbrs <- which(((dr == 1 & dc == 0) | (dr == 0 & dc == 1)))
+    }
+    nb[[i]] <- if (length(nbrs)) as.integer(nbrs) else 0L
+  }
+  class(nb) <- "nb"
+  attr(nb, "region.id") <- as.character(seq_len(n))
+  attr(nb, "type") <- type
+  nb
+}
+
+nb_queen <- build_grid_nb(df$row, df$col, "queen")
+lw_queen <- nb2listw(nb_queen, style = "W", zero.policy = TRUE)
+
+coords <- cbind(df$lon, df$lat)
+nb_knn  <- knn2nb(knearneigh(coords, k = 6))
+lw_knn  <- nb2listw(nb_knn, style = "W")
+
+# Distance threshold: twice the 90th percentile of nearest-neighbour distance
+nn1 <- knn2nb(knearneigh(coords, k = 1))
+nn_d <- unlist(nbdists(nn1, coords))
+thr  <- 2 * quantile(nn_d, 0.90)
+nb_dist <- dnearneigh(coords, 0, thr)
+lw_dist <- nb2listw(nb_dist, style = "W", zero.policy = TRUE)
+
+cat(sprintf("Queen W: %dx%d | Mean neighbours: %.1f\n",
+            N, N, mean(card(nb_queen))))
+cat(sprintf("KNN W  : %dx%d | Mean neighbours: %.1f\n",
+            N, N, mean(card(nb_knn))))
+cat(sprintf("Dist W : %dx%d | Mean neighbours: %.1f\n",
+            N, N, mean(card(nb_dist))))
+```
+
+## 3. Global Moran's I
+
+```{r}
+print_moran <- function(x, lw, label) {
+  mt <- moran.test(x, lw, zero.policy = TRUE, alternative = "two.sided")
+  mp <- moran.mc(x, lw, nsim = 999, zero.policy = TRUE, alternative = "two.sided")
+  tibble(
+    variable = label,
+    I        = unname(mt$estimate["Moran I statistic"]),
+    E_I      = unname(mt$estimate["Expectation"]),
+    z_score  = unname(mt$statistic),
+    p_value  = mp$p.value
+  )
+}
+
+moran_tab <- bind_rows(
+  print_moran(df$cvd_rate, lw_queen, "CVD rate"),
+  print_moran(df$pct_poverty, lw_queen, "Poverty (%)"),
+  print_moran(df$smr, lw_queen, "SMR"),
+  print_moran(df$pm25, lw_queen, "PM2.5")
+)
+print(moran_tab)
+
+# Moran I for CVD rate (main analysis)
+res_cvd <- moran.test(df$cvd_rate, lw_queen, zero.policy = TRUE, alternative = "two.sided")
+mc_cvd  <- moran.mc(df$cvd_rate, lw_queen, nsim = 999, zero.policy = TRUE)
+I_cvd   <- unname(res_cvd$estimate["Moran I statistic"])
+p_cvd   <- mc_cvd$p.value
+e_cvd   <- unname(res_cvd$estimate["Expectation"])
+```
+
+```{r}
+# Moran scatterplot (spdep::moran.plot) plus permutation histogram
+z_cvd  <- as.numeric(scale(df$cvd_rate))
+Wz_cvd <- lag.listw(lw_queen, z_cvd, zero.policy = TRUE)
+quadrant <- case_when(
+  z_cvd > 0 & Wz_cvd > 0 ~ "High-High",
+  z_cvd < 0 & Wz_cvd < 0 ~ "Low-Low",
+  z_cvd > 0 & Wz_cvd < 0 ~ "High-Low",
+  TRUE                   ~ "Low-High"
+)
+quad_colors <- c(
+  "High-High" = "#DC2626", "Low-Low" = "#2563EB",
+  "High-Low" = "#AEC6CF", "Low-High" = "#F4A582"
+)
+
+p_scatter <- ggplot(tibble(z = z_cvd, Wz = Wz_cvd, q = quadrant), aes(z, Wz, colour = q)) +
+  geom_point(alpha = 0.75, size = 2) +
+  geom_smooth(method = "lm", se = FALSE, colour = "black", linewidth = 1, inherit.aes = FALSE,
+              mapping = aes(z, Wz)) +
+  geom_hline(yintercept = 0, colour = "grey50", linewidth = 0.4) +
+  geom_vline(xintercept = 0, colour = "grey50", linewidth = 0.4) +
+  scale_colour_manual(values = quad_colors) +
+  labs(
+    x = "Standardised CVD rate (z)", y = "Spatial lag (W*z)", colour = NULL,
+    title = sprintf("Moran Scatterplot: CVD Rate\n(I=%.3f, p=%.4f)", I_cvd, p_cvd)
+  )
+
+p_perm <- ggplot(tibble(I = as.numeric(mc_cvd$res)), aes(I)) +
+  geom_histogram(bins = 40, fill = "#AEC6CF", colour = "white") +
+  geom_vline(xintercept = I_cvd, colour = "#DC2626", linewidth = 1.2) +
+  geom_vline(xintercept = e_cvd, colour = "grey40", linetype = "dashed") +
+  labs(
+    x = "Moran's I (permuted)", y = "Count",
+    title = sprintf("Permutation Distribution (B=999)\np=%.4f", p_cvd)
+  )
+
+p_moran <- p_scatter | p_perm
+print(p_moran)
+ggsave(file.path(out_dir, "morans_i.png"), p_moran, width = 14, height = 5, dpi = 150)
+
+# Official Moran scatterplot from spdep
+moran.plot(df$cvd_rate, lw_queen, labels = FALSE,
+           xlab = "CVD rate", ylab = "Spatial lag of CVD rate",
+           main = "spdep::moran.plot")
+```
+
+## 4. Local Moran's I (LISA)
+
+```{r}
+lisa <- localmoran(df$cvd_rate, lw_queen, zero.policy = TRUE)
+gdf$lisa_i <- lisa[, "Ii"]
+gdf$lisa_p <- lisa[, "Pr(z != E(Ii))"]
+z_std <- as.numeric(scale(df$cvd_rate))
+z_lag <- lag.listw(lw_queen, z_std, zero.policy = TRUE)
+quadrant_loc <- case_when(
+  z_std > 0 & z_lag > 0 ~ "HH",
+  z_std < 0 & z_lag < 0 ~ "LL",
+  z_std > 0 & z_lag < 0 ~ "HL",
+  TRUE                  ~ "LH"
+)
+gdf$lisa_cluster <- ifelse(gdf$lisa_p < 0.05, quadrant_loc, "NS")
+
+cluster_colors <- c(
+  HH = "#DC2626", LL = "#2563EB", HL = "#F4A582", LH = "#92C5DE", NS = "#E0E0E0"
+)
+
+p_lisa <- ggplot(gdf) +
+  geom_sf(aes(fill = lisa_cluster), colour = "white", linewidth = 0.15) +
+  scale_fill_manual(values = cluster_colors) +
+  labs(
+    title = "LISA Cluster Map: CVD Mortality",
+    subtitle = "HH=hot spots, LL=cold spots, HL/LH=outliers",
+    fill = NULL, x = "Longitude", y = "Latitude"
+  )
+
+sig_lab <- ifelse(gdf$lisa_p < 0.05, "p < 0.05", "NS")
+p_sig <- ggplot(gdf) +
+  geom_sf(aes(fill = sig_lab), colour = "white", linewidth = 0.15) +
+  scale_fill_manual(values = c("p < 0.05" = "#DC2626", NS = "#E0E0E0")) +
+  labs(
+    title = sprintf(
+      "LISA Significance Map (p<0.05)\n%d significant counties (%.1f%%)",
+      sum(gdf$lisa_p < 0.05), mean(gdf$lisa_p < 0.05) * 100
+    ),
+    fill = NULL, x = "Longitude", y = "Latitude"
+  )
+
+p_lisa_both <- p_lisa | p_sig
+print(p_lisa_both)
+ggsave(file.path(out_dir, "lisa_cluster_map.png"), p_lisa_both,
+       width = 16, height = 5, dpi = 150)
+
+cat("LISA cluster summary:\n")
+print(gdf %>% st_drop_geometry() %>% count(lisa_cluster) %>%
+        mutate(pct = n / sum(n) * 100))
+```
+
+## 5. Getis-Ord G* Hot Spot Analysis
+
+```{r}
+# G* includes self in the neighbourhood
+lw_gstar <- nb2listw(include.self(nb_queen), style = "B", zero.policy = TRUE)
+g_star <- localG(df$cvd_rate, lw_gstar, zero.policy = TRUE)
+gdf$g_star   <- as.numeric(g_star)
+gdf$g_star_p <- 2 * pnorm(-abs(gdf$g_star))
+
+gdf$hotspot_class <- case_when(
+  gdf$g_star >  2.58 & gdf$g_star_p < 0.01 ~ "Hot spot 99%",
+  gdf$g_star >  1.96 & gdf$g_star_p < 0.05 ~ "Hot spot 95%",
+  gdf$g_star < -2.58 & gdf$g_star_p < 0.01 ~ "Cold spot 99%",
+  gdf$g_star < -1.96 & gdf$g_star_p < 0.05 ~ "Cold spot 95%",
+  TRUE                                     ~ "Not significant"
+)
+hs_colors <- c(
+  "Hot spot 99%" = "#D73027", "Hot spot 95%" = "#FC8D59",
+  "Cold spot 99%" = "#4575B4", "Cold spot 95%" = "#91BFDB",
+  "Not significant" = "#E0E0E0"
+)
+
+p_hs <- ggplot(gdf) +
+  geom_sf(aes(fill = hotspot_class), colour = "white", linewidth = 0.15) +
+  scale_fill_manual(values = hs_colors) +
+  labs(
+    title = "Getis-Ord G* Hot Spot Analysis: CVD Mortality",
+    fill = NULL, x = "Longitude", y = "Latitude"
+  )
+print(p_hs)
+ggsave(file.path(out_dir, "getis_ord_gstar.png"), p_hs, width = 10, height = 6, dpi = 150)
+print(table(gdf$hotspot_class))
+```
+
+## 6. Knowledge Check
+1. Global Moran's I = 0.42 (p<0.001). Does this tell us *where* the spatial clusters are?
+2. A LISA map shows an HL outlier (High-Low): a high CVD county surrounded by low-CVD counties. List three explanations.
+3. You used queen contiguity weights. How would switching to k-NN (k=8) change the Moran's I estimate?
+4. Why should LISA p-values be interpreted cautiously given that you're running 200 local tests?
+5. Compute Moran's I for the *residuals* from an OLS regression of CVD on poverty. Interpret the result.
+
+```{r}
+# Exercise 5 — Moran's I on OLS residuals
+ols <- lm(cvd_rate ~ pct_poverty + pct_uninsured + pm25, data = df)
+mt_ols <- moran.test(residuals(ols), lw_queen, zero.policy = TRUE)
+mc_ols <- moran.mc(residuals(ols), lw_queen, nsim = 499, zero.policy = TRUE)
+cat(sprintf("Moran's I on CVD rate           : %.4f (p=%.4f)\n", I_cvd, p_cvd))
+cat(sprintf("Moran's I on OLS residuals      : %.4f (p=%.4f)\n",
+            unname(mt_ols$estimate["Moran I statistic"]), mc_ols$p.value))
+if (mc_ols$p.value < 0.05) {
+  cat("Significant residual spatial autocorrelation -> OLS is biased!\n")
+  cat("Need spatial regression models (spatial lag or spatial error).\n")
+} else {
+  cat("Residual spatial autocorrelation removed by covariate adjustment.\n")
+}
+```
+
+***
+**Next → NB-03: Spatial Regression — Lag, Error & GWR**

@@ -1,0 +1,447 @@
+---
+title: "Propensity Score Methods"
+subtitle: "Module 06 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 06: Causal Inference in Health Research
+***
+**Learning objectives**
+- Estimate propensity scores using logistic regression and GBM
+- Apply PS matching (nearest-neighbour, caliper, 1:k)
+- Implement inverse probability of treatment weighting (IPTW)
+- Assess covariate balance with Standardised Mean Differences (SMD)
+- Estimate ATE and ATT with confidence intervals via bootstrap
+- Compare PS matching vs IPTW trade-offs
+
+**Estimated time:** 3 hours | **Level:** Intermediate-Advanced | **Libraries:** `MatchIt`, `WeightIt`, `cobalt`, `gbm`, `ggplot2`, `dplyr`
+
+## 1. Setup & Shared Dataset
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(ggplot2)
+library(broom)
+library(patchwork)
+library(MatchIt)
+library(WeightIt)
+library(cobalt)
+library(gbm)
+
+theme_set(
+  theme_minimal(base_size = 12) +
+    theme(
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+mod06_dir <- file.path(tempdir(), "mod06")
+dir.create(mod06_dir, showWarnings = FALSE, recursive = TRUE)
+
+col_blue  <- "#2563EB"
+col_red   <- "#DC2626"
+col_green <- "#16A34A"
+
+logistic <- function(x) 1 / (1 + exp(-x))
+
+set.seed(42)
+N <- 5000
+age <- pmin(pmax(rnorm(N, 60, 12), 30), 90)
+smoking <- rbinom(N, 1, logistic(-1 + 0.02 * (age - 60)))
+chd_history <- rbinom(N, 1, logistic(-2 + 0.03 * (age - 60)))
+ldl_baseline <- pmin(pmax(rnorm(N, 140 + 20 * smoking, 30), 60), 280)
+ses_score <- rnorm(N, 0, 1)
+statin_logit <- -2.0 + 0.025 * (ldl_baseline - 140) + 1.0 * chd_history +
+  0.02 * (age - 60) - 0.3 * ses_score
+statin <- rbinom(N, 1, logistic(statin_logit))
+TRUE_EFFECT <- -0.8
+mi_logit <- -3.0 + TRUE_EFFECT * statin + 0.03 * (age - 60) + 0.5 * smoking +
+  0.8 * chd_history + 0.005 * (ldl_baseline - 140)
+mi <- rbinom(N, 1, logistic(mi_logit))
+
+df <- tibble(
+  age = age, smoking = smoking, chd_history = chd_history,
+  ldl_baseline = ldl_baseline, ses_score = ses_score,
+  statin = statin, mi = mi
+)
+COVARIATES <- c("age", "smoking", "chd_history", "ldl_baseline", "ses_score")
+ps_formula <- statin ~ age + smoking + chd_history + ldl_baseline + ses_score
+
+cat(sprintf("N=%d | Statin=%.1f%% | MI=%.1f%% | True OR=%.3f\n",
+            N, mean(statin) * 100, mean(mi) * 100, exp(TRUE_EFFECT)))
+```
+
+## 2. Propensity Score Estimation
+
+```{r}
+# Estimate PS with logistic regression
+lr_ps <- glm(ps_formula, data = df, family = binomial())
+df$ps_lr <- fitted(lr_ps)
+
+# Estimate PS with gradient boosting (more flexible)
+set.seed(42)
+gb_ps <- gbm(
+  ps_formula,
+  data = as.data.frame(df),
+  distribution = "bernoulli",
+  n.trees = 200,
+  interaction.depth = 4,
+  shrinkage = 0.05,
+  bag.fraction = 0.8,
+  n.minobsinnode = 10,
+  verbose = FALSE
+)
+df$ps_gb <- as.numeric(predict(gb_ps, newdata = as.data.frame(df),
+                               n.trees = 200, type = "response"))
+
+df_long_ps <- df |>
+  select(statin, ps_lr, ps_gb) |>
+  tidyr::pivot_longer(c(ps_lr, ps_gb), names_to = "model", values_to = "ps") |>
+  mutate(
+    model = recode(model,
+                   ps_lr = "Logistic Regression PS",
+                   ps_gb = "Gradient Boosting PS"),
+    grp = if_else(statin == 1, "Treated (statin)", "Control (no statin)")
+  )
+
+p_ps_hist <- ggplot(df_long_ps, aes(x = ps, fill = grp)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 40,
+                 alpha = 0.6, position = "identity", colour = NA) +
+  scale_fill_manual(values = c("Control (no statin)" = col_blue,
+                               "Treated (statin)" = col_red)) +
+  facet_wrap(~ model) +
+  labs(x = "Propensity score", y = "Density", fill = NULL)
+
+# Calibration
+calib_curve <- function(y, p, n_bins = 10) {
+  breaks <- seq(0, 1, length.out = n_bins + 1)
+  bin <- cut(p, breaks, include.lowest = TRUE)
+  tibble(y = y, p = p, bin = bin) |>
+    group_by(bin) |>
+    summarise(
+      mean_predicted    = mean(p),
+      fraction_treated  = mean(y),
+      .groups = "drop"
+    )
+}
+
+cal_gb <- calib_curve(df$statin, df$ps_gb) |> mutate(model = "GBM PS")
+cal_lr <- calib_curve(df$statin, df$ps_lr) |> mutate(model = "LR PS")
+cal_df <- bind_rows(cal_gb, cal_lr)
+
+p_cal <- ggplot(cal_df, aes(x = mean_predicted, y = fraction_treated,
+                            colour = model, shape = model)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "black",
+              linewidth = 0.4) +
+  geom_line() +
+  geom_point(size = 2.5) +
+  scale_colour_manual(values = c("GBM PS" = col_red, "LR PS" = col_blue)) +
+  labs(x = "Mean predicted PS", y = "Fraction treated",
+       title = "PS Calibration", colour = NULL, shape = NULL) +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1))
+
+p_ps <- p_ps_hist + p_cal + plot_layout(widths = c(2, 1))
+print(p_ps)
+ggsave(file.path(mod06_dir, "ps_distributions.png"), p_ps,
+       width = 16, height = 4.5, dpi = 120)
+
+cat(sprintf("PS range (LR): %.3f - %.3f\n", min(df$ps_lr), max(df$ps_lr)))
+cat(sprintf("PS range (GB): %.3f - %.3f\n", min(df$ps_gb), max(df$ps_gb)))
+```
+
+## 3. Covariate Balance — Standardised Mean Differences
+
+```{r}
+compute_smd <- function(df_sub, treatment_col, covariates) {
+  # Compute Standardised Mean Difference for each covariate.
+  treat <- df_sub[df_sub[[treatment_col]] == 1, ]
+  ctrl  <- df_sub[df_sub[[treatment_col]] == 0, ]
+  smds <- sapply(covariates, function(cov) {
+    m1 <- mean(treat[[cov]]); m0 <- mean(ctrl[[cov]])
+    s1 <- sd(treat[[cov]]);   s0 <- sd(ctrl[[cov]])
+    pooled_sd <- sqrt((s1^2 + s0^2) / 2)
+    if (pooled_sd > 0) (m1 - m0) / pooled_sd else 0
+  })
+  tibble(covariate = covariates, smd = as.numeric(smds))
+}
+
+smd_unadjusted <- compute_smd(df, "statin", COVARIATES)
+
+p_love_un <- ggplot(smd_unadjusted, aes(x = abs(smd), y = reorder(covariate, abs(smd)))) +
+  geom_col(fill = col_red, alpha = 0.85) +
+  geom_vline(xintercept = 0.10, colour = "black", linetype = "dashed", linewidth = 0.8) +
+  geom_vline(xintercept = 0.25, colour = "grey50", linetype = "dotted", linewidth = 0.8) +
+  labs(
+    x = "Absolute SMD", y = NULL,
+    title = "Love Plot — Covariate Balance (Unadjusted)"
+  ) +
+  annotate("text", x = 0.10, y = 0.6, label = "SMD=0.10", hjust = -0.1, size = 3) +
+  annotate("text", x = 0.25, y = 0.6, label = "SMD=0.25 (poor balance)",
+           hjust = -0.05, size = 3, colour = "grey40")
+
+print(p_love_un)
+ggsave(file.path(mod06_dir, "love_plot.png"), p_love_un,
+       width = 9, height = 5, dpi = 120)
+
+cat("Unadjusted SMDs (higher = more imbalance):\n")
+smd_unadjusted |>
+  mutate(abs_smd = abs(smd)) |>
+  arrange(desc(abs_smd)) |>
+  mutate(flag = if_else(abs_smd > 0.10, " <- IMBALANCED", "")) |>
+  (\(x) {
+    for (i in seq_len(nrow(x))) {
+      cat(sprintf("  %-20s: %.3f%s\n", x$covariate[i], x$abs_smd[i], x$flag[i]))
+    }
+  })()
+```
+
+## 4. Propensity Score Matching
+
+```{r}
+# 1:1 nearest-neighbour PS matching with caliper (MatchIt)
+m_out <- matchit(
+  ps_formula,
+  data = as.data.frame(df),
+  method = "nearest",
+  distance = df$ps_gb,
+  caliper = 0.2,
+  std.caliper = TRUE,
+  ratio = 1,
+  replace = FALSE
+)
+
+df_matched <- tibble(match.data(m_out))
+n_treated <- sum(df_matched$statin == 1)
+n_control <- sum(df_matched$statin == 0)
+cat(sprintf("Matched dataset: N=%d (%d treated, %d control)\n",
+            nrow(df_matched), n_treated, n_control))
+cat("MatchIt summary:\n")
+print(summary(m_out, un = TRUE)$nn)
+
+smd_matched <- compute_smd(df_matched, "statin", COVARIATES)
+
+love_cmp <- bind_rows(
+  smd_unadjusted |> mutate(stage = "Before matching"),
+  smd_matched    |> mutate(stage = "After PS matching")
+) |>
+  mutate(covariate = factor(covariate, levels = rev(COVARIATES)))
+
+p_love_m <- ggplot(love_cmp, aes(x = abs(smd), y = covariate, fill = stage)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.65, alpha = 0.85) +
+  geom_vline(xintercept = 0.10, colour = "black", linetype = "dashed",
+             linewidth = 0.8) +
+  scale_fill_manual(values = c("Before matching" = col_red,
+                               "After PS matching" = col_blue)) +
+  labs(
+    x = "Absolute SMD", y = NULL, fill = NULL,
+    title = "Love Plot: Before vs After PS Matching"
+  )
+
+print(p_love_m)
+ggsave(file.path(mod06_dir, "love_plot_matched.png"), p_love_m,
+       width = 10, height = 5, dpi = 120)
+
+# cobalt Love plot (same comparison, package implementation)
+p_cobalt <- cobalt::love.plot(
+  m_out,
+  stats = "mean.diffs",
+  abs = TRUE,
+  thresholds = c(m = 0.10),
+  var.order = "unadjusted",
+  colors = c(col_red, col_blue),
+  title = "cobalt Love Plot: Before vs After PS Matching"
+)
+print(p_cobalt)
+```
+
+## 5. ATT Estimation via Matching
+
+```{r}
+estimate_att_matching <- function(df_m, treatment, outcome) {
+  # Estimate ATT from matched dataset.
+  r1 <- mean(df_m[[outcome]][df_m[[treatment]] == 1])
+  r0 <- mean(df_m[[outcome]][df_m[[treatment]] == 0])
+  log_or <- log(r1 / (1 - r1)) - log(r0 / (1 - r0))
+  list(
+    RD     = round(r1 - r0, 4),
+    RR     = round(r1 / r0, 4),
+    log_OR = round(log_or, 4),
+    OR     = round(exp(log_or), 4)
+  )
+}
+
+att_match <- estimate_att_matching(df_matched, "statin", "mi")
+cat("ATT (Matching):\n")
+cat(sprintf("  Risk difference (RD): %.4f\n", att_match$RD))
+cat(sprintf("  Risk ratio (RR)     : %.4f\n", att_match$RR))
+cat(sprintf("  Odds ratio (OR)     : %.4f\n", att_match$OR))
+cat(sprintf("  Log-odds            : %.4f\n", att_match$log_OR))
+cat(sprintf("  True log-odds       : %.4f\n", TRUE_EFFECT))
+cat(sprintf("  Bias                : %+.4f\n", att_match$log_OR - TRUE_EFFECT))
+
+# Bootstrap CI for ATT
+bootstrap_att <- function(df_m, n_boot = 500, seed = 42) {
+  set.seed(seed)
+  ests <- replicate(n_boot, {
+    idx <- sample.int(nrow(df_m), replace = TRUE)
+    boot <- df_m[idx, ]
+    estimate_att_matching(boot, "statin", "mi")$log_OR
+  })
+  as.numeric(quantile(ests, c(0.025, 0.975)))
+}
+
+ci <- bootstrap_att(df_matched)
+cat(sprintf("  95%% Bootstrap CI    : (%.4f, %.4f)\n", ci[1], ci[2]))
+```
+
+## 6. Inverse Probability of Treatment Weighting (IPTW)
+
+```{r}
+# ATE weights: 1/ps for treated, 1/(1-ps) for controls
+# ATT weights: 1 for treated, ps/(1-ps) for controls
+# WeightIt constructs these from the GBM propensity scores
+w_ate_fit <- weightit(
+  statin ~ 1, data = as.data.frame(df),
+  ps = df$ps_gb, estimand = "ATE"
+)
+w_att_fit <- weightit(
+  statin ~ 1, data = as.data.frame(df),
+  ps = df$ps_gb, estimand = "ATT"
+)
+
+df$w_ate <- w_ate_fit$weights
+df$w_att <- w_att_fit$weights
+
+# Truncate extreme weights at 99th percentile
+for (w_col in c("w_ate", "w_att")) {
+  cap <- as.numeric(quantile(df[[w_col]], 0.99))
+  df[[w_col]] <- pmin(df[[w_col]], cap)
+}
+
+ess <- function(w) (sum(w)^2) / sum(w^2)
+
+cat("Weight distributions:\n")
+cat(sprintf("  ATE weights: mean=%.2f, max=%.2f, ESS=%.0f\n",
+            mean(df$w_ate), max(df$w_ate), ess(df$w_ate)))
+cat(sprintf("  ATT weights: mean=%.2f, max=%.2f\n",
+            mean(df$w_att), max(df$w_att)))
+
+# Weighted SMD (balance check for IPTW)
+weighted_smd <- function(dat, treatment, covariates, weights) {
+  smds <- sapply(covariates, function(cov) {
+    idx1 <- dat[[treatment]] == 1
+    idx0 <- dat[[treatment]] == 0
+    w1 <- weights[idx1]; x1 <- dat[[cov]][idx1]
+    w0 <- weights[idx0]; x0 <- dat[[cov]][idx0]
+    m1 <- weighted.mean(x1, w1); m0 <- weighted.mean(x0, w0)
+    v1 <- weighted.mean((x1 - m1)^2, w1)
+    v0 <- weighted.mean((x0 - m0)^2, w0)
+    pooled <- sqrt((v1 + v0) / 2)
+    if (pooled > 0) (m1 - m0) / pooled else 0
+  })
+  tibble(covariate = covariates, smd = as.numeric(smds))
+}
+
+smd_iptw <- weighted_smd(df, "statin", COVARIATES, df$w_ate)
+
+cat("\nWeighted SMDs (IPTW ATE):\n")
+smd_iptw |>
+  mutate(abs_smd = abs(smd)) |>
+  arrange(desc(abs_smd)) |>
+  mutate(flag = if_else(abs_smd > 0.10, " <- still imbalanced!", "")) |>
+  (\(x) {
+    for (i in seq_len(nrow(x))) {
+      cat(sprintf("  %-20s: %.3f%s\n", x$covariate[i], x$abs_smd[i], x$flag[i]))
+    }
+  })()
+
+cat("\ncobalt balance table (IPTW ATE, untrimmed weights from WeightIt):\n")
+print(cobalt::bal.tab(w_ate_fit, un = TRUE, thresholds = c(m = 0.10)))
+```
+
+```{r}
+# Estimate ATE using IPTW (Horvitz-Thompson estimator)
+iptw_estimate <- function(dat, treatment, outcome, weight_col) {
+  idx1 <- dat[[treatment]] == 1
+  idx0 <- dat[[treatment]] == 0
+  r1 <- sum(dat[[outcome]][idx1] * dat[[weight_col]][idx1]) /
+    sum(dat[[weight_col]][idx1])
+  r0 <- sum(dat[[outcome]][idx0] * dat[[weight_col]][idx0]) /
+    sum(dat[[weight_col]][idx0])
+  log_or <- log(r1 / (1 - r1)) - log(r0 / (1 - r0))
+  list(
+    RD     = round(r1 - r0, 4),
+    RR     = round(r1 / r0, 4),
+    log_OR = round(log_or, 4),
+    OR     = round(exp(log_or), 4)
+  )
+}
+
+ate_iptw <- iptw_estimate(df, "statin", "mi", "w_ate")
+att_iptw <- iptw_estimate(df, "statin", "mi", "w_att")
+
+cat("IPTW Results:\n")
+cat(sprintf("%-20s %10s %10s %10s\n", "", "ATE", "ATT", "True"))
+cat(paste(rep("-", 55), collapse = ""), "\n")
+for (metric in c("log_OR", "OR", "RD")) {
+  true_str <- if (metric == "log_OR") sprintf("%10.4f", TRUE_EFFECT) else sprintf("%10s", "N/A")
+  cat(sprintf("  %-18s %10.4f %10.4f %s\n",
+              metric, ate_iptw[[metric]], att_iptw[[metric]], true_str))
+}
+```
+
+## 7. Knowledge Check
+1. Your PS model has AUC=0.85. Is this good or bad for causal inference?
+2. After IPTW, SMD for LDL is 0.03. What does this mean for the analysis?
+3. ATE and ATT differ by 0.08 log-odds. Under what circumstances would these be equal?
+4. Extreme PS weights (e.g. 50x) can inflate variance. What are three remedies?
+5. Implement doubly-robust estimation: combine outcome regression with IPTW weights.
+
+```{r}
+# Exercise 5 — Doubly Robust (AIPW) estimator
+# Outcome model (Q-model)
+fit_out <- glm(
+  mi ~ age + smoking + chd_history + ldl_baseline + ses_score + statin,
+  data = df, family = binomial()
+)
+
+# Predict potential outcomes
+df_1 <- df; df_1$statin <- 1
+df_0 <- df; df_0$statin <- 0
+mu1 <- predict(fit_out, newdata = df_1, type = "response")
+mu0 <- predict(fit_out, newdata = df_0, type = "response")
+
+# AIPW correction terms
+ps <- df$ps_gb
+A  <- df$statin
+Y  <- df$mi
+# ATE AIPW
+aipw_1 <- mu1 + (A / ps) * (Y - mu1)
+aipw_0 <- mu0 + ((1 - A) / (1 - ps)) * (Y - mu0)
+ate_aipw_rd <- mean(aipw_1) - mean(aipw_0)
+mu1_mean <- mean(mu1)
+mu0_mean <- mean(mu0)
+aipw_lor <- log(mu1_mean / (1 - mu1_mean)) - log(mu0_mean / (1 - mu0_mean))
+
+cat("Doubly Robust (AIPW) Estimates:\n")
+cat(sprintf("  ATE RD (AIPW)      : %.4f\n", ate_aipw_rd))
+cat(sprintf("  Approx log-OR      : %.4f\n", aipw_lor))
+cat(sprintf("  True log-OR        : %.4f\n", TRUE_EFFECT))
+cat(sprintf("  Bias               : %+.4f\n", aipw_lor - TRUE_EFFECT))
+cat("\n")
+cat("AIPW is consistent if EITHER the PS model OR the outcome model is correct.\n")
+
+cat("\nOutcome model (broom):\n")
+print(
+  broom::tidy(fit_out, conf.int = TRUE) |>
+    filter(term == "statin")
+)
+```
+
+***
+**Next -> NB-03: Difference-in-Differences**

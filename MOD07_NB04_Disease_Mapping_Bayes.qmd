@@ -1,0 +1,365 @@
+---
+title: "Disease Mapping & Bayesian Smoothing"
+subtitle: "Module 07 — Health Analytics with R"
+---
+
+![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+***
+**Learning objectives**
+- Understand the small-area estimation problem: unstable rates in sparse populations
+- Implement empirical Bayes smoothing (James-Stein, gamma-Poisson)
+- Conceptualise the BYM (Besag-York-Mollié) CAR model structure
+- Compare raw SMR vs smoothed estimates visually and statistically
+- Apply a BYM-style spatial smoother that runs without compiling Stan
+- Assess shrinkage patterns in Bayesian disease mapping
+
+**Estimated time:** 3 hours | **Level:** Advanced  
+**Libraries:** `sf`, `spdep`, `spatialreg`, `ggplot2`, `MASS`
+
+## 1. Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(sf)
+library(spdep)
+library(spatialreg)
+library(patchwork)
+
+set.seed(42)
+out_dir <- file.path(tempdir(), "mod07")
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+theme_set(
+  theme_minimal(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      panel.grid.minor = element_blank()
+    )
+)
+
+spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 2) {
+  grid <- matrix(0, nrow = nrow, ncol = ncol)
+  for (i in seq_along(values)) grid[row_idx[i], col_idx[i]] <- values[i]
+  k <- ceiling(3 * sigma)
+  xs <- (-k):k
+  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
+  kern <- kern / sum(kern)
+  pad <- k
+  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
+  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
+  out <- matrix(0, nrow, ncol)
+  for (r in seq_len(nrow)) for (c in seq_len(ncol)) {
+    out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
+  }
+  mapply(function(r, c) out[r, c], row_idx, col_idx)
+}
+
+NROW <- 10; NCOL <- 20; N <- NROW * NCOL
+row_idx <- rep(seq_len(NROW), each = NCOL)
+col_idx <- rep(seq_len(NCOL), times = NROW)
+lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
+lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
+pct_poverty <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
+pm25 <- 8 + 4 * rgamma(N, 2, 1)
+population <- as.integer(rlnorm(N, 10.5, 1.0))
+spatial_risk <- spatial_smooth(rnorm(N), row_idx, col_idx, NROW, NCOL)
+cvd_rate <- (180 + 1.2 * pct_poverty + 0.5 * pm25 + 15 * spatial_risk + rnorm(N, 0, 12))
+expected <- (cvd_rate / 100000) * population * 5
+observed <- rpois(N, expected)
+smr <- observed / pmax(expected, 1)
+
+df <- tibble(
+  county_id = sprintf("C%03d", seq_len(N) - 1),
+  lon, lat, row = row_idx, col = col_idx,
+  pct_poverty, pm25, population, cvd_rate, observed, expected, smr
+)
+geoms <- Map(function(lo, la) {
+  st_polygon(list(matrix(
+    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
+      lo - 1.25, la + 1, lo - 1.25, la - 1), ncol = 2, byrow = TRUE
+  )))
+}, df$lon, df$lat)
+gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
+cat(sprintf("N=%d | CVD=%.1f | SMR range=[%.2f,%.2f]\n",
+            N, mean(cvd_rate), min(smr), max(smr)))
+```
+
+## 2. The Small-Area Estimation Problem
+
+**Problem:** Observed SMR = O_i / E_i is unstable for areas with small populations.
+
+A county with expected deaths E=2 and observed O=4 has SMR=2.0, suggesting 100% excess mortality — but this could easily be random variation.
+
+**Key insight:** Raw rates have high variance in low-population areas. Bayesian methods "borrow strength" from neighbouring areas and the overall mean.
+
+| Method | Shrinkage target | Spatially informed? |
+|--------|-----------------|---------------------|
+| Raw SMR | None | No |
+| Empirical Bayes (EB) | Overall mean | No |
+| BYM/CAR | Spatial neighbours | Yes |
+| Full Bayesian MCMC | Prior + data | Yes (BYM) |
+
+```{r}
+p1 <- ggplot(gdf) +
+  geom_sf(aes(fill = smr), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(name = "Raw SMR", palette = "RdBu", direction = -1,
+                       limits = c(0.5, 1.8), oob = scales::squish) +
+  labs(title = "Raw SMR — noisy in small areas", x = "Lon", y = "Lat")
+
+p2 <- ggplot(gdf) +
+  geom_sf(aes(fill = log(population)), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(name = "log(Population)", palette = "Blues", direction = 1) +
+  labs(title = "Log population (denominator size)", x = "Lon", y = "Lat")
+
+p3 <- ggplot(gdf) +
+  geom_sf(aes(fill = expected), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(name = "Expected deaths (5-yr)", palette = "YlOrRd", direction = 1) +
+  labs(title = "Expected deaths — reliability indicator", x = "Lon", y = "Lat")
+
+p_sae <- p1 | p2 | p3
+p_sae <- p_sae + plot_annotation(
+  title = "Small-Area Problem: Raw SMR Most Unreliable Where Expected Counts Are Small"
+)
+print(p_sae)
+ggsave(file.path(out_dir, "small_area_problem.png"), p_sae, width = 18, height = 5, dpi = 150)
+
+cv_smr <- ifelse(df$expected < 5, "< 5 expected", ">= 5 expected")
+cat("SMR variance by expected count group:\n")
+for (grp in c("< 5 expected", ">= 5 expected")) {
+  mask <- cv_smr == grp
+  cat(sprintf("  %-20s: n=%3d | SMR mean=%.3f | SD=%.3f\n",
+              grp, sum(mask), mean(df$smr[mask]), sd(df$smr[mask])))
+}
+```
+
+## 3. Empirical Bayes Smoothing
+
+```{r}
+# Gamma-Poisson (conjugate) Empirical Bayes
+# Model: O_i | theta_i ~ Poisson(E_i * theta_i)
+#        theta_i ~ Gamma(alpha, beta)
+# Posterior mean: E[theta_i|O_i] = (O_i + alpha) / (E_i + beta)
+# Shrinkage toward overall rate: alpha/beta
+
+smr_mean <- mean(df$smr)
+smr_var  <- var(df$smr)
+extra_var <- max(smr_var - smr_mean / mean(df$expected), 0.01)
+alpha_hat <- smr_mean^2 / extra_var
+beta_hat  <- smr_mean / extra_var
+
+cat(sprintf("EB Hyperparameters: alpha=%.3f, beta=%.3f\n", alpha_hat, beta_hat))
+cat(sprintf("Prior mean (overall rate): %.3f\n", alpha_hat / beta_hat))
+
+gdf$smr_eb <- (df$observed + alpha_hat) / (df$expected + beta_hat)
+gdf$smr_shrinkage <- 1 - (df$expected / (df$expected + beta_hat))
+df$smr_eb <- gdf$smr_eb
+df$smr_shrinkage <- gdf$smr_shrinkage
+
+cat("\nSmoothing results:\n")
+cat(sprintf("  Raw SMR   : mean=%.3f  SD=%.3f  range=[%.2f,%.2f]\n",
+            mean(df$smr), sd(df$smr), min(df$smr), max(df$smr)))
+cat(sprintf("  EB Smooth : mean=%.3f  SD=%.3f  range=[%.2f,%.2f]\n",
+            mean(df$smr_eb), sd(df$smr_eb), min(df$smr_eb), max(df$smr_eb)))
+cat(sprintf("  Mean shrinkage: %.1f%%\n", mean(df$smr_shrinkage) * 100))
+cat(sprintf("  High shrinkage (>50%%): %d counties (low population)\n",
+            sum(df$smr_shrinkage > 0.5)))
+```
+
+```{r}
+# Compare raw SMR vs EB smoothed
+p_raw <- ggplot(gdf) +
+  geom_sf(aes(fill = smr), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(name = "Raw SMR", palette = "RdBu", direction = -1,
+                       limits = c(0.5, 1.8), oob = scales::squish) +
+  labs(title = "Raw SMR", x = "Lon", y = "Lat")
+
+p_eb <- ggplot(gdf) +
+  geom_sf(aes(fill = smr_eb), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(name = "EB-Smoothed SMR", palette = "RdBu", direction = -1,
+                       limits = c(0.5, 1.8), oob = scales::squish) +
+  labs(title = "Empirical Bayes Smoothed SMR", x = "Lon", y = "Lat")
+
+p_sh <- ggplot(gdf) +
+  geom_sf(aes(fill = smr_shrinkage), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(name = "Shrinkage fraction", palette = "Blues", direction = 1) +
+  labs(title = "Shrinkage: 1 = fully shrunk to mean\n(small areas shrunk more)",
+       x = "Lon", y = "Lat")
+
+p_eb_all <- (p_raw | p_eb | p_sh) +
+  plot_annotation(title = "Empirical Bayes Smoothing: Stabilising Small-Area Rates")
+print(p_eb_all)
+ggsave(file.path(out_dir, "eb_smoothing.png"), p_eb_all, width = 18, height = 5, dpi = 150)
+```
+
+## 4. CAR/BYM Model — Conceptual Framework
+
+The **Besag-York-Mollié (BYM)** model decomposes the random effect into:
+
+```
+Y_i | theta_i ~ Poisson(E_i * theta_i)
+log(theta_i) = mu + u_i + v_i
+```
+
+Where:
+- `u_i` = **spatially structured** random effect (ICAR prior — neighbours pull toward each other)
+- `v_i` = **unstructured** random effect (i.i.d. normal — pure noise)
+- `mu`  = overall log-relative risk
+
+**ICAR prior for u_i:**
+```
+u_i | u_{-i} ~ Normal(mean(u_j for j in neighbours_i), sigma²_u / n_i)
+```
+
+This is equivalent to a joint Gaussian distribution with precision matrix Q = D - W  
+where D is the diagonal matrix of neighbour counts and W is the adjacency matrix.
+
+```{r}
+# Spatial empirical Bayes (Marshall) via spdep::EBlocal
+nb <- vector("list", N)
+W_bin <- matrix(0, N, N)
+for (i in seq_len(N)) {
+  nbrs <- which(pmax(abs(df$row - df$row[i]), abs(df$col - df$col[i])) <= 1)
+  nbrs <- setdiff(nbrs, i)
+  nb[[i]] <- if (length(nbrs)) nbrs else 0L
+  W_bin[i, nbrs] <- 1
+}
+class(nb) <- "nb"
+attr(nb, "region.id") <- as.character(seq_len(N))
+lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+eb_loc <- EBlocal(df$observed, df$expected, nb)
+gdf$smr_eb_local <- eb_loc$est
+
+# Approximate BYM via Moran eigenvectors of the graph Laplacian (INLA/Stan-free)
+D_diag <- rowSums(W_bin)
+Q <- diag(D_diag) - W_bin
+eig <- eigen(Q, symmetric = TRUE)
+# Smallest non-zero eigenvalues = smoothest spatial patterns
+ord <- order(eig$values)
+spatial_basis <- eig$vectors[, ord[2:11], drop = FALSE]  # skip the zero eigenvalue
+
+log_smr <- log(pmin(pmax(df$smr, 0.01), 5))
+ridge_fit <- MASS::lm.ridge(log_smr ~ spatial_basis, lambda = 1)
+# Reconstruct fitted values from ridge
+X_bym <- cbind(1, spatial_basis)
+# lm.ridge coefs
+b_hat <- coef(ridge_fit)
+log_smr_hat <- as.numeric(X_bym %*% b_hat)
+gdf$smr_bym_approx <- exp(log_smr_hat)
+
+# CAR-like spatial error on log(SMR) as a second Stan-free smoother
+sem_bym <- errorsarlm(log_smr ~ 1, data = df, listw = lw, zero.policy = TRUE)
+gdf$smr_car <- exp(fitted(sem_bym))
+
+p_raw2 <- ggplot(gdf) +
+  geom_sf(aes(fill = smr), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(0.6, 1.7),
+                       oob = scales::squish, name = "SMR") +
+  labs(title = "Raw SMR", x = "Lon", y = "Lat")
+p_eb2 <- ggplot(gdf) +
+  geom_sf(aes(fill = smr_eb), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(0.6, 1.7),
+                       oob = scales::squish, name = "SMR") +
+  labs(title = "EB Smoothed SMR", x = "Lon", y = "Lat")
+p_bym <- ggplot(gdf) +
+  geom_sf(aes(fill = smr_bym_approx), colour = "white", linewidth = 0.15) +
+  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(0.6, 1.7),
+                       oob = scales::squish, name = "SMR") +
+  labs(title = "Approx BYM Smoothed (ICAR basis)", x = "Lon", y = "Lat")
+
+p_bym_all <- (p_raw2 | p_eb2 | p_bym) +
+  plot_annotation(title = "Disease Mapping: Raw SMR → EB → BYM-Approximate Smoothing")
+print(p_bym_all)
+ggsave(file.path(out_dir, "bym_smoothing.png"), p_bym_all, width = 18, height = 5, dpi = 150)
+
+for (item in list(
+  list("Raw", gdf$smr),
+  list("EB", gdf$smr_eb),
+  list("EBlocal", gdf$smr_eb_local),
+  list("BYM-approx", gdf$smr_bym_approx),
+  list("CAR (SEM)", gdf$smr_car)
+)) {
+  col <- item[[2]]
+  cat(sprintf("  %-12s: SD=%.4f | Range=[%.2f,%.2f]\n",
+              item[[1]], sd(col), min(col), max(col)))
+}
+```
+
+## 5. brms BYM Starter Code (Stan optional)
+
+A full hierarchical BYM in `brms` requires compiling Stan and is slow for teaching. The **working smoother used above** (spatial EB + Moran-eigenvector / CAR via `spatialreg`) produces smoothed rates without Stan. The template below is for later full-Bayesian work.
+
+```{r}
+brms_template <- '
+# Requires cmdstanr / rstan — skip if Stan is not installed.
+# library(brms)
+# N <- nrow(df)
+# # Build ICAR adjacency (node1, node2) from queen neighbours
+# edges <- which(W_bin == 1 & upper.tri(W_bin), arr.ind = TRUE)
+# dat <- list(
+#   observed = df$observed, expected = df$expected,
+#   N = N, node1 = edges[, 1], node2 = edges[, 2]
+# )
+# # brms does not expose ICAR out of the box as cleanly as INLA;
+# # a practical brms analogue is a CAR / spatial error or a GP:
+# fit_car <- brm(
+#   observed ~ offset(log(expected)) + gp(lon, lat),
+#   data = df, family = poisson(),
+#   chains = 2, iter = 1000, seed = 42
+# )
+# smr_bym_full <- fitted(fit_car)[, "Estimate"] / df$expected
+'
+cat("brms BYM/GP template saved (optional; not executed).\n")
+cat("To run: install.packages(\"brms\") and a Stan backend.\n\n")
+cat("Key BYM parameters to monitor:\n")
+cat("  sigma_u: spatial random effect SD (larger = more spatial clustering)\n")
+cat("  sigma_v: unstructured random effect SD (larger = more pure noise)\n")
+cat("  u_i: spatially structured relative risk (map this for disease clusters)\n")
+cat("  theta_i: total relative risk = exp(mu + sigma_u*u_i + v_i)\n\n")
+cat("Model selection: DIC or WAIC comparing:\n")
+cat("  Null model (mu only) vs EB (v only) vs BYM (u + v)\n")
+cat("\nStan-free fallback used in this notebook:\n")
+cat("  1. Global gamma-Poisson EB\n")
+cat("  2. spdep::EBlocal (spatial EB)\n")
+cat("  3. Moran-eigenvector ridge smoother (BYM-like convolution)\n")
+cat("  4. spatialreg::errorsarlm CAR-like fit on log(SMR)\n")
+```
+
+## 6. Knowledge Check
+1. A county has O=1 death, E=0.8, so SMR=1.25. The EB-smoothed estimate is 1.02. Why does EB shrink this so aggressively?
+2. BYM model sigma_u >> sigma_v. What does this imply about the nature of spatial clustering?
+3. A researcher uses raw SMR to rank counties for intervention. What are the consequences of not smoothing?
+4. Moran's I for raw SMR = 0.41 but for EB-smoothed SMR = 0.55. Why does smoothing *increase* spatial autocorrelation?
+5. Implement a 2D kernel density smoothed risk surface from the point-level CVD rate data.
+
+```{r}
+# Exercise 5 — KDE risk surface (population-weighted)
+wts <- df$population / sum(df$population) * df$smr
+wts <- pmax(wts, 0)
+wts <- wts / sum(wts)
+# Sample points proportional to weights, then 2D KDE
+idx <- sample.int(N, size = 4000, replace = TRUE, prob = wts)
+kde <- MASS::kde2d(df$lon[idx], df$lat[idx], n = c(60, 30),
+                   lims = c(range(df$lon), range(df$lat)))
+kde_df <- expand.grid(lon = kde$x, lat = kde$y)
+kde_df$z <- as.vector(kde$z)
+
+p_kde <- ggplot() +
+  geom_contour_filled(data = kde_df, aes(lon, lat, z = z), bins = 12) +
+  geom_sf(data = st_centroid(gdf), colour = "white", size = 0.4, alpha = 0.4,
+          inherit.aes = FALSE) +
+  scale_fill_manual(values = colorRampPalette(c("#FFFFCC", "#FD8D3C", "#800026"))(12),
+                    guide = "none") +
+  labs(
+    x = "Longitude", y = "Latitude",
+    title = "KDE Risk Surface: Population-Weighted CVD Mortality Density"
+  ) +
+  coord_sf()
+print(p_kde)
+ggsave(file.path(out_dir, "kde_risk_surface.png"), p_kde, width = 12, height = 6, dpi = 150)
+```
+
+***
+**Next → NB-05: Spatial Cluster Detection (SaTScan-style)**
