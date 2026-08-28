@@ -1,11 +1,9 @@
----
-title: "Spatial Data & Choropleth Mapping"
-subtitle: "Module 07 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+### Module 07: Spatial Epidemiology
+
+# Choropleth Mapping
+
 ***
 **Learning objectives**
 - Understand spatial data types: points, polygons, rasters, and their health applications
@@ -13,12 +11,14 @@ subtitle: "Module 07 — Health Analytics with R"
 - Create publication-quality choropleth maps with quintile and Jenks classification
 - Apply coordinate reference systems (CRS) and spatial joins
 - Map health outcomes with appropriate colour schemes and legends
-- Compute and visualise age-standardised mortality rates (SMR)
+- Compute and visualise standardised prevalence ratios (SMR analogue)
 
+**Data:** `Data/usa_data.csv` — CDC adult diabetes prevalence and County Health Rankings covariates for 3,108 US counties (CONUS + DC)  
+**Geometries:** `Data/US_COUNTY.shp` — county polygons in NAD83 Albers (EPSG:5070)  
 **Estimated time:** 2.5 hours | **Level:** Intermediate  
 **Libraries:** `sf`, `ggplot2`, `dplyr`, `classInt`, `patchwork`
 
-## 1. Setup & Synthetic County Health Dataset
+## 1. Setup & US County Health Dataset
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -39,88 +39,57 @@ theme_set(
     )
 )
 
-spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 1.5) {
-  grid <- matrix(0, nrow = nrow, ncol = ncol)
-  for (i in seq_along(values)) {
-    grid[row_idx[i], col_idx[i]] <- values[i]
-  }
-  k <- ceiling(3 * sigma)
-  xs <- (-k):k
-  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
-  kern <- kern / sum(kern)
-  pad <- k
-  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
-  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
-  out <- matrix(0, nrow, ncol)
-  for (r in seq_len(nrow)) {
-    for (c in seq_len(ncol)) {
-      out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
-    }
-  }
-  mapply(function(r, c) out[r, c], row_idx, col_idx)
+theme_map <- function() {
+  theme_void(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
+      plot.subtitle = element_text(size = 9, hjust = 0.5),
+      legend.position = "right"
+    )
 }
 
-NROW <- 10
-NCOL <- 20
-N_COUNTIES <- NROW * NCOL
-row_idx <- rep(seq_len(NROW), each = NCOL)
-col_idx <- rep(seq_len(NCOL), times = NROW)
+# County Health Rankings + CDC diabetes prevalence (CONUS + DC)
+raw <- read_csv("Data/usa_data.csv", show_col_types = FALSE)
 
-# Geographic coordinates (lon/lat-like)
-lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N_COUNTIES, 0, 0.3)
-lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N_COUNTIES, 0, 0.2)
-
-# Socioeconomic and demographic covariates
-pct_poverty   <- 10 + 8 * rbeta(N_COUNTIES, 2, 5) + 3 * sin(lon / 20)
-pct_uninsured <- 8 + 6 * rbeta(N_COUNTIES, 2, 4) + 0.3 * pct_poverty
-pct_black     <- 5 + 20 * rbeta(N_COUNTIES, 1, 4)
-pct_rural     <- 30 + 40 * rbeta(N_COUNTIES, 3, 3)
-pm25          <- 8 + 4 * rgamma(N_COUNTIES, shape = 2, scale = 1) + 0.05 * pct_rural
-median_income <- 45000 - 800 * pct_poverty + rnorm(N_COUNTIES, 0, 3000)
-population    <- as.integer(rlnorm(N_COUNTIES, 10.5, 1.0))
-
-# Spatially autocorrelated latent risk factor
-spatial_risk <- spatial_smooth(rnorm(N_COUNTIES), row_idx, col_idx, NROW, NCOL, sigma = 2)
-
-# Outcome: age-adjusted CVD mortality rate (per 100k)
-TRUE_POVERTY_EFFECT <- 1.2  # each 1pp poverty -> 1.2 extra deaths per 100k
-cvd_rate <- (180 + TRUE_POVERTY_EFFECT * pct_poverty + 0.8 * pct_uninsured +
-               0.5 * pm25 + 15 * spatial_risk + rnorm(N_COUNTIES, 0, 12))
-
-# Observed deaths and expected (for SMR/SIR)
-expected_deaths <- (cvd_rate / 100000) * population * 5  # 5-year count
-observed_deaths <- rpois(N_COUNTIES, expected_deaths)
-national_rate   <- mean(cvd_rate) / 100000
-expected_std    <- national_rate * population * 5
-smr             <- observed_deaths / pmax(expected_std, 1)
+# Centroids stored as NAD83 Albers metres (EPSG:5070) — convert to WGS84 lon/lat
+pts <- st_as_sf(raw, coords = c("centroid_x_m", "centroid_y_m"), crs = 5070, remove = FALSE)
+pts_ll <- st_transform(pts, 4326)
+xy <- st_coordinates(pts_ll)
 
 df <- tibble(
-  county_id       = sprintf("C%03d", seq_len(N_COUNTIES) - 1),
-  lon             = lon,
-  lat             = lat,
-  row             = row_idx,
-  col             = col_idx,
-  pct_poverty     = pct_poverty,
-  pct_uninsured   = pct_uninsured,
-  pct_black       = pct_black,
-  pct_rural       = pct_rural,
-  pm25            = pm25,
-  median_income   = median_income,
-  population      = population,
-  cvd_rate        = cvd_rate,
-  expected_deaths = expected_deaths,
-  observed_deaths = observed_deaths,
-  smr             = smr,
-  spatial_risk    = spatial_risk
+  county_id       = sprintf("%05d", as.integer(raw$fips)),
+  fips            = as.integer(raw$fips),
+  county          = raw$county,
+  state_abbr      = raw$state_abbr,
+  state_name      = raw$state_name,
+  lon             = xy[, 1],
+  lat             = xy[, 2],
+  x_m             = raw$centroid_x_m,
+  y_m             = raw$centroid_y_m,
+  diabetes_prev   = raw$y_diabetes_prevalence_adults_with_diabetes,
+  pct_65plus      = raw$chr_65_and_older_65_and_over,
+  pct_exercise    = raw$chr_access_to_exercise_opportunities,
+  pct_obesity     = raw$chr_adult_obesity,
+  food_env_index  = raw$chr_food_environment_index,
+  n_pcp           = raw$chr_primary_care_physicians,
+  rural_pop       = raw$chr_rural,
+  n_unemployed    = raw$chr_unemployment,
+  n_uninsured     = raw$chr_uninsured
 )
 
+# Standardised prevalence ratio: county rate / national mean (SMR analogue)
+df$smr <- df$diabetes_prev / mean(df$diabetes_prev, na.rm = TRUE)
+
+N_COUNTIES <- nrow(df)
 cat(sprintf(
-  "County dataset: N=%d | CVD rate: %.1f/100k (SD=%.1f)\n",
-  N_COUNTIES, mean(cvd_rate), sd(cvd_rate)
+  "County dataset: N=%d | Diabetes: %.1f%% (SD=%.1f)\n",
+  N_COUNTIES, mean(df$diabetes_prev), sd(df$diabetes_prev)
 ))
 cat(sprintf(
-  "Poverty: %.1f%% | Uninsured: %.1f%% | PM2.5: %.1f\n",
-  mean(pct_poverty), mean(pct_uninsured), mean(pm25)
+  "Obesity: %.1f%% | 65+: %.1f%% | Food env. index: %.1f\n",
+  mean(df$pct_obesity), mean(df$pct_65plus), mean(df$food_env_index)
 ))
 ```
 
@@ -139,231 +108,262 @@ cat(sprintf(
 - NAD83 (EPSG:4269): North American datum — for US health data
 - Albers Equal Area (EPSG:5070): preserves area — for choropleth maps
 
-```{r}
-# Create sf object with synthetic county centroids + bounding boxes
-# Each county is a 2.5° x 2.0° rectangle
-make_box <- function(lo, la) {
-  st_polygon(list(matrix(
-    c(lo - 1.25, la - 1.0,
-      lo + 1.25, la - 1.0,
-      lo + 1.25, la + 1.0,
-      lo - 1.25, la + 1.0,
-      lo - 1.25, la - 1.0),
-    ncol = 2, byrow = TRUE
-  )))
-}
+A choropleth map is a thematic map in which geographic regions are shaded in proportion to a statistical variable (disease rates, population density, income). In health analytics, choropleths visualise the geographic distribution of outcomes, risk factors, or access to care across counties, states, or census tracts.
 
-geoms <- mapply(make_box, df$lon, df$lat, SIMPLIFY = FALSE)
-gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
+```{r}
+# Join tabular health data with US county polygons
+county_shapes <- st_read("Data/US_COUNTY.shp", quiet = TRUE)
+county_shapes$FIPS <- as.integer(county_shapes$FIPS)
+# Shannon County SD (46113) was renamed Oglala Lakota (46102)
+county_shapes$FIPS[county_shapes$FIPS == 46113] <- 46102
+
+gdf <- county_shapes %>%
+  inner_join(df, by = c("FIPS" = "fips"))
 bb <- st_bbox(gdf)
 
 cat(sprintf("sf object: %d counties | CRS: %s\n", nrow(gdf), st_crs(gdf)$input))
 cat(sprintf(
-  "Bounding box: xmin=%.2f ymin=%.2f xmax=%.2f ymax=%.2f\n",
+  "Bounding box (Albers metres): xmin=%.0f ymin=%.0f xmax=%.0f ymax=%.0f\n",
   bb["xmin"], bb["ymin"], bb["xmax"], bb["ymax"]
 ))
 ```
 
-## 3. Choropleth Map — CVD Mortality Rate
+## 3. Choropleth Map — Diabetes Prevalence & Risk Factors
 
 ```{r}
 sf_choropleth <- function(gdf_in, column, title, palette = "RdYlGn",
-                          direction = -1, legend = "Rate per 100k") {
+                          direction = -1, legend = "Rate") {
   ggplot(gdf_in) +
-    geom_sf(aes(fill = .data[[column]]), colour = "white", linewidth = 0.15) +
+    geom_sf(aes(fill = .data[[column]]), colour = "white", linewidth = 0.05) +
     scale_fill_distiller(name = legend, palette = palette, direction = direction) +
-    labs(title = title, x = "Longitude", y = "Latitude") +
-    coord_sf()
+    labs(title = title) +
+    theme_map()
 }
 
-p_cvd <- sf_choropleth(gdf, "cvd_rate", "CVD Mortality Rate (per 100k)",
-                       "RdYlGn", -1, "Rate/100k")
-p_pov <- sf_choropleth(gdf, "pct_poverty", "Poverty Rate (%)",
-                       "YlOrRd", 1, "Poverty (%)")
-p_smr <- sf_choropleth(gdf, "smr", "SMR > 1 = excess mortality | < 1 = deficit",
-                       "RdBu", -1, "SMR")
-p_pm  <- sf_choropleth(gdf, "pm25", "PM2.5 (µg/m³)",
-                       "YlOrBr", 1, "PM2.5")
+p_diab <- sf_choropleth(gdf, "diabetes_prev", "Adult Diabetes Prevalence (%)",
+                        "RdYlGn", -1, "Prevalence (%)")
+p_ob   <- sf_choropleth(gdf, "pct_obesity", "Adult Obesity (%)",
+                        "Spectral", -1, "Obesity (%)")
+p_smr  <- sf_choropleth(gdf, "smr",
+                        "SPR > 1 = above-average diabetes | < 1 = below average",
+                        "RdBu", -1, "SPR")
+p_food <- sf_choropleth(gdf, "food_env_index",
+                        "Food Environment Index (0–10, higher = better)",
+                        "YlGn", 1, "Index")
 
-p_atlas <- (p_cvd | p_pov) / (p_smr | p_pm) +
-  plot_annotation(title = "County-Level Health Atlas: CVD Mortality & Risk Factors")
+p_atlas <- (p_diab | p_ob) / (p_smr | p_food) +
+  plot_annotation(title = "US County Health Atlas: Diabetes Prevalence & Risk Factors")
 
 print(p_atlas)
 ggsave(file.path(out_dir, "choropleth_atlas.png"), p_atlas,
        width = 16, height = 11, dpi = 150)
 
 cat(sprintf(
-  "Counties with SMR > 1.2 (excess mortality): %d (%.1f%%)\n",
-  sum(df$smr > 1.2), mean(df$smr > 1.2) * 100
+  "Counties with SPR > 1.2 (excess prevalence): %d (%.1f%%)\n",
+  sum(gdf$smr > 1.2), mean(gdf$smr > 1.2) * 100
 ))
 cat(sprintf(
-  "Counties with SMR < 0.8 (deficit mortality): %d (%.1f%%)\n",
-  sum(df$smr < 0.8), mean(df$smr < 0.8) * 100
+  "Counties with SPR < 0.8 (deficit prevalence): %d (%.1f%%)\n",
+  sum(gdf$smr < 0.8), mean(gdf$smr < 0.8) * 100
 ))
 ```
 
 ## 4. Classification Schemes for Health Maps
 
-```{r}
+There are multiple ways to classify continuous values into categories for health maps:
+
+- **Equal interval:** Divides the range of data into categories with equal-sized intervals.
+- **Quantile:** Splits the data so that each class contains the same number of observations (e.g. quintiles).
+- **Natural Breaks (Jenks):** Groups values to minimise within-class variance and maximise between-class differences.
+
+```{r, fig.width = 12, fig.height = 5}
 n_classes <- 5
-vals <- gdf$cvd_rate
+vals <- gdf$diabetes_prev
 
 brks_equal <- classIntervals(vals, n = n_classes, style = "equal")
 brks_quant <- classIntervals(vals, n = n_classes, style = "quantile")
 brks_jenks <- classIntervals(vals, n = n_classes, style = "jenks")
 
 classify_map <- function(gdf_in, brks, title) {
-  gdf_in$class <- cut(gdf_in$cvd_rate, breaks = brks$brks, include.lowest = TRUE)
+  gdf_in$class <- cut(gdf_in$diabetes_prev, breaks = brks$brks, include.lowest = TRUE)
   ggplot(gdf_in) +
-    geom_sf(aes(fill = class), colour = "white", linewidth = 0.15) +
-    scale_fill_brewer(name = "Rate/100k", palette = "RdYlGn", direction = -1) +
-    labs(title = paste("CVD Rate:", title), x = "Lon", y = "Lat")
+    geom_sf(aes(fill = class), colour = "white", linewidth = 0.05) +
+    scale_fill_brewer(name = "Prevalence (%)", palette = "RdYlGn", direction = -1) +
+    labs(title = paste("Diabetes %:", title)) +
+    theme_map()
 }
 
 p_eq <- classify_map(gdf, brks_equal, "Equal Interval")
 p_q  <- classify_map(gdf, brks_quant, "Quantile (quintiles)")
 p_j  <- classify_map(gdf, brks_jenks, "Natural Breaks (Jenks)")
 
-p_class <- p_eq | p_q | p_j
-p_class <- p_class +
-  plot_annotation(title = "Classification Scheme Comparison — CVD Mortality")
+p_class <- (p_eq | p_q | p_j) +
+  plot_annotation(title = "Classification Scheme Comparison — Adult Diabetes Prevalence")
 print(p_class)
 ggsave(file.path(out_dir, "classification_schemes.png"), p_class,
        width = 18, height = 5, dpi = 150)
 ```
 
-## 5. Age-Standardised Rate Computation
+## 5. Age Structure — Crude vs Adjusted Prevalence
 
-```{r}
-# Simulate age-stratified deaths for direct standardisation
-age_groups <- c("<45", "45-64", "65-74", "75+")
-std_pop    <- c(0.35, 0.30, 0.20, 0.15)  # 2000 US standard population weights
+The published county diabetes rate is a crude prevalence. Age structure (`% aged 65+`) is observed, not simulated: older counties tend to show higher diabetes even if age-specific risk is the same. Residualising on `% aged 65+` produces an age-adjusted analogue.
 
-set.seed(7)
-# True age-specific rates by county
-base_rates <- c(50, 200, 600, 1800)  # per 100k per age group
-age_specific_rates <- outer(df$cvd_rate / 200, base_rates)
-age_specific_rates <- age_specific_rates + matrix(rnorm(N_COUNTIES * 4, 0, 20), ncol = 4)
-age_specific_rates <- pmin(pmax(age_specific_rates, 10), 3000)
+```{r, fig.width = 10, fig.height = 5}
+fit_age <- lm(diabetes_prev ~ pct_65plus, data = gdf)
+gdf$diabetes_age_adj <- residuals(fit_age) + mean(gdf$diabetes_prev)
 
-# Direct standardisation: apply standard pop weights to age-specific rates
-asmr <- as.numeric(age_specific_rates %*% std_pop)
-gdf$asmr <- asmr
-df$asmr  <- asmr
-
-p_asmr <- ggplot(df, aes(cvd_rate, asmr)) +
-  geom_point(alpha = 0.5, size = 2, colour = "#2563EB") +
+p_age <- ggplot(st_drop_geometry(gdf), aes(pct_65plus, diabetes_prev)) +
+  geom_point(alpha = 0.25, size = 0.8, colour = "#2563EB") +
   geom_smooth(method = "lm", se = FALSE, colour = "#DC2626", linewidth = 1) +
   labs(
-    x = "Crude CVD rate (per 100k)",
-    y = "ASMR (per 100k, direct std)",
-    title = "Crude vs Age-Standardised Mortality Rate (Correlation reflects confounding by age structure)",
-    subtitle = sprintf("r = %.3f", cor(df$cvd_rate, df$asmr))
+    x = "% aged 65+",
+    y = "Adult diabetes prevalence (%)",
+    title = "Crude diabetes vs age structure",
+    subtitle = sprintf("r = %.3f", cor(gdf$pct_65plus, gdf$diabetes_prev))
   )
-print(p_asmr)
-ggsave(file.path(out_dir, "crude_vs_asmr.png"), p_asmr,
-       width = 10, height = 5, dpi = 150)
 
-diff <- df$asmr - df$cvd_rate
+p_adj <- ggplot(st_drop_geometry(gdf), aes(diabetes_prev, diabetes_age_adj)) +
+  geom_point(alpha = 0.25, size = 0.8, colour = "#DC2626") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(
+    x = "Crude diabetes (%)",
+    y = "Age-residualised diabetes (%)",
+    title = sprintf(
+      "Crude vs age-adjusted prevalence (r = %.3f)",
+      cor(gdf$diabetes_prev, gdf$diabetes_age_adj)
+    )
+  )
+
+p_age_adj <- p_age | p_adj
+print(p_age_adj)
+ggsave(file.path(out_dir, "crude_vs_asmr.png"), p_age_adj,
+       width = 14, height = 5, dpi = 150)
+
+diff <- gdf$diabetes_age_adj - gdf$diabetes_prev
 cat(sprintf(
-  "Counties where ASMR > crude rate (older age structure): %d (%.1f%%)\n",
+  "Counties where age-adjusted > crude (younger than expected for their rate): %d (%.1f%%)\n",
   sum(diff > 0), mean(diff > 0) * 100
 ))
-cat(sprintf("Mean difference (ASMR - crude): %.1f per 100k\n", mean(diff)))
+cat(sprintf("Mean difference (age-adjusted − crude): %.2f pp\n", mean(diff)))
 ```
 
 ## 6. Spatial Join — Linking Point Data to Polygons
 
-```{r}
-# Simulate hospital locations (point data) and join to county
+Simulate hospital locations as points, place them inside county polygons (weighted by uninsured count as a population-size proxy), then join each hospital to the containing county. Overlay hospitals on a PCP-supply map and check the ecological correlation with diabetes.
+
+```{r, fig.width = 10, fig.height = 5}
 set.seed(13)
-N_HOSPITALS <- 50
-hosp <- st_as_sf(
+N_HOSPITALS <- 400
+weights <- pmax(gdf$n_uninsured, 1)
+weights <- weights / sum(weights)
+hosp_idx <- sample.int(nrow(gdf), N_HOSPITALS, replace = TRUE, prob = weights)
+
+# Place each hospital randomly inside its assigned county polygon
+place_in_poly <- function(geom) {
+  bb <- st_bbox(geom)
+  for (i in 1:20) {
+    pt <- st_sfc(st_point(c(runif(1, bb["xmin"], bb["xmax"]),
+                            runif(1, bb["ymin"], bb["ymax"]))),
+                 crs = st_crs(geom))
+    if (as.logical(st_within(pt, geom, sparse = FALSE))) return(pt[[1]])
+  }
+  st_centroid(geom)[[1]]
+}
+
+hosp_geoms <- lapply(hosp_idx, function(i) place_in_poly(gdf$geometry[i]))
+pop_proxy <- gdf$n_uninsured[hosp_idx]
+beds_mean <- 100 + (pop_proxy / max(pop_proxy)) * 700
+hosp <- st_sf(
   tibble(
-    lon        = runif(N_HOSPITALS, min(df$lon), max(df$lon)),
-    lat        = runif(N_HOSPITALS, min(df$lat), max(df$lat)),
-    hosp_beds  = pmin(pmax(as.integer(rlnorm(N_HOSPITALS, 5, 0.7)), 50), 2000),
-    hosp_trauma = rbinom(N_HOSPITALS, 1, 0.3)
+    hosp_beds   = pmin(pmax(as.integer(rlnorm(N_HOSPITALS, log(beds_mean), 0.4)), 50), 1500),
+    hosp_trauma = rbinom(N_HOSPITALS, 1, pmin(pmax(pop_proxy / max(pop_proxy) * 0.6, 0.2), 0.7))
   ),
-  coords = c("lon", "lat"),
-  crs = 4326
+  geometry = st_sfc(hosp_geoms, crs = st_crs(gdf))
 )
 
-# Assign each hospital to nearest county centroid
-centroids <- st_centroid(gdf)
-nn_idx <- st_nearest_feature(hosp, centroids)
-
-gdf$n_hospitals    <- 0
-gdf$total_beds     <- 0
-gdf$has_trauma_ctr <- 0
-for (i in seq_len(N_HOSPITALS)) {
-  c_idx <- nn_idx[i]
-  gdf$n_hospitals[c_idx]    <- gdf$n_hospitals[c_idx] + 1
-  gdf$total_beds[c_idx]     <- gdf$total_beds[c_idx] + hosp$hosp_beds[i]
-  gdf$has_trauma_ctr[c_idx] <- gdf$has_trauma_ctr[c_idx] + hosp$hosp_trauma[i]
+joined <- st_join(hosp, gdf["FIPS"], join = st_within, left = TRUE)
+# Fallback: nearest county if a point missed its polygon
+miss <- is.na(joined$FIPS)
+if (any(miss)) {
+  joined$FIPS[miss] <- gdf$FIPS[st_nearest_feature(hosp[miss, ], gdf)]
 }
-gdf$has_trauma_ctr <- as.integer(gdf$has_trauma_ctr > 0)
-gdf$beds_per_1000  <- gdf$total_beds / gdf$population * 1000
 
-p_beds <- ggplot(gdf) +
-  geom_sf(aes(fill = beds_per_1000), colour = "white", linewidth = 0.15) +
-  geom_sf(data = hosp, shape = 3, size = 2.5, colour = "#DC2626") +
-  scale_fill_distiller(name = "Beds per 1,000 pop", palette = "Blues", direction = 1) +
-  labs(title = "Hospital Beds per 1,000 Population", x = "Lon", y = "Lat")
-
-corr_beds <- cor(gdf$beds_per_1000, gdf$cvd_rate)
-p_corr <- ggplot(st_drop_geometry(gdf), aes(beds_per_1000, cvd_rate)) +
-  geom_point(alpha = 0.5, size = 2, colour = "#DC2626") +
-  geom_smooth(method = "lm", se = FALSE, colour = "black", linewidth = 1) +
-  labs(
-    x = "Beds per 1,000", y = "CVD rate per 100k",
-    title = sprintf(
-      "Hospital Capacity vs CVD Mortality (r=%.3f — ecological correlation only!)",
-      corr_beds
-    )
+hosp_agg <- joined %>%
+  st_drop_geometry() %>%
+  group_by(FIPS) %>%
+  summarise(
+    n_hospitals    = n(),
+    total_beds     = sum(hosp_beds),
+    has_trauma_ctr = as.integer(any(hosp_trauma == 1)),
+    .groups = "drop"
   )
 
-p_join <- p_beds | p_corr
+gdf <- gdf %>%
+  left_join(hosp_agg, by = "FIPS") %>%
+  mutate(
+    n_hospitals    = replace_na(n_hospitals, 0),
+    total_beds     = replace_na(total_beds, 0),
+    has_trauma_ctr = replace_na(has_trauma_ctr, 0L)
+  )
+
+p_pcp <- ggplot(gdf) +
+  geom_sf(aes(fill = n_pcp), colour = NA, linewidth = 0) +
+  geom_sf(data = hosp, shape = 3, size = 1.4, colour = "#DC2626") +
+  scale_fill_distiller(name = "PCP count", palette = "Blues", direction = 1) +
+  labs(title = "PCPs (CHR) + simulated hospitals") +
+  theme_map()
+
+corr_pcp <- cor(gdf$n_pcp, gdf$diabetes_prev, use = "complete.obs")
+p_corr <- ggplot(st_drop_geometry(gdf), aes(n_pcp, diabetes_prev)) +
+  geom_point(alpha = 0.25, size = 0.8, colour = "#DC2626") +
+  geom_smooth(method = "lm", se = FALSE, colour = "black", linewidth = 1) +
+  labs(
+    x = "Primary care physicians",
+    y = "Adult diabetes prevalence (%)",
+    title = sprintf("PCP supply vs diabetes (r=%.3f — ecological correlation only!)", corr_pcp)
+  )
+
+p_join <- p_pcp | p_corr
 print(p_join)
 ggsave(file.path(out_dir, "hospital_join.png"), p_join,
        width = 14, height = 5, dpi = 150)
 ```
 
 ## 7. Knowledge Check
-1. A choropleth map uses quantile classification and shows your county in the highest quintile. A colleague uses equal-interval and shows it in the 4th quintile. Which is "correct"?
-2. SMR = 1.45 for a rural county. What does this mean, and what information do you need to know if this is statistically significant?
-3. You want to map CVD mortality for census tracts. Your denominator (population) comes from the 2020 Census but your numerator (deaths) covers 2018-2022. What are the key assumptions?
-4. The correlation between beds/1,000 and CVD rate is -0.31. A colleague concludes "more hospitals reduce CVD deaths." What fallacy is this?
-5. Compute a bivariate choropleth: classify counties into 3x3 cells by both poverty rate and CVD mortality, and colour-code the 9 combinations.
+1. A choropleth map uses quantile classification and shows your county in the highest quintile. A colleague uses equal-interval and shows it in the 4th class. Which is "correct"?
+2. SPR = 1.45 for a rural county (diabetes / national mean). What does this mean, and what information do you need to know if this is statistically significant?
+3. You want to map diabetes prevalence for census tracts. Your denominator (population) comes from the 2020 Census but your numerator covers 2018–2022. What are the key assumptions?
+4. The correlation between PCP count and diabetes prevalence is negative. A colleague concludes "more doctors reduce diabetes." What fallacy is this?
+5. Compute a bivariate choropleth: classify counties into 3×3 cells by both obesity and diabetes prevalence, and colour-code the 9 combinations.
 
 ```{r}
 # Exercise 5 — Bivariate choropleth (3x3 = 9 classes)
-poverty_cat <- as.integer(cut(gdf$pct_poverty, breaks = quantile(gdf$pct_poverty, probs = 0:3 / 3),
+obesity_cat <- as.integer(cut(gdf$pct_obesity,
+                              breaks = quantile(gdf$pct_obesity, probs = 0:3 / 3),
                               include.lowest = TRUE, labels = FALSE)) - 1
-cvd_cat     <- as.integer(cut(gdf$cvd_rate, breaks = quantile(gdf$cvd_rate, probs = 0:3 / 3),
-                              include.lowest = TRUE, labels = FALSE)) - 1
-gdf$bivariate_class <- poverty_cat * 3 + cvd_cat
+diab_cat <- as.integer(cut(gdf$diabetes_prev,
+                           breaks = quantile(gdf$diabetes_prev, probs = 0:3 / 3),
+                           include.lowest = TRUE, labels = FALSE)) - 1
+gdf$bivariate_class <- obesity_cat * 3 + diab_cat
 
 biv_colors <- c(
-  "0" = "#e8e8e8", "1" = "#dfb0d6", "2" = "#be64ac",
-  "3" = "#ace4e4", "4" = "#a5add3", "5" = "#8c62aa",
-  "6" = "#5ac8c8", "7" = "#5698b9", "8" = "#3b4994"
+  "Ob:Low Diab:Low"  = "#e8e8e8", "Ob:Low Diab:Med"  = "#dfb0d6", "Ob:Low Diab:High"  = "#be64ac",
+  "Ob:Med Diab:Low"  = "#ace4e4", "Ob:Med Diab:Med"  = "#a5add3", "Ob:Med Diab:High"  = "#8c62aa",
+  "Ob:High Diab:Low" = "#5ac8c8", "Ob:High Diab:Med" = "#5698b9", "Ob:High Diab:High" = "#3b4994"
 )
-gdf$biv_lab <- factor(gdf$bivariate_class, levels = 0:8)
-pov_lbl <- c("Low", "Med", "High")
-cvd_lbl <- c("Low", "Med", "High")
-lab_map <- sprintf("Pov:%s CVD:%s", pov_lbl[floor(0:8 / 3) + 1], cvd_lbl[(0:8) %% 3 + 1])
-names(biv_colors) <- lab_map
-gdf$biv_lab <- factor(lab_map[gdf$bivariate_class + 1], levels = lab_map)
+ob_lbl <- c("Low", "Med", "High")
+db_lbl <- c("Low", "Med", "High")
+lab_map <- sprintf("Ob:%s Diab:%s", ob_lbl[floor(0:8 / 3) + 1], db_lbl[(0:8) %% 3 + 1])
+gdf$biv_lab <- factor(lab_map[gdf$bivariate_class + 1], levels = names(biv_colors))
 
 p_biv <- ggplot(gdf) +
-  geom_sf(aes(fill = biv_lab), colour = "white", linewidth = 0.15) +
+  geom_sf(aes(fill = biv_lab), colour = "white", linewidth = 0.05) +
   scale_fill_manual(name = NULL, values = biv_colors) +
   labs(
-    title = "Bivariate Choropleth: Poverty Rate × CVD Mortality",
-    subtitle = "blue=low/low, red=high/high, purple=high poverty/low CVD",
-    x = "Longitude", y = "Latitude"
+    title = "Bivariate Choropleth: Adult Obesity × Diabetes Prevalence",
+    subtitle = "light = low/low, dark = high/high"
   ) +
+  theme_map() +
   theme(legend.position = "bottom")
 
 print(p_biv)

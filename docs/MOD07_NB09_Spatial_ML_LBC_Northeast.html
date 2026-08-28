@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Spatial Machine Learning — LBC Mortality in the Northeast – Health Analytics with R</title>
+<title>mod07_nb09_spatial_ml_lbc_northeast – Health Analytics with R</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -161,7 +161,7 @@ window.Quarto = {
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-with-Python"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-R"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -185,7 +185,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html">Spatial ML - LBC Mortality (Northeast)</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html">NB-09 · Spatial ML — LBC Mortality (Northeast)</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -195,24 +195,7 @@ window.Quarto = {
   </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-body"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html">Spatial ML - LBC Mortality (Northeast)</a></li></ol></nav>
-      <h1 class="title">Spatial Machine Learning — LBC Mortality in the Northeast</h1>
-            <p class="subtitle lead">Module 07 — Health Analytics with R</p>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html">NB-09 · Spatial ML — LBC Mortality (Northeast)</a></li></ol></nav></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
@@ -292,49 +275,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB01_Data_Loading_Profiling.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Loading &amp; Automated Profiling</span></a>
+ <span class="menu-text">NB-01 · Data Loading &amp; Automated Profiling</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB02_Descriptive_Statistics.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Descriptive Statistics for Clinical Variables</span></a>
+ <span class="menu-text">NB-02 · Descriptive Statistics for Clinical Variables</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB03_Clinical_Visualisation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Visualising Clinical Distributions</span></a>
+ <span class="menu-text">NB-03 · Visualising Clinical Distributions</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB04_TimeSeries_Admissions.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Time-Series of Admissions &amp; Clinical Events</span></a>
+ <span class="menu-text">NB-04 · Time-Series of Admissions &amp; Clinical Events</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB05_Missingness_Imputation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Missingness Analysis &amp; Imputation</span></a>
+ <span class="menu-text">NB-05 · Missingness Analysis &amp; Imputation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB06_Comorbidity_Heatmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Comorbidity Co-occurrence Heatmap</span></a>
+ <span class="menu-text">NB-06 · Comorbidity Co-occurrence Heatmap</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB07_Geospatial_Disparities.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Geospatial Health Disparities Map</span></a>
+ <span class="menu-text">NB-07 · Geospatial Health Disparities Map</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB08_Capstone_Readmission_EDA.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End EDA on Readmission Risk</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End EDA on Readmission Risk</span></a>
   </div>
 </li>
       </ul>
@@ -351,49 +334,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB01_Hypothesis_Testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hypothesis Testing for Health Outcomes</span></a>
+ <span class="menu-text">NB-01 · Hypothesis Testing for Health Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB02_RR_OR_CI.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
+ <span class="menu-text">NB-02 · Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB03_Survival_Analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
+ <span class="menu-text">NB-03 · Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB04_Linear_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Linear Regression for Continuous Outcomes</span></a>
+ <span class="menu-text">NB-04 · Linear Regression for Continuous Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB05_Logistic_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Logistic Regression for Binary Outcomes</span></a>
+ <span class="menu-text">NB-05 · Logistic Regression for Binary Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB06_Count_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Poisson &amp; Negative Binomial Regression</span></a>
+ <span class="menu-text">NB-06 · Poisson &amp; Negative Binomial Regression</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB07_Confounding_EffectModification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Confounding &amp; Effect Modification</span></a>
+ <span class="menu-text">NB-07 · Confounding &amp; Effect Modification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB08_Capstone_Inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Multivariable Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Multivariable Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -410,49 +393,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB01_Pipeline_Splits.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ML Pipeline Setup &amp; Train/Test Splits</span></a>
+ <span class="menu-text">NB-01 · ML Pipeline Setup &amp; Train/Test Splits</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB02_DecisionTree_RandomForest.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Decision Trees &amp; Random Forest</span></a>
+ <span class="menu-text">NB-02 · Decision Trees &amp; Random Forest</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB03_XGBoost_LightGBM.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">XGBoost &amp; LightGBM</span></a>
+ <span class="menu-text">NB-03 · XGBoost &amp; LightGBM</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB04_Clinical_Model_Evaluation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Model Evaluation</span></a>
+ <span class="menu-text">NB-04 · Clinical Model Evaluation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB05_Hyperparameter_Tuning.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hyperparameter Tuning &amp; Cross-Validation</span></a>
+ <span class="menu-text">NB-05 · Hyperparameter Tuning &amp; Cross-Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB06_SHAP_Explainability.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SHAP Explainability</span></a>
+ <span class="menu-text">NB-06 · SHAP Explainability</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB07_Clinical_Prediction_Models.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Three Clinical Prediction Models</span></a>
+ <span class="menu-text">NB-07 · Three Clinical Prediction Models</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB08_Capstone_ML_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical ML Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical ML Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -469,49 +452,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB01_Clinical_Text_Preprocessing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Text Preprocessing</span></a>
+ <span class="menu-text">NB-01 · Clinical Text Preprocessing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB02_Clinical_NER.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Named Entity Recognition</span></a>
+ <span class="menu-text">NB-02 · Clinical Named Entity Recognition</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB03_TF_IDF_Classification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TF-IDF &amp; Clinical Text Classification</span></a>
+ <span class="menu-text">NB-03 · TF-IDF &amp; Clinical Text Classification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB04_Word_Embeddings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Word Embeddings &amp; Word2Vec</span></a>
+ <span class="menu-text">NB-04 · Word Embeddings &amp; Word2Vec</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB05_Clinical_BERT.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
+ <span class="menu-text">NB-05 · Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB06_ICD_Coding_Medications.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ICD Coding &amp; Medication Extraction</span></a>
+ <span class="menu-text">NB-06 · ICD Coding &amp; Medication Extraction</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB07_Summarisation_ZeroShot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Summarisation &amp; Zero-Shot NLP</span></a>
+ <span class="menu-text">NB-07 · Summarisation &amp; Zero-Shot NLP</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB08_Capstone_Clinical_NLP.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical NLP Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical NLP Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -528,49 +511,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB01_DAGs_Confounding.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DAGs, Confounding &amp; Identification</span></a>
+ <span class="menu-text">NB-01 · DAGs, Confounding &amp; Identification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB02_Propensity_Scores.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Propensity Score Methods</span></a>
+ <span class="menu-text">NB-02 · Propensity Score Methods</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB03_DiD_EventStudy.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Difference-in-Differences &amp; Event Studies</span></a>
+ <span class="menu-text">NB-03 · Difference-in-Differences &amp; Event Studies</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB04_ITS_SyntheticControl.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Interrupted Time Series &amp; Synthetic Control</span></a>
+ <span class="menu-text">NB-04 · Interrupted Time Series &amp; Synthetic Control</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB05_IV_RDD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Instrumental Variables &amp; RDD</span></a>
+ <span class="menu-text">NB-05 · Instrumental Variables &amp; RDD</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB06_GComp_TMLE.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">G-Computation, TMLE &amp; Mediation</span></a>
+ <span class="menu-text">NB-06 · G-Computation, TMLE &amp; Mediation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB07_Sensitivity_Reporting.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Sensitivity Analysis &amp; Reporting</span></a>
+ <span class="menu-text">NB-07 · Sensitivity Analysis &amp; Reporting</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Causal Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Causal Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -578,7 +561,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
- <span class="menu-text"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</span></a>
+ <span class="menu-text"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -587,61 +570,61 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB01_Spatial_Data_Choropleth.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Data &amp; Choropleth Mapping</span></a>
+ <span class="menu-text">NB-01 · Spatial Data &amp; Choropleth Mapping</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Autocorrelation &amp; Moran's I</span></a>
+ <span class="menu-text">NB-02 · Spatial Autocorrelation &amp; Moran's I</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB03_Spatial_Regression_GWR.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Regression: Lag, Error &amp; GWR</span></a>
+ <span class="menu-text">NB-03 · Spatial Regression: Lag, Error &amp; GWR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Disease Mapping &amp; Bayesian Smoothing</span></a>
+ <span class="menu-text">NB-04 · Disease Mapping &amp; Bayesian Smoothing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB05_Cluster_Detection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Cluster Detection</span></a>
+ <span class="menu-text">NB-05 · Spatial Cluster Detection</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB06_Environmental_Epidemiology.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Environmental Epidemiology</span></a>
+ <span class="menu-text">NB-06 · Environmental Epidemiology</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB07_Health_Service_Access.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Health Service Area &amp; Access Metrics</span></a>
+ <span class="menu-text">NB-07 · Health Service Area &amp; Access Metrics</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone - Spatial Health Inequity Atlas</span></a>
+ <span class="menu-text">NB-08 · Capstone · Spatial Health Inequity Atlas</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Spatial ML - LBC Mortality (Northeast)</span></a>
+ <span class="menu-text">NB-09 · Spatial ML — LBC Mortality (Northeast)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Geostatistical Risk Analysis</span></a>
+ <span class="menu-text">NB-10 · Geostatistical Risk Analysis</span></a>
   </div>
 </li>
       </ul>
@@ -658,49 +641,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB01_Reproducible_Foundations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Reproducible Research Foundations</span></a>
+ <span class="menu-text">NB-01 · Reproducible Research Foundations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB02_Quarto_Reports.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Quarto Documents for Health Reports</span></a>
+ <span class="menu-text">NB-02 · Quarto Documents for Health Reports</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB03_Shiny_Dashboards.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Shiny Dashboards</span></a>
+ <span class="menu-text">NB-03 · Shiny Dashboards</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB04_MLflow_Tracking.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">MLflow Model Tracking &amp; Registry</span></a>
+ <span class="menu-text">NB-04 · MLflow Model Tracking &amp; Registry</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB05_Plumber_Serving.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Plumber for Clinical Model Serving</span></a>
+ <span class="menu-text">NB-05 · Plumber for Clinical Model Serving</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB06_Testing_CICD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Testing, CI/CD &amp; Code Quality</span></a>
+ <span class="menu-text">NB-06 · Testing, CI/CD &amp; Code Quality</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB07_ModelCards_Governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Model Cards &amp; Clinical AI Governance</span></a>
+ <span class="menu-text">NB-07 · Model Cards &amp; Clinical AI Governance</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB08_Capstone_Deployment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Full Deployment Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Full Deployment Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -715,8 +698,13 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology" id="toc-health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="nav-link active" data-scroll-target="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</a></li>
-  <li><a href="#setup-data-loading" id="toc-setup-data-loading" class="nav-link" data-scroll-target="#setup-data-loading">1. Setup &amp; Data Loading</a></li>
+  <li><a href="#module-07-spatial-epidemiology" id="toc-module-07-spatial-epidemiology" class="nav-link active" data-scroll-target="#module-07-spatial-epidemiology">### Module 07: Spatial Epidemiology</a></li>
+  <li><a href="#spatial-machine-learning" id="toc-spatial-machine-learning" class="nav-link" data-scroll-target="#spatial-machine-learning">Spatial Machine Learning</a>
+  <ul class="collapse">
+  <li><a href="#setup-data-loading" id="toc-setup-data-loading" class="nav-link" data-scroll-target="#setup-data-loading">1. Setup &amp; Data Loading</a>
+  <ul class="collapse">
+  <li><a href="#supplementary-county-health-rankings-2025-optional" id="toc-supplementary-county-health-rankings-2025-optional" class="nav-link" data-scroll-target="#supplementary-county-health-rankings-2025-optional">Supplementary: County Health Rankings 2025 (optional)</a></li>
+  </ul></li>
   <li><a href="#exploratory-data-analysis" id="toc-exploratory-data-analysis" class="nav-link" data-scroll-target="#exploratory-data-analysis">2. Exploratory Data Analysis</a></li>
   <li><a href="#choropleth-maps-yearly-period-mean-lbc-rates" id="toc-choropleth-maps-yearly-period-mean-lbc-rates" class="nav-link" data-scroll-target="#choropleth-maps-yearly-period-mean-lbc-rates">3. Choropleth Maps — Yearly &amp; Period Mean LBC Rates</a></li>
   <li><a href="#spatial-weights-hot-spot-analysis-getis-ord-gi" id="toc-spatial-weights-hot-spot-analysis-getis-ord-gi" class="nav-link" data-scroll-target="#spatial-weights-hot-spot-analysis-getis-ord-gi">4. Spatial Weights &amp; Hot Spot Analysis (Getis-Ord Gi*)</a></li>
@@ -727,12 +715,12 @@ window.Quarto = {
   <li><a href="#geographically-weighted-random-forest-gw-rf" id="toc-geographically-weighted-random-forest-gw-rf" class="nav-link" data-scroll-target="#geographically-weighted-random-forest-gw-rf">9. Geographically Weighted Random Forest (GW-RF)</a></li>
   <li><a href="#summary-clinical-interpretation" id="toc-summary-clinical-interpretation" class="nav-link" data-scroll-target="#summary-clinical-interpretation">10. Summary &amp; Clinical Interpretation</a></li>
   <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">Knowledge Check</a></li>
+  </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB09_Spatial_ML_LBC_Northeast.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB09_Spatial_ML_LBC_Northeast.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
-
 
 
 
@@ -742,18 +730,21 @@ window.Quarto = {
 <p><img src="Images/banner_health_analytics.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
-<section id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="level3">
-<h3 class="anchored" data-anchor-id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</h3>
+<section id="module-07-spatial-epidemiology" class="level3">
+<h3 class="anchored" data-anchor-id="module-07-spatial-epidemiology">### Module 07: Spatial Epidemiology</h3>
+</section>
+<section id="spatial-machine-learning" class="level1">
+<h1>Spatial Machine Learning</h1>
 <hr>
 <p><strong>Learning objectives</strong> - Load county-level lung &amp; bronchus cancer (LBC) mortality data and join to US county boundaries - Conduct exploratory data analysis (EDA) for Northeast (NE) counties, 1998–2010 - Map yearly and period-mean LBC mortality rates (<code>RATE</code>) with choropleths - Detect hot/cold spots with Getis-Ord Gi* - Compute bivariate Local Moran’s I (LBC mortality vs poverty) - Fit models with spatially lagged exogenous (SLX) and endogenous (SAR) terms - Compare spatial lag (SAR) and spatial error (SEM) specifications - Estimate geographically weighted correlation (GWCORR) - Fit Geographically Weighted OLS (GW-OLS) and map local coefficients - Fit Geographically Weighted Random Forest (GW-RF) and map global/local feature importance</p>
-<p><strong>Data:</strong> <code>Data/data_1998_2010_long_lbc.csv</code>, <code>Data/US_COUNTY.shp</code> (+ sidecar files), <code>Data/2025 County Health Rankings Data - v4.xlsx</code><br>
+<p><strong>Data:</strong> <code>Data/data_1998_2010_long_lbc.csv</code>, <code>Data/US_COUNTY.shp</code> (+ sidecar files)<br>
+<strong>Optional overlay:</strong> <code>Data/2025 County Health Rankings Data - v4.xlsx</code> (supplementary SES/access join)<br>
 <strong>Region:</strong> Northeast US counties only · <strong>Period:</strong> 1998–2010 (period means for modelling)<br>
 <strong>Estimated time:</strong> 4 hours | <strong>Level:</strong> Advanced<br>
-<strong>Libraries:</strong> <code>sf</code>, <code>spdep</code>, <code>spatialreg</code>, <code>GWmodel</code>, <code>ranger</code>, <code>readxl</code>, <code>ggplot2</code></p>
-</section>
+<strong>Libraries:</strong> <code>sf</code>, <code>spdep</code>, <code>spatialreg</code>, <code>GWmodel</code>, <code>ranger</code>, <code>ggplot2</code>, <code>patchwork</code></p>
 <section id="setup-data-loading" class="level2">
 <h2 class="anchored" data-anchor-id="setup-data-loading">1. Setup &amp; Data Loading</h2>
-<p>We use county FIPS codes to join longitudinal LBC mortality and environmental covariates to the US county shapefile, subset to the <strong>Northeast</strong> census region, and compute <strong>1998–2010 period means</strong> for spatial modelling. Contemporary County Health Rankings (CHR 2025) measures are joined as a supplementary SES/access layer.</p>
+<p>We use county FIPS codes to join longitudinal LBC mortality and environmental covariates to the US county shapefile, subset to the <strong>Northeast</strong> census region, and compute <strong>1998–2010 period means</strong> for spatial modelling.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
@@ -776,17 +767,25 @@ window.Quarto = {
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.title =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>()</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>YEAR_MIN <span class="ot">&lt;-</span> <span class="dv">1998</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>YEAR_MAX <span class="ot">&lt;-</span> <span class="dv">2010</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>COVARIATES <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"SMOKING"</span>, <span class="st">"POVERTY"</span>, <span class="st">"PM25"</span>, <span class="st">"NO2"</span>, <span class="st">"SO2"</span>)</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>TARGET <span class="ot">&lt;-</span> <span class="st">"RATE"</span>  <span class="co"># lung &amp; bronchus cancer mortality rate (per 100k)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>theme_map <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">11</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>YEAR_MIN <span class="ot">&lt;-</span> <span class="dv">1998</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>YEAR_MAX <span class="ot">&lt;-</span> <span class="dv">2010</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>COVARIATES <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"SMOKING"</span>, <span class="st">"POVERTY"</span>, <span class="st">"PM25"</span>, <span class="st">"NO2"</span>, <span class="st">"SO2"</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>TARGET <span class="ot">&lt;-</span> <span class="st">"RATE"</span>  <span class="co"># lung &amp; bronchus cancer mortality rate (per 100k)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load longitudinal LBC data</span></span>
@@ -821,8 +820,10 @@ window.Quarto = {
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># County boundaries</span></span>
 <span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>counties <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="fu">file.path</span>(DATA_DIR, <span class="st">"US_COUNTY.shp"</span>), <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>counties<span class="sc">$</span>FIPS_int <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(counties<span class="sc">$</span>FIPS)</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Shapefile counties: %s | CRS: %s</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>            <span class="fu">format</span>(<span class="fu">nrow</span>(counties), <span class="at">big.mark =</span> <span class="st">","</span>), <span class="fu">st_crs</span>(counties)<span class="sc">$</span>input))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Shannon County SD (46113) was renamed Oglala Lakota (46102)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>counties<span class="sc">$</span>FIPS_int[counties<span class="sc">$</span>FIPS_int <span class="sc">==</span> <span class="dv">46113</span>] <span class="ot">&lt;-</span> <span class="dv">46102</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Shapefile counties: %s | CRS: %s</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="fu">format</span>(<span class="fu">nrow</span>(counties), <span class="at">big.mark =</span> <span class="st">","</span>), <span class="fu">st_crs</span>(counties)<span class="sc">$</span>input))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Shapefile counties: 3,108 | CRS: NAD_1983_Albers</code></pre>
@@ -838,12 +839,11 @@ Shapefile counties: 3,108 | CRS: NAD_1983_Albers</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Subset Northeast and join period means</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>ne <span class="ot">&lt;-</span> counties <span class="sc">%&gt;%</span> <span class="fu">filter</span>(REGION <span class="sc">==</span> <span class="st">"Northeast"</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> ne <span class="sc">%&gt;%</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(mean_df, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"FIPS_int"</span> <span class="ot">=</span> <span class="st">"FIPS"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(RATE_mean))</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># US Albers Equal Area for mapping &amp; distances</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.na</span>(<span class="fu">st_crs</span>(gdf))) <span class="fu">st_crs</span>(gdf) <span class="ot">&lt;-</span> <span class="dv">5070</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(gdf, <span class="dv">5070</span>)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>centroid_x <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(<span class="fu">st_centroid</span>(gdf))[, <span class="dv">1</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(mean_df, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"FIPS_int"</span> <span class="ot">=</span> <span class="st">"FIPS"</span>))</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># US Albers Equal Area for mapping &amp; distances</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.na</span>(<span class="fu">st_crs</span>(gdf))) <span class="fu">st_crs</span>(gdf) <span class="ot">&lt;-</span> <span class="dv">5070</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(gdf, <span class="dv">5070</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>centroid_x <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(<span class="fu">st_centroid</span>(gdf))[, <span class="dv">1</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: st_centroid assumes attributes are constant over geometries</code></pre>
 </div>
@@ -877,6 +877,9 @@ Shapefile counties: 3,108 | CRS: NAD_1983_Albers</code></pre>
  Max.   :27.577   Max.   :13.733   Max.   :15.569   Max.   :0.4706923  </code></pre>
 </div>
 </div>
+<section id="supplementary-county-health-rankings-2025-optional" class="level3">
+<h3 class="anchored" data-anchor-id="supplementary-county-health-rankings-2025-optional">Supplementary: County Health Rankings 2025 (optional)</h3>
+<p>The Python notebook loads only LBC mortality and <code>US_COUNTY.shp</code>. The CHR 2025 join below is an optional SES/access overlay for the same Northeast county geography — it is <strong>not</strong> used in the Gi*, LISA, SLX/SAR/SEM, GW-OLS, or GW-RF models.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># County Health Rankings 2025 — contemporary smoking, uninsured, PM2.5, poverty</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>chr_sel <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(</span>
@@ -1081,6 +1084,7 @@ Shapefile counties: 3,108 | CRS: NAD_1983_Albers</code></pre>
 </div>
 </div>
 </section>
+</section>
 <section id="exploratory-data-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="exploratory-data-analysis">2. Exploratory Data Analysis</h2>
 <p>Distribution of LBC mortality and covariates, temporal trends, and bivariate relationships across NE counties.</p>
@@ -1191,7 +1195,7 @@ Shapefile counties: 3,108 | CRS: NAD_1983_Albers</code></pre>
 <span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">na.value =</span> <span class="st">"grey90"</span></span>
 <span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
 <span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title) <span class="sc">+</span></span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_map</span>()</span>
 <span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>p_mean <span class="ot">&lt;-</span> <span class="fu">choropleth</span>(gdf, <span class="st">"RATE_mean"</span>, <span class="st">"NE Counties  Mean LBC Mortality (1998–2010)"</span>)</span>
@@ -1209,23 +1213,22 @@ Shapefile counties: 3,108 | CRS: NAD_1983_Albers</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>sample_years <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1998</span>, <span class="dv">2002</span>, <span class="dv">2006</span>, <span class="dv">2010</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>ne_yearly_gdf <span class="ot">&lt;-</span> counties <span class="sc">%&gt;%</span></span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(REGION <span class="sc">==</span> <span class="st">"Northeast"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">FIPS_int =</span> <span class="fu">as.integer</span>(FIPS)) <span class="sc">%&gt;%</span></span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="dv">5070</span>)</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>vmin <span class="ot">&lt;-</span> <span class="fu">min</span>(ne_yearly<span class="sc">$</span>RATE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>vmax <span class="ot">&lt;-</span> <span class="fu">max</span>(ne_yearly<span class="sc">$</span>RATE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>yr_maps <span class="ot">&lt;-</span> <span class="fu">lapply</span>(sample_years, <span class="cf">function</span>(yr) {</span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  yr_df <span class="ot">&lt;-</span> ne_yearly <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Year <span class="sc">==</span> yr)</span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  yr_gdf <span class="ot">&lt;-</span> ne_yearly_gdf <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(yr_df, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"FIPS_int"</span> <span class="ot">=</span> <span class="st">"FIPS"</span>))</span>
-<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">choropleth</span>(yr_gdf, <span class="st">"RATE"</span>, <span class="fu">sprintf</span>(<span class="st">"LBC Rate — %d"</span>, yr), <span class="at">vmin =</span> vmin, <span class="at">vmax =</span> vmax)</span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>p_yrs <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(yr_maps, <span class="at">ncol =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Yearly LBC Mortality Rate — Northeast Counties"</span>)</span>
-<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_yrs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="dv">5070</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>vmin <span class="ot">&lt;-</span> <span class="fu">min</span>(ne_yearly<span class="sc">$</span>RATE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>vmax <span class="ot">&lt;-</span> <span class="fu">max</span>(ne_yearly<span class="sc">$</span>RATE, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>yr_maps <span class="ot">&lt;-</span> <span class="fu">lapply</span>(sample_years, <span class="cf">function</span>(yr) {</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  yr_df <span class="ot">&lt;-</span> ne_yearly <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Year <span class="sc">==</span> yr)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  yr_gdf <span class="ot">&lt;-</span> ne_yearly_gdf <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(yr_df, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"FIPS_int"</span> <span class="ot">=</span> <span class="st">"FIPS"</span>))</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">choropleth</span>(yr_gdf, <span class="st">"RATE"</span>, <span class="fu">sprintf</span>(<span class="st">"LBC Rate — %d"</span>, yr), <span class="at">vmin =</span> vmin, <span class="at">vmax =</span> vmax)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>p_yrs <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(yr_maps, <span class="at">ncol =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Yearly LBC Mortality Rate — Northeast Counties"</span>)</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_yrs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB09_Spatial_ML_LBC_Northeast_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB09_Spatial_ML_LBC_Northeast_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="1344"></p>
 </figure>
 </div>
 </div>
@@ -1302,8 +1305,9 @@ if this sub-graph count seems unexpected, try increasing the snap argument.</cod
 <span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>p_hs <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf_sp) <span class="sc">+</span></span>
 <span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> hotspot), <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
 <span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> hs_colors) <span class="sc">+</span></span>
-<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Getis-Ord Gi* Hot/Cold Spots — Mean LBC Rate (p ≤ 0.05)"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>)</span>
-<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_hs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Getis-Ord Gi* Hot/Cold Spots — Mean LBC Rate (p ≤ 0.05)"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_hs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1361,8 +1365,9 @@ I_i^{XY} = z_{X,i} \sum_j w_{ij} z_{Y,j}
 <span id="cb49-27"><a href="#cb49-27" aria-hidden="true" tabindex="-1"></a>p_bv <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf_sp) <span class="sc">+</span></span>
 <span id="cb49-28"><a href="#cb49-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> bivar_cluster), <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
 <span id="cb49-29"><a href="#cb49-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> bv_colors) <span class="sc">+</span></span>
-<span id="cb49-30"><a href="#cb49-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Bivariate LISA: LBC Rate (i) × Poverty (neighbours)"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>)</span>
-<span id="cb49-31"><a href="#cb49-31" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_bv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb49-30"><a href="#cb49-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Bivariate LISA: LBC Rate (i) × Poverty (neighbours)"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb49-31"><a href="#cb49-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb49-32"><a href="#cb49-32" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_bv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1642,8 +1647,9 @@ r_i = \frac{\mathrm{Cov}_i(y_1, y_2)}{\sigma_{1,i} \, \sigma_{2,i}}
 <span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> gw_corr_rate_poverty), <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
 <span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Local r"</span>, <span class="at">palette =</span> <span class="st">"RdBu"</span>, <span class="at">direction =</span> <span class="dv">1</span>,</span>
 <span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>                       <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"GWCORR: LBC Rate vs Poverty (local Pearson r)"</span>)</span>
-<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_gwc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"GWCORR: LBC Rate vs Poverty (local Pearson r)"</span>) <span class="sc">+</span></span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_gwc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1668,7 +1674,7 @@ y_i = \beta_0(u_i, v_i) + \sum_{j=1}^p \beta_j(u_i, v_i) X_{ij} + \varepsilon_i
 <p>Here, <span class="math inline">\(w_{ik}\)</span> is a spatial weight (usually Gaussian) measuring the proximity of location <span class="math inline">\(k\)</span> to <span class="math inline">\(i\)</span>. The bandwidth parameter (selected via AICc) controls the degree of locality.</p>
 <p>We use the <code>GWmodel</code> package to fit GW-OLS, select optimal bandwidth, and map the local effects of key predictors (smoking, poverty, PM2.5).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>spdf <span class="ot">&lt;-</span> <span class="fu">st_drop_geometry</span>(gdf_sp)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>spdf <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">st_drop_geometry</span>(gdf_sp))</span>
 <span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>spdf<span class="sc">$</span>x <span class="ot">&lt;-</span> coords_sp[, <span class="dv">1</span>]</span>
 <span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>spdf<span class="sc">$</span>y <span class="ot">&lt;-</span> coords_sp[, <span class="dv">2</span>]</span>
 <span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a><span class="fu">coordinates</span>(spdf) <span class="ot">&lt;-</span> <span class="er">~</span> x <span class="sc">+</span> y</span>
@@ -1715,7 +1721,7 @@ Fixed bandwidth: 94075.56 CV score: 5607.055 </code></pre>
 <pre><code>   ***********************************************************************
    *                       Package   GWmodel                             *
    ***********************************************************************
-   Program starts at: 2026-08-23 23:52:58.73262 
+   Program starts at: 2026-08-27 19:17:39.164884 
    Call:
    gwr.basic(formula = RATE_mean ~ SMOKING + POVERTY + PM25 + NO2 + 
     SO2, data = spdf, bw = bw_gwr, kernel = "gaussian", adaptive = FALSE)
@@ -1785,7 +1791,7 @@ Fixed bandwidth: 94075.56 CV score: 5607.055 </code></pre>
    Adjusted R-square value:  0.620231 
 
    ***********************************************************************
-   Program stops at: 2026-08-23 23:52:58.752113 </code></pre>
+   Program stops at: 2026-08-27 19:17:39.184512 </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>local_b <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(gwr_model<span class="sc">$</span>SDF)</span>
 <span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>gdf_sp<span class="sc">$</span>gw_beta_Intercept <span class="ot">&lt;-</span> local_b<span class="sc">$</span>Intercept</span>
@@ -1797,14 +1803,15 @@ Fixed bandwidth: 94075.56 CV score: 5607.055 </code></pre>
 <span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(gdf_sp) <span class="sc">+</span></span>
 <span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> .data[[<span class="fu">paste0</span>(<span class="st">"gw_beta_"</span>, var)]]), <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
 <span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"RdBu"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"GW-OLS β —"</span>, var), <span class="at">fill =</span> <span class="cn">NULL</span>)</span>
-<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>}), <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Spatially Varying Coefficients (GW-OLS)"</span>)</span>
-<span id="cb83-9"><a href="#cb83-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_gwr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"GW-OLS β —"</span>, var), <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_map</span>()</span>
+<span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a>}), <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb83-9"><a href="#cb83-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Spatially Varying Coefficients (GW-OLS)"</span>)</span>
+<span id="cb83-10"><a href="#cb83-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_gwr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB09_Spatial_ML_LBC_Northeast_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB09_Spatial_ML_LBC_Northeast_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="1152"></p>
 </figure>
 </div>
 </div>
@@ -1896,29 +1903,31 @@ GW-RF bandwidth: 234251 m | mean local R² proxy: 0.969</code></pre>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(OUT_DIR, <span class="st">"gwr_rf_global_importance.png"</span>), p_imp, <span class="at">width =</span> <span class="dv">7</span>, <span class="at">height =</span> <span class="dv">4</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>p_loc <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(<span class="fu">lapply</span>(COVARIATES, <span class="cf">function</span>(var) {</span>
-<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(gdf_sp) <span class="sc">+</span></span>
-<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> .data[[<span class="fu">paste0</span>(<span class="st">"gwrf_imp_"</span>, var)]]), <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
-<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"YlOrRd"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"GW-RF importance —"</span>, var), <span class="at">fill =</span> <span class="cn">NULL</span>)</span>
-<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a>}), <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Local Feature Importance (GW-RF)"</span>)</span>
-<span id="cb93-10"><a href="#cb93-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_loc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(OUT_DIR, <span class="st">"gwr_rf_global_importance.png"</span>), p_imp, <span class="at">width =</span> <span class="dv">7</span>, <span class="at">height =</span> <span class="dv">4</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>p_loc <span class="ot">&lt;-</span> <span class="fu">wrap_plots</span>(<span class="fu">lapply</span>(COVARIATES, <span class="cf">function</span>(var) {</span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(gdf_sp) <span class="sc">+</span></span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> .data[[<span class="fu">paste0</span>(<span class="st">"gwrf_imp_"</span>, var)]]), <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"YlOrRd"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"GW-RF importance —"</span>, var), <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb94-6"><a href="#cb94-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_map</span>()</span>
+<span id="cb94-7"><a href="#cb94-7" aria-hidden="true" tabindex="-1"></a>}), <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb94-8"><a href="#cb94-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Local Feature Importance (GW-RF)"</span>)</span>
+<span id="cb94-9"><a href="#cb94-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_loc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB09_Spatial_ML_LBC_Northeast_files/figure-html/unnamed-chunk-18-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB09_Spatial_ML_LBC_Northeast_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="1152"></p>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(OUT_DIR, <span class="st">"map_gwrf_local_importance.png"</span>), p_loc, <span class="at">width =</span> <span class="dv">15</span>, <span class="at">height =</span> <span class="dv">9</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(OUT_DIR, <span class="st">"map_gwrf_local_importance.png"</span>), p_loc, <span class="at">width =</span> <span class="dv">15</span>, <span class="at">height =</span> <span class="dv">9</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="summary-clinical-interpretation" class="level2">
 <h2 class="anchored" data-anchor-id="summary-clinical-interpretation">10. Summary &amp; Clinical Interpretation</h2>
-<p><strong>Key findings (Northeast, 1998–2010):</strong> - Period-mean LBC mortality shows clear spatial structure; Gi* identifies significant hot and cold spots. - Bivariate LISA links local mortality clusters with neighbourhood poverty patterns. - SAR/SEM models indicate spatial dependence beyond standard OLS; compare AIC to choose specification. - GW-OLS reveals <strong>spatially varying</strong> associations — e.g., poverty effects may strengthen in urban corridors. - GW-RF highlights which environmental and behavioural drivers matter <strong>locally</strong> vs <strong>globally</strong>. - CHR 2025 covariates provide a contemporary SES/access overlay for the same county geography.</p>
+<p><strong>Key findings (Northeast, 1998–2010):</strong> - Period-mean LBC mortality shows clear spatial structure; Gi* identifies significant hot and cold spots. - Bivariate LISA links local mortality clusters with neighbourhood poverty patterns. - SAR/SEM models indicate spatial dependence beyond standard OLS; compare AIC to choose specification. - GW-OLS reveals <strong>spatially varying</strong> associations — e.g., poverty effects may strengthen in urban corridors. - GW-RF highlights which environmental and behavioural drivers matter <strong>locally</strong> vs <strong>globally</strong>.</p>
 <p><strong>Caveats:</strong> Ecological (county-level) inference; rate smoothing not applied; island counties excluded from spatial weights; GW-RF is computationally intensive and should be validated with cross-validation in production workflows.</p>
 <p><strong>Extensions:</strong> BYM disease mapping, spatial cross-validation, GW-RF with spatial lag features, policy simulations.</p>
 </section>
@@ -1933,6 +1942,7 @@ GW-RF bandwidth: 234251 m | mean local R² proxy: 0.969</code></pre>
 </ol>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -2009,7 +2019,7 @@ GW-RF bandwidth: 234251 m | mean local R² proxy: 0.969</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-with-Python\/");
+        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-R\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -2338,13 +2348,13 @@ GW-RF bandwidth: 234251 m | mean local R² proxy: 0.969</code></pre>
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="pagination-link" aria-label="Capstone - Spatial Health Inequity Atlas">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Capstone - Spatial Health Inequity Atlas</span>
+      <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="pagination-link" aria-label="NB-08 · Capstone · Spatial Health Inequity Atlas">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">NB-08 · Capstone · Spatial Health Inequity Atlas</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="pagination-link" aria-label="Geostatistical Risk Analysis">
-        <span class="nav-page-text">Geostatistical Risk Analysis</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="pagination-link" aria-label="NB-10 · Geostatistical Risk Analysis">
+        <span class="nav-page-text">NB-10 · Geostatistical Risk Analysis</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -2356,7 +2366,7 @@ GW-RF bandwidth: 234251 m | mean local R² proxy: 0.969</code></pre>
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB09_Spatial_ML_LBC_Northeast.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB09_Spatial_ML_LBC_Northeast.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>

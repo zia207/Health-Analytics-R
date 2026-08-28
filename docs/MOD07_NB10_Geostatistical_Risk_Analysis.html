@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Geostatistical Risk Analysis – Health Analytics with R</title>
+<title>mod07_nb10_geostatistical_risk_analysis – Health Analytics with R</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -161,7 +161,7 @@ window.Quarto = {
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-with-Python"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-R"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -185,7 +185,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html">Geostatistical Risk Analysis</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html">NB-10 · Geostatistical Risk Analysis</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -195,24 +195,7 @@ window.Quarto = {
   </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-body"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html">Geostatistical Risk Analysis</a></li></ol></nav>
-      <h1 class="title">Geostatistical Risk Analysis</h1>
-            <p class="subtitle lead">Module 07 — Health Analytics with R</p>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html">NB-10 · Geostatistical Risk Analysis</a></li></ol></nav></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
@@ -292,49 +275,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB01_Data_Loading_Profiling.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Loading &amp; Automated Profiling</span></a>
+ <span class="menu-text">NB-01 · Data Loading &amp; Automated Profiling</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB02_Descriptive_Statistics.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Descriptive Statistics for Clinical Variables</span></a>
+ <span class="menu-text">NB-02 · Descriptive Statistics for Clinical Variables</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB03_Clinical_Visualisation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Visualising Clinical Distributions</span></a>
+ <span class="menu-text">NB-03 · Visualising Clinical Distributions</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB04_TimeSeries_Admissions.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Time-Series of Admissions &amp; Clinical Events</span></a>
+ <span class="menu-text">NB-04 · Time-Series of Admissions &amp; Clinical Events</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB05_Missingness_Imputation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Missingness Analysis &amp; Imputation</span></a>
+ <span class="menu-text">NB-05 · Missingness Analysis &amp; Imputation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB06_Comorbidity_Heatmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Comorbidity Co-occurrence Heatmap</span></a>
+ <span class="menu-text">NB-06 · Comorbidity Co-occurrence Heatmap</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB07_Geospatial_Disparities.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Geospatial Health Disparities Map</span></a>
+ <span class="menu-text">NB-07 · Geospatial Health Disparities Map</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB08_Capstone_Readmission_EDA.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End EDA on Readmission Risk</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End EDA on Readmission Risk</span></a>
   </div>
 </li>
       </ul>
@@ -351,49 +334,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB01_Hypothesis_Testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hypothesis Testing for Health Outcomes</span></a>
+ <span class="menu-text">NB-01 · Hypothesis Testing for Health Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB02_RR_OR_CI.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
+ <span class="menu-text">NB-02 · Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB03_Survival_Analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
+ <span class="menu-text">NB-03 · Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB04_Linear_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Linear Regression for Continuous Outcomes</span></a>
+ <span class="menu-text">NB-04 · Linear Regression for Continuous Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB05_Logistic_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Logistic Regression for Binary Outcomes</span></a>
+ <span class="menu-text">NB-05 · Logistic Regression for Binary Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB06_Count_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Poisson &amp; Negative Binomial Regression</span></a>
+ <span class="menu-text">NB-06 · Poisson &amp; Negative Binomial Regression</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB07_Confounding_EffectModification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Confounding &amp; Effect Modification</span></a>
+ <span class="menu-text">NB-07 · Confounding &amp; Effect Modification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB08_Capstone_Inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Multivariable Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Multivariable Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -410,49 +393,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB01_Pipeline_Splits.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ML Pipeline Setup &amp; Train/Test Splits</span></a>
+ <span class="menu-text">NB-01 · ML Pipeline Setup &amp; Train/Test Splits</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB02_DecisionTree_RandomForest.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Decision Trees &amp; Random Forest</span></a>
+ <span class="menu-text">NB-02 · Decision Trees &amp; Random Forest</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB03_XGBoost_LightGBM.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">XGBoost &amp; LightGBM</span></a>
+ <span class="menu-text">NB-03 · XGBoost &amp; LightGBM</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB04_Clinical_Model_Evaluation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Model Evaluation</span></a>
+ <span class="menu-text">NB-04 · Clinical Model Evaluation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB05_Hyperparameter_Tuning.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hyperparameter Tuning &amp; Cross-Validation</span></a>
+ <span class="menu-text">NB-05 · Hyperparameter Tuning &amp; Cross-Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB06_SHAP_Explainability.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SHAP Explainability</span></a>
+ <span class="menu-text">NB-06 · SHAP Explainability</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB07_Clinical_Prediction_Models.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Three Clinical Prediction Models</span></a>
+ <span class="menu-text">NB-07 · Three Clinical Prediction Models</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB08_Capstone_ML_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical ML Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical ML Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -469,49 +452,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB01_Clinical_Text_Preprocessing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Text Preprocessing</span></a>
+ <span class="menu-text">NB-01 · Clinical Text Preprocessing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB02_Clinical_NER.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Named Entity Recognition</span></a>
+ <span class="menu-text">NB-02 · Clinical Named Entity Recognition</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB03_TF_IDF_Classification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TF-IDF &amp; Clinical Text Classification</span></a>
+ <span class="menu-text">NB-03 · TF-IDF &amp; Clinical Text Classification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB04_Word_Embeddings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Word Embeddings &amp; Word2Vec</span></a>
+ <span class="menu-text">NB-04 · Word Embeddings &amp; Word2Vec</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB05_Clinical_BERT.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
+ <span class="menu-text">NB-05 · Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB06_ICD_Coding_Medications.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ICD Coding &amp; Medication Extraction</span></a>
+ <span class="menu-text">NB-06 · ICD Coding &amp; Medication Extraction</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB07_Summarisation_ZeroShot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Summarisation &amp; Zero-Shot NLP</span></a>
+ <span class="menu-text">NB-07 · Summarisation &amp; Zero-Shot NLP</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB08_Capstone_Clinical_NLP.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical NLP Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical NLP Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -528,49 +511,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB01_DAGs_Confounding.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DAGs, Confounding &amp; Identification</span></a>
+ <span class="menu-text">NB-01 · DAGs, Confounding &amp; Identification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB02_Propensity_Scores.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Propensity Score Methods</span></a>
+ <span class="menu-text">NB-02 · Propensity Score Methods</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB03_DiD_EventStudy.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Difference-in-Differences &amp; Event Studies</span></a>
+ <span class="menu-text">NB-03 · Difference-in-Differences &amp; Event Studies</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB04_ITS_SyntheticControl.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Interrupted Time Series &amp; Synthetic Control</span></a>
+ <span class="menu-text">NB-04 · Interrupted Time Series &amp; Synthetic Control</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB05_IV_RDD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Instrumental Variables &amp; RDD</span></a>
+ <span class="menu-text">NB-05 · Instrumental Variables &amp; RDD</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB06_GComp_TMLE.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">G-Computation, TMLE &amp; Mediation</span></a>
+ <span class="menu-text">NB-06 · G-Computation, TMLE &amp; Mediation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB07_Sensitivity_Reporting.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Sensitivity Analysis &amp; Reporting</span></a>
+ <span class="menu-text">NB-07 · Sensitivity Analysis &amp; Reporting</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Causal Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Causal Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -578,7 +561,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
- <span class="menu-text"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</span></a>
+ <span class="menu-text"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -587,61 +570,61 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB01_Spatial_Data_Choropleth.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Data &amp; Choropleth Mapping</span></a>
+ <span class="menu-text">NB-01 · Spatial Data &amp; Choropleth Mapping</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Autocorrelation &amp; Moran's I</span></a>
+ <span class="menu-text">NB-02 · Spatial Autocorrelation &amp; Moran's I</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB03_Spatial_Regression_GWR.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Regression: Lag, Error &amp; GWR</span></a>
+ <span class="menu-text">NB-03 · Spatial Regression: Lag, Error &amp; GWR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Disease Mapping &amp; Bayesian Smoothing</span></a>
+ <span class="menu-text">NB-04 · Disease Mapping &amp; Bayesian Smoothing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB05_Cluster_Detection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Cluster Detection</span></a>
+ <span class="menu-text">NB-05 · Spatial Cluster Detection</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB06_Environmental_Epidemiology.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Environmental Epidemiology</span></a>
+ <span class="menu-text">NB-06 · Environmental Epidemiology</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB07_Health_Service_Access.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Health Service Area &amp; Access Metrics</span></a>
+ <span class="menu-text">NB-07 · Health Service Area &amp; Access Metrics</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone - Spatial Health Inequity Atlas</span></a>
+ <span class="menu-text">NB-08 · Capstone · Spatial Health Inequity Atlas</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial ML - LBC Mortality (Northeast)</span></a>
+ <span class="menu-text">NB-09 · Spatial ML — LBC Mortality (Northeast)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Geostatistical Risk Analysis</span></a>
+ <span class="menu-text">NB-10 · Geostatistical Risk Analysis</span></a>
   </div>
 </li>
       </ul>
@@ -658,49 +641,49 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB01_Reproducible_Foundations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Reproducible Research Foundations</span></a>
+ <span class="menu-text">NB-01 · Reproducible Research Foundations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB02_Quarto_Reports.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Quarto Documents for Health Reports</span></a>
+ <span class="menu-text">NB-02 · Quarto Documents for Health Reports</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB03_Shiny_Dashboards.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Shiny Dashboards</span></a>
+ <span class="menu-text">NB-03 · Shiny Dashboards</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB04_MLflow_Tracking.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">MLflow Model Tracking &amp; Registry</span></a>
+ <span class="menu-text">NB-04 · MLflow Model Tracking &amp; Registry</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB05_Plumber_Serving.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Plumber for Clinical Model Serving</span></a>
+ <span class="menu-text">NB-05 · Plumber for Clinical Model Serving</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB06_Testing_CICD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Testing, CI/CD &amp; Code Quality</span></a>
+ <span class="menu-text">NB-06 · Testing, CI/CD &amp; Code Quality</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB07_ModelCards_Governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Model Cards &amp; Clinical AI Governance</span></a>
+ <span class="menu-text">NB-07 · Model Cards &amp; Clinical AI Governance</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB08_Capstone_Deployment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Full Deployment Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Full Deployment Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -715,7 +698,9 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology" id="toc-health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="nav-link active" data-scroll-target="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</a></li>
+  <li><a href="#module-07-spatial-epidemiology" id="toc-module-07-spatial-epidemiology" class="nav-link active" data-scroll-target="#module-07-spatial-epidemiology">Module 07: Spatial Epidemiology</a></li>
+  <li><a href="#geostatistical-risk-analysis" id="toc-geostatistical-risk-analysis" class="nav-link" data-scroll-target="#geostatistical-risk-analysis">Geostatistical Risk Analysis</a>
+  <ul class="collapse">
   <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">1. Setup</a></li>
   <li><a href="#indicator-kriging-for-environmental-health-risk" id="toc-indicator-kriging-for-environmental-health-risk" class="nav-link" data-scroll-target="#indicator-kriging-for-environmental-health-risk">2. Indicator Kriging for Environmental Health Risk</a></li>
   <li><a href="#load-data" id="toc-load-data" class="nav-link" data-scroll-target="#load-data">3. Load Data</a>
@@ -733,12 +718,12 @@ window.Quarto = {
   <li><a href="#district-level-risk-summary" id="toc-district-level-risk-summary" class="nav-link" data-scroll-target="#district-level-risk-summary">12. District-Level Risk Summary</a></li>
   <li><a href="#interpretation-health-policy-context" id="toc-interpretation-health-policy-context" class="nav-link" data-scroll-target="#interpretation-health-policy-context">13. Interpretation &amp; Health Policy Context</a></li>
   <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">14. Knowledge Check</a></li>
+  </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB10_Geostatistical_Risk_Analysis.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB10_Geostatistical_Risk_Analysis.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
-
 
 
 
@@ -748,36 +733,55 @@ window.Quarto = {
 <p><img src="Images/banner_health_analytics.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
-<section id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="level3">
-<h3 class="anchored" data-anchor-id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</h3>
+<section id="module-07-spatial-epidemiology" class="level3">
+<h3 class="anchored" data-anchor-id="module-07-spatial-epidemiology">Module 07: Spatial Epidemiology</h3>
+</section>
+<section id="geostatistical-risk-analysis" class="level1">
+<h1>Geostatistical Risk Analysis</h1>
 <hr>
-<p><strong>Learning objectives</strong> - Understand indicator kriging (IK) for probabilistic geostatistical risk mapping - Prepare groundwater arsenic survey data with detection-limit censoring rules - Transform continuous concentrations into binary health-risk indicators (WHO &amp; Bangladesh thresholds) - Compute, model, and visualise indicator semivariograms - Validate IK predictions with k-fold cross-validation - Map the probability of exceeding regulatory arsenic limits across Bangladesh - Interpret IK outputs for environmental health decision-making</p>
+<p><strong>Learning objectives</strong> - Understand indicator kriging (IK) as a non-parametric method for probabilistic risk mapping - Prepare BGS groundwater arsenic data, including detection-limit censoring - Transform continuous concentrations into binary exceedance indicators (WHO &amp; Bangladesh thresholds) - Compute, model, and visualise indicator semivariograms with <code>gstat</code> - Validate IK predictions with k-fold cross-validation - Map the probability of exceeding regulatory arsenic limits on a national grid - Interpret IK surfaces for environmental health decision-making</p>
 <p><strong>Data:</strong> <code>Data/bgs_geochemical.csv</code>, <code>Data/bd_grid.csv</code>, <code>Data/BD_Banladesh_BUTM.shp</code> (+ sidecar files)<br>
-<strong>Context:</strong> British Geological Survey (BGS) groundwater survey, 3,534 boreholes across 61 districts<br>
+<strong>Context:</strong> British Geological Survey (BGS) groundwater survey, 3,534 boreholes across 61 of 64 districts<br>
 <strong>Thresholds:</strong> 10 µg/L (WHO) and 50 µg/L (Bangladesh national standard)<br>
 <strong>Estimated time:</strong> 3 hours | <strong>Level:</strong> Advanced<br>
-<strong>Libraries:</strong> <code>sf</code>, <code>gstat</code>, <code>ggplot2</code>, <code>dplyr</code></p>
-</section>
+<strong>Libraries:</strong> <code>sf</code>, <code>sp</code>, <code>gstat</code>, <code>ggplot2</code>, <code>dplyr</code>, <code>patchwork</code></p>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">1. Setup</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gstat)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>DATA <span class="ot">&lt;-</span> <span class="st">"Data"</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>THRESHOLDS <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">WHO =</span> <span class="dv">10</span>, <span class="at">Bangladesh =</span> <span class="dv">50</span>)  <span class="co"># µg/L (ppb)</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Setup complete</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sp)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gstat)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>DATA <span class="ot">&lt;-</span> <span class="st">"Data"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>THRESHOLDS <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">WHO =</span> <span class="dv">10</span>, <span class="at">Bangladesh =</span> <span class="dv">50</span>)  <span class="co"># µg/L (ppb)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>theme_map <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">11</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Original IK colour ramp (rasterVis / levelplot workflow)</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>ik_colours <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"green"</span>, <span class="st">"yellow"</span>, <span class="st">"red"</span>)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Setup complete</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Setup complete</code></pre>
 </div>
@@ -785,12 +789,15 @@ window.Quarto = {
 </section>
 <section id="indicator-kriging-for-environmental-health-risk" class="level2">
 <h2 class="anchored" data-anchor-id="indicator-kriging-for-environmental-health-risk">2. Indicator Kriging for Environmental Health Risk</h2>
-<p><strong>Kriging</strong> is a geostatistical interpolation technique that provides the <em>best linear unbiased prediction</em> (BLUP) of a spatially distributed variable, based on observed data and a model of spatial autocorrelation (the variogram). For a location <span class="math inline">\(\mathbf{s}_0\)</span>, the ordinary kriging estimate <span class="math inline">\(\hat{Z}(\mathbf{s}_0)\)</span> is a weighted sum of <span class="math inline">\(n\)</span> observed values:</p>
+<p><strong>Indicator kriging (IK)</strong> is a non-parametric geostatistical method. After an <em>indicator transformation</em> of a continuous variable at one or more pre-defined thresholds, ordinary kriging of the 0/1 indicators maps the <strong>probability of exceeding</strong> those thresholds. That probability surface is directly useful for regulatory and public-health decisions.</p>
+<p>IK can also reconstruct an entire cumulative distribution function (CDF) at unsampled locations. The mean of that CDF (the <strong>E-type estimate</strong>) is then an estimate of concentration after the upper and lower tails have been modelled <a href="https://www.ncbi.nlm.nih.gov/pubmed/20161335">(Goovaerts, 2009)</a>. CDF-based IK is attractive when the raw distribution is strongly skewed: log-transforms and other parametric estimators are easily dominated by extreme values.</p>
+<p>In R, <strong><code>gstat</code></strong> implements indicator kriging of binary fields. There is still <strong>no CRAN package that builds E-type estimates from IK CDFs</strong>. That step is available in classical geostatistical software such as <a href="http://www.gslib.com/">GSLIB</a> and <a href="http://sgems.sourceforge.net/">SGeMS</a>. <strong>AUTO-IK</strong> <a href="https://www.ncbi.nlm.nih.gov/pubmed/20161335">(Goovaerts, 2009)</a> automates GSLIB routines for threshold selection, indicator variogram modelling, prediction of probability distributions on regular or irregular grids, and estimation of the mean and variance of those distributions.</p>
+<p><strong>Ordinary kriging</strong> is the best linear unbiased predictor (BLUP) of a spatially distributed variable. At an unsampled location <span class="math inline">\(\mathbf{s}_0\)</span>:</p>
 <p><span class="math display">\[
 \hat{Z}(\mathbf{s}_0) = \sum_{i=1}^n \lambda_i Z(\mathbf{s}_i)
 \]</span></p>
-<p>where <span class="math inline">\(Z(\mathbf{s}_i)\)</span> are the observed values at known locations <span class="math inline">\(\mathbf{s}_i\)</span>, and <span class="math inline">\(\lambda_i\)</span> are weights optimized to minimize prediction variance, subject to unbiasedness (weights sum to 1).</p>
-<p><strong>Indicator kriging (IK)</strong> extends this approach for modeling the <em>probability</em> that a variable exceeds a threshold <span class="math inline">\(z_c\)</span>, rather than its absolute value. Instead of direct values, we code:</p>
+<p>where <span class="math inline">\(Z(\mathbf{s}_i)\)</span> are observed values and the weights <span class="math inline">\(\lambda_i\)</span> minimise prediction variance subject to <span class="math inline">\(\sum_i \lambda_i = 1\)</span>.</p>
+<p>IK applies the same estimator to a threshold indicator. For a cut-off <span class="math inline">\(z_c\)</span>:</p>
 <p><span class="math display">\[
 I(\mathbf{s}_i; z_c) =
   \begin{cases}
@@ -798,12 +805,10 @@ I(\mathbf{s}_i; z_c) =
     0 &amp; \text{otherwise}
   \end{cases}
 \]</span></p>
-<p>and perform ordinary kriging on <span class="math inline">\(I(\mathbf{s}_i; z_c)\)</span> to estimate, at each unsampled location <span class="math inline">\(\mathbf{s}_0\)</span>, the <em>conditional probability</em>:</p>
+<p>Kriging <span class="math inline">\(I(\mathbf{s}_i; z_c)\)</span> estimates the conditional exceedance probability:</p>
 <p><span class="math display">\[
 \mathbb{P}[Z(\mathbf{s}_0) &gt; z_c \mid \text{data}] \approx \hat{I}(\mathbf{s}_0; z_c) = \sum_{i=1}^n \lambda_i I(\mathbf{s}_i; z_c)
 \]</span></p>
-<p>Thus, indicator kriging yields a spatial probability surface, mapping the risk of exceeding health-relevant thresholds.</p>
-<p>This is directly useful for probabilistic decision-making in environmental epidemiology:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -818,11 +823,11 @@ I(\mathbf{s}_i; z_c) =
 <tbody>
 <tr class="odd">
 <td><strong>Regulatory compliance</strong></td>
-<td>Map P(As &gt; 10 µg/L) for WHO guideline exceedance</td>
+<td>Map P(As &gt; 10 µg/L) against the WHO guideline</td>
 </tr>
 <tr class="even">
 <td><strong>National standards</strong></td>
-<td>Map P(As &gt; 50 µg/L) for Bangladesh drinking-water policy</td>
+<td>Map P(As &gt; 50 µg/L) against the Bangladesh drinking-water standard</td>
 </tr>
 <tr class="odd">
 <td><strong>Skewed distributions</strong></td>
@@ -830,21 +835,21 @@ I(\mathbf{s}_i; z_c) =
 </tr>
 <tr class="even">
 <td><strong>Censored data</strong></td>
-<td>Detection-limit samples can be handled before indicator coding</td>
+<td>Detection-limit samples can be handled <em>before</em> indicator coding</td>
 </tr>
 </tbody>
 </table>
-<p>IK can also estimate an entire cumulative distribution function (CDF); the mean of the CDF (E-type estimate) provides a concentration estimate when multiple thresholds are modelled <a href="https://www.ncbi.nlm.nih.gov/pubmed/20161335">(Goovaerts, 2009)</a>.</p>
-<p>In this notebook we follow the classic BGS Bangladesh arsenic workflow:</p>
+<p>This notebook follows the classic BGS Bangladesh arsenic workflow:</p>
 <ol type="1">
-<li>Convert arsenic concentrations to indicator variables at 10 and 50 µg/L</li>
+<li>Convert arsenic concentrations to indicators at 10 and 50 µg/L</li>
 <li>Compute and model indicator semivariograms</li>
-<li>Predict the probability of exceeding each threshold by indicator kriging</li>
-<li>Visualise probability surfaces on a national prediction grid</li>
+<li>Predict exceedance probabilities by indicator kriging</li>
+<li>Map those probabilities on a national prediction grid</li>
 </ol>
 </section>
 <section id="load-data" class="level2">
 <h2 class="anchored" data-anchor-id="load-data">3. Load Data</h2>
+<p>We use the British Geological Survey <a href="http://www.bgs.ac.uk/research/groundwater/health/arsenic/Bangladesh/data.html">groundwater arsenic survey</a>: hydrochemical data from <strong>3,534 boreholes</strong> in <strong>61 of 64</strong> districts. Prediction locations are the national 5 km grid (<code>bd_grid.csv</code>); the country outline is the BUTM shapefile.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df   <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">file.path</span>(DATA, <span class="st">"bgs_geochemical.csv"</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
@@ -868,78 +873,87 @@ e.g.:
 <div class="cell-output cell-output-stdout">
 <pre><code>Bangladesh boundary CRS: BUTM (Bangladesh Universal Transverse Mercator)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Districts in shapefile: %d</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">nrow</span>(bd)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Polygons in shapefile: %d</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">nrow</span>(bd)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Districts in shapefile: 369</code></pre>
+<pre><code>Polygons in shapefile: 369</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(df, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(df <span class="sc">%&gt;%</span> <span class="fu">select</span>(SAMPLE_ID, LONG_DEG, LAT_DEG, DISTRICT, WELL_TYPE, As), <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 3 × 34
-  SAMPLE_ID SAMPLE_FIELD_ID SAMPLE_DATE LONG_DEG LAT_DEG YEAR_CONSTRUCTION
-  &lt;chr&gt;     &lt;chr&gt;           &lt;chr&gt;          &lt;dbl&gt;   &lt;dbl&gt;             &lt;dbl&gt;
-1 S98_02701 RIP1640         9/5/1998        90.1    22.4              1993
-2 S98_02715 RIP2184         16/04/1998      89.4    23.9              1977
-3 S98_02979 RIP0490         2/6/1998        91.6    24.6              1995
-# ℹ 28 more variables: WELL_TYPE &lt;chr&gt;, WELL_DEPTH &lt;dbl&gt;, DIVISION &lt;chr&gt;,
-#   DISTRICT &lt;chr&gt;, THANA &lt;chr&gt;, UNION &lt;chr&gt;, MOUZA &lt;chr&gt;, GEOCODE &lt;dbl&gt;,
-#   As &lt;dbl&gt;, Al &lt;chr&gt;, B_ &lt;chr&gt;, Ba &lt;chr&gt;, Ca &lt;dbl&gt;, Co &lt;chr&gt;, Cr &lt;chr&gt;,
-#   Cu &lt;chr&gt;, Fe &lt;chr&gt;, K_ &lt;chr&gt;, Li &lt;chr&gt;, Mg &lt;dbl&gt;, Mn &lt;chr&gt;, Na &lt;dbl&gt;,
-#   P_ &lt;chr&gt;, Si &lt;dbl&gt;, SO4 &lt;chr&gt;, Sr &lt;dbl&gt;, V_ &lt;chr&gt;, Zn &lt;chr&gt;</code></pre>
+<pre><code># A tibble: 3 × 6
+  SAMPLE_ID LONG_DEG LAT_DEG DISTRICT  WELL_TYPE    As
+  &lt;chr&gt;        &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;dbl&gt;
+1 S98_02701     90.1    22.4 Jhalakati DTW         0.5
+2 S98_02715     89.4    23.9 Pabna     STW         0.5
+3 S98_02979     91.6    24.6 Habiganj  STW         0.5</code></pre>
 </div>
-</div>
-<section id="handle-detection-limits" class="level3">
-<h3 class="anchored" data-anchor-id="handle-detection-limits">3.1 Handle detection limits</h3>
-<p>About 27.7% of wells had arsenic below the instrumental detection limit of 0.5 µg/L. Following the BGS protocol, censored values are assigned <strong>half the detection limit</strong> (0.25 µg/L) before analysis.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>parse_concentration <span class="ot">&lt;-</span> <span class="cf">function</span>(val, <span class="at">dl =</span> <span class="fl">0.5</span>, <span class="at">half_dl =</span> <span class="fl">0.25</span>) {</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  parse_one <span class="ot">&lt;-</span> <span class="cf">function</span>(v) {</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.na</span>(v)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    s <span class="ot">&lt;-</span> <span class="fu">str_trim</span>(<span class="fu">as.character</span>(v))</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">str_starts</span>(s, <span class="st">"&lt;"</span>)) <span class="fu">return</span>(half_dl)</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    num <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(s))</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.na</span>(num)) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">isTRUE</span>(<span class="fu">all.equal</span>(num, dl))) <span class="fu">return</span>(half_dl)  <span class="co"># BGS: below DL reported as 0.5 -&gt; 0.25</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    num</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vapply</span>(val, parse_one, <span class="fu">numeric</span>(<span class="dv">1</span>))</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>As_ppb <span class="ot">&lt;-</span> <span class="fu">parse_concentration</span>(df<span class="sc">$</span>As)</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>as_num <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(<span class="fu">as.character</span>(df<span class="sc">$</span>As)))</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>n_at_dl <span class="ot">&lt;-</span> <span class="fu">sum</span>(as_num <span class="sc">==</span> <span class="fl">0.5</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>n_censored <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">str_starts</span>(<span class="fu">str_trim</span>(<span class="fu">as.character</span>(df<span class="sc">$</span>As)), <span class="st">"&lt;"</span>), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Values at detection limit (0.5 -&gt; 0.25 µg/L): %s (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>            <span class="fu">format</span>(n_at_dl, <span class="at">big.mark =</span> <span class="st">","</span>), <span class="dv">100</span> <span class="sc">*</span> n_at_dl <span class="sc">/</span> <span class="fu">nrow</span>(df)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Values at detection limit (0.5 -&gt; 0.25 µg/L): 33 (0.9%)</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Censored string readings (&lt; DL): %s</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">format</span>(n_censored, <span class="at">big.mark =</span> <span class="st">","</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Censored string readings (&lt; DL): 0</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(df<span class="sc">$</span>As_ppb))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(df<span class="sc">$</span>As))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
    0.25    0.25    3.90   55.17   49.98 1660.00 </code></pre>
 </div>
 </div>
+<section id="handle-detection-limits" class="level3">
+<h3 class="anchored" data-anchor-id="handle-detection-limits">3.1 Handle detection limits</h3>
+<p>About <strong>27.7%</strong> of sampled wells had arsenic below the instrumental detection limit of <strong>0.5 µg/L</strong> (hydride generation–atomic fluorescence spectrometry) and <strong>2.5%</strong> below <strong>6.0 µg/L</strong> (hydride generation–ICP-AES). Following the BGS protocol, values below a detection limit are assigned <strong>half the equipment detection limit</strong> (0.25 or 3.0 µg/L). Many records in this file are already stored at those half-DL values; remaining readings reported exactly at 0.5 or 6.0 µg/L are converted here.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>as_raw <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(<span class="fu">as.character</span>(df<span class="sc">$</span>As)))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Half-DL substitution: HG-AFS (0.5 → 0.25) and HG-ICP-AES (6.0 → 3.0)</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>As_ppb <span class="ot">&lt;-</span> <span class="fu">case_when</span>(</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">is.na</span>(as_raw)              <span class="sc">~</span> <span class="cn">NA_real_</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  as_raw <span class="sc">==</span> <span class="fl">0.5</span>              <span class="sc">~</span> <span class="fl">0.25</span>,</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  as_raw <span class="sc">==</span> <span class="fl">6.0</span>              <span class="sc">~</span> <span class="fl">3.0</span>,</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="cn">TRUE</span>                       <span class="sc">~</span> as_raw</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>n_dl_afs <span class="ot">&lt;-</span> <span class="fu">sum</span>(as_raw <span class="sc">==</span> <span class="fl">0.5</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>n_dl_icp <span class="ot">&lt;-</span> <span class="fu">sum</span>(as_raw <span class="sc">==</span> <span class="fl">6.0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>n_half_afs <span class="ot">&lt;-</span> <span class="fu">sum</span>(df<span class="sc">$</span>As_ppb <span class="sc">==</span> <span class="fl">0.25</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>n_half_icp <span class="ot">&lt;-</span> <span class="fu">sum</span>(df<span class="sc">$</span>As_ppb <span class="sc">==</span> <span class="fl">3.0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"HG-AFS DL readings (0.5 → 0.25 µg/L): %s</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">format</span>(n_dl_afs, <span class="at">big.mark =</span> <span class="st">","</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>HG-AFS DL readings (0.5 → 0.25 µg/L): 33</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"HG-ICP-AES DL readings (6.0 → 3.0 µg/L): %s</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">format</span>(n_dl_icp, <span class="at">big.mark =</span> <span class="st">","</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>HG-ICP-AES DL readings (6.0 → 3.0 µg/L): 6</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Values at half-DL 0.25 µg/L after substitution: %s (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">format</span>(n_half_afs, <span class="at">big.mark =</span> <span class="st">","</span>), <span class="dv">100</span> <span class="sc">*</span> n_half_afs <span class="sc">/</span> <span class="fu">nrow</span>(df)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Values at half-DL 0.25 µg/L after substitution: 1,027 (29.1%)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Values at half-DL 3.0 µg/L after substitution: %s</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">format</span>(n_half_icp, <span class="at">big.mark =</span> <span class="st">","</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Values at half-DL 3.0 µg/L after substitution: 15</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(df<span class="sc">$</span>As_ppb))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.25    0.25    3.80   55.17   49.98 1660.00 </code></pre>
+</div>
+</div>
+<p>Censoring at 0.25 or 3.0 µg/L does not change WHO (10) or Bangladesh (50) indicators, but it is the correct protocol before any later E-type / multi-threshold analysis.</p>
 </section>
 </section>
 <section id="exploratory-data-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="exploratory-data-analysis">4. Exploratory Data Analysis</h2>
+<p>Arsenic is strongly right-skewed, which is exactly the setting where indicator coding is more robust than kriging the raw (or log) concentrations.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>p_hist <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(As_ppb)) <span class="sc">+</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>, <span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> THRESHOLDS, <span class="at">colour =</span> <span class="st">"#DC2626"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"As (µg/L)"</span>, <span class="at">y =</span> <span class="st">"Count"</span>, <span class="at">title =</span> <span class="st">"Histogram of groundwater As"</span>)</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>p_qq <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">sample =</span> As_ppb)) <span class="sc">+</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq</span>(<span class="at">colour =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq_line</span>(<span class="at">colour =</span> <span class="st">"grey30"</span>) <span class="sc">+</span></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Theoretical quantiles"</span>, <span class="at">y =</span> <span class="st">"Sample quantiles"</span>,</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Normal Q–Q plot of As"</span>)</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_hist <span class="sc">|</span> p_qq)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>p_hist <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(As_ppb)) <span class="sc">+</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>, <span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">unname</span>(THRESHOLDS), <span class="at">colour =</span> <span class="st">"#DC2626"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"As (µg/L)"</span>, <span class="at">y =</span> <span class="st">"Count"</span>, <span class="at">title =</span> <span class="st">"Histogram of groundwater As"</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>p_qq <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">sample =</span> As_ppb)) <span class="sc">+</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq</span>(<span class="at">colour =</span> <span class="st">"steelblue"</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq_line</span>(<span class="at">colour =</span> <span class="st">"steelblue"</span>, <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Theoretical quantiles"</span>, <span class="at">y =</span> <span class="st">"Sample quantiles"</span>,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Normal Q–Q plot of As"</span>)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_hist <span class="sc">|</span> p_qq)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -947,11 +961,11 @@ e.g.:
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (nm <span class="cf">in</span> <span class="fu">names</span>(THRESHOLDS)) {</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  thr <span class="ot">&lt;-</span> THRESHOLDS[[nm]]</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  pct <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(df<span class="sc">$</span>As_ppb <span class="sc">&gt;</span> thr, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Samples exceeding %s standard (%g µg/L): %.1f%%</span><span class="sc">\n</span><span class="st">"</span>, nm, thr, pct))</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (nm <span class="cf">in</span> <span class="fu">names</span>(THRESHOLDS)) {</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  thr <span class="ot">&lt;-</span> THRESHOLDS[[nm]]</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  pct <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(df<span class="sc">$</span>As_ppb <span class="sc">&gt;</span> thr, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Samples exceeding %s standard (%g µg/L): %.1f%%</span><span class="sc">\n</span><span class="st">"</span>, nm, thr, pct))</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Samples exceeding WHO standard (10 µg/L): 42.1%
 Samples exceeding Bangladesh standard (50 µg/L): 24.9%</code></pre>
@@ -960,168 +974,185 @@ Samples exceeding Bangladesh standard (50 µg/L): 24.9%</code></pre>
 </section>
 <section id="project-sample-locations-to-butm" class="level2">
 <h2 class="anchored" data-anchor-id="project-sample-locations-to-butm">5. Project Sample Locations to BUTM</h2>
-<p>Sample coordinates are stored as longitude/latitude (WGS 84). We reproject borehole locations to <strong>Bangladesh Universal Transverse Mercator (BUTM)</strong>, the same projected CRS as the national boundary shapefile, so that Euclidean distances in metres are meaningful for the semivariogram.</p>
+<p>Sampling coordinates are stored as longitude/latitude (WGS 84). We reproject boreholes to <strong>Bangladesh Universal Transverse Mercator (BUTM)</strong> — the same projected CRS as the national boundary — so Euclidean distances in metres are meaningful for the semivariogram.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(df, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"LONG_DEG"</span>, <span class="st">"LAT_DEG"</span>), <span class="at">crs =</span> <span class="dv">4326</span>)</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>gdf_proj <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(gdf, <span class="fu">st_crs</span>(bd))</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(gdf_proj)</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>mf <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x        =</span> <span class="fu">as.numeric</span>(xy[, <span class="dv">1</span>]),</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">y        =</span> <span class="fu">as.numeric</span>(xy[, <span class="dv">2</span>]),</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">As       =</span> df<span class="sc">$</span>As_ppb,</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">DISTRICT =</span> df<span class="sc">$</span>DISTRICT</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="fu">drop_na</span>(As)</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>n_before <span class="ot">&lt;-</span> <span class="fu">nrow</span>(mf)</span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>mf <span class="ot">&lt;-</span> mf <span class="sc">%&gt;%</span> <span class="fu">distinct</span>(x, y, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Unique sample locations: %s (dropped %d duplicates)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>            <span class="fu">format</span>(<span class="fu">nrow</span>(mf), <span class="at">big.mark =</span> <span class="st">","</span>), n_before <span class="sc">-</span> <span class="fu">nrow</span>(mf)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(df, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"LONG_DEG"</span>, <span class="st">"LAT_DEG"</span>), <span class="at">crs =</span> <span class="dv">4326</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>gdf_proj <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(gdf, <span class="fu">st_crs</span>(bd))</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(gdf_proj)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>mf <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x         =</span> <span class="fu">as.numeric</span>(xy[, <span class="dv">1</span>]),</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">y         =</span> <span class="fu">as.numeric</span>(xy[, <span class="dv">2</span>]),</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">As        =</span> df<span class="sc">$</span>As_ppb,</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">DISTRICT  =</span> df<span class="sc">$</span>DISTRICT,</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">WELL_TYPE =</span> df<span class="sc">$</span>WELL_TYPE</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="fu">drop_na</span>(As)</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Projected samples: %s</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">format</span>(<span class="fu">nrow</span>(mf), <span class="at">big.mark =</span> <span class="st">","</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Unique sample locations: 3,420 (dropped 114 duplicates)</code></pre>
+<pre><code>Projected samples: 3,534</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(mf))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(mf))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 4
-        x        y    As DISTRICT     
-    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;        
-1 509574. 2474006.  0.25 Jhalakati    
-2 439963. 2647931.  0.25 Pabna        
-3 662328. 2718502.  0.25 Habiganj     
-4 619708. 2631583.  0.25 Brahamanbaria
-5 454332. 2522667.  0.25 Khulna       
-6 438852. 2576967.  0.25 Magura       </code></pre>
+<pre><code># A tibble: 6 × 5
+        x        y    As DISTRICT      WELL_TYPE
+    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;    
+1 509574. 2474006.  0.25 Jhalakati     DTW      
+2 439963. 2647931.  0.25 Pabna         STW      
+3 662328. 2718502.  0.25 Habiganj      STW      
+4 619708. 2631583.  0.25 Brahamanbaria STW      
+5 454332. 2522667.  0.25 Khulna        DTW      
+6 438852. 2576967.  0.25 Magura        STW      </code></pre>
 </div>
 </div>
 </section>
 <section id="indicator-transformation" class="level2">
 <h2 class="anchored" data-anchor-id="indicator-transformation">6. Indicator Transformation</h2>
+<p>An indicator for a continuous variable is <strong>1 if the value exceeds a defined threshold</strong>, 0 otherwise. We use the two regulatory cut-offs from the original BGS IK exercise:</p>
+<ul>
+<li><strong>10 µg/L</strong> — WHO drinking-water guideline</li>
+<li><strong>50 µg/L</strong> — Bangladesh national standard</li>
+</ul>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mf<span class="sc">$</span>ik_10 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(mf<span class="sc">$</span>As <span class="sc">&gt;</span> THRESHOLDS[[<span class="st">"WHO"</span>]])</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>mf<span class="sc">$</span>ik_50 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(mf<span class="sc">$</span>As <span class="sc">&gt;</span> THRESHOLDS[[<span class="st">"Bangladesh"</span>]])</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"ik_10 (As &gt; 10 µg/L): mean = %.3f (%d / %d samples above threshold)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(mf<span class="sc">$</span>ik_10), <span class="fu">sum</span>(mf<span class="sc">$</span>ik_10), <span class="fu">nrow</span>(mf)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>mf<span class="sc">$</span>ik_10 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(mf<span class="sc">$</span>As <span class="sc">&gt;</span> THRESHOLDS[[<span class="st">"WHO"</span>]])</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>mf<span class="sc">$</span>ik_50 <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(mf<span class="sc">$</span>As <span class="sc">&gt;</span> THRESHOLDS[[<span class="st">"Bangladesh"</span>]])</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>ik_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(mf, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">st_crs</span>(bd), <span class="at">remove =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"ik_10 (As &gt; 10 µg/L): mean = %.3f (%d / %d samples above threshold)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(mf<span class="sc">$</span>ik_10), <span class="fu">sum</span>(mf<span class="sc">$</span>ik_10), <span class="fu">nrow</span>(mf)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>ik_10 (As &gt; 10 µg/L): mean = 0.414 (1415 / 3420 samples above threshold)</code></pre>
+<pre><code>ik_10 (As &gt; 10 µg/L): mean = 0.421 (1487 / 3534 samples above threshold)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"ik_50 (As &gt; 50 µg/L): mean = %.3f (%d / %d samples above threshold)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(mf<span class="sc">$</span>ik_50), <span class="fu">sum</span>(mf<span class="sc">$</span>ik_50), <span class="fu">nrow</span>(mf)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"ik_50 (As &gt; 50 µg/L): mean = %.3f (%d / %d samples above threshold)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(mf<span class="sc">$</span>ik_50), <span class="fu">sum</span>(mf<span class="sc">$</span>ik_50), <span class="fu">nrow</span>(mf)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>ik_50 (As &gt; 50 µg/L): mean = 0.244 (834 / 3420 samples above threshold)</code></pre>
+<pre><code>ik_50 (As &gt; 50 µg/L): mean = 0.249 (881 / 3534 samples above threshold)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(mf <span class="sc">%&gt;%</span> <span class="fu">select</span>(x, y, As, ik_10, ik_50)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">head</span>(mf <span class="sc">%&gt;%</span> <span class="fu">select</span>(x, y, As, ik_10, ik_50, DISTRICT)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 5
-        x        y    As ik_10 ik_50
-    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-1 509574. 2474006.  0.25     0     0
-2 439963. 2647931.  0.25     0     0
-3 662328. 2718502.  0.25     0     0
-4 619708. 2631583.  0.25     0     0
-5 454332. 2522667.  0.25     0     0
-6 438852. 2576967.  0.25     0     0</code></pre>
+<pre><code># A tibble: 6 × 6
+        x        y    As ik_10 ik_50 DISTRICT     
+    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;        
+1 509574. 2474006.  0.25     0     0 Jhalakati    
+2 439963. 2647931.  0.25     0     0 Pabna        
+3 662328. 2718502.  0.25     0     0 Habiganj     
+4 619708. 2631583.  0.25     0     0 Brahamanbaria
+5 454332. 2522667.  0.25     0     0 Khulna       
+6 438852. 2576967.  0.25     0     0 Magura       </code></pre>
 </div>
 </div>
 </section>
 <section id="map-sample-data" class="level2">
 <h2 class="anchored" data-anchor-id="map-sample-data">7. Map Sample Data</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>bd_line <span class="ot">&lt;-</span> <span class="fu">st_cast</span>(<span class="fu">st_geometry</span>(bd), <span class="st">"MULTILINESTRING"</span>) <span class="sc">%&gt;%</span> <span class="fu">st_sf</span>(<span class="at">geometry =</span> .)</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>p_as <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> mf, <span class="fu">aes</span>(x, y, <span class="at">colour =</span> As), <span class="at">size =</span> <span class="fl">0.6</span>, <span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_distiller</span>(<span class="at">name =</span> <span class="st">"As (µg/L)"</span>, <span class="at">palette =</span> <span class="st">"YlOrRd"</span>, <span class="at">direction =</span> <span class="dv">1</span>,</span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">200</span>), <span class="at">oob =</span> scales<span class="sc">::</span>squish) <span class="sc">+</span></span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Groundwater As (µg/L)"</span>, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="st">"Northing (m)"</span>) <span class="sc">+</span></span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_sf</span>()</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>map_ik <span class="ot">&lt;-</span> <span class="cf">function</span>(col, title) {</span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> mf, <span class="fu">aes</span>(x, y, <span class="at">colour =</span> <span class="fu">factor</span>(.data[[col]])),</span>
-<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">size =</span> <span class="fl">0.6</span>, <span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
-<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"#16A34A"</span>, <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"#DC2626"</span>), <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
-<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>p_samp <span class="ot">&lt;-</span> p_as <span class="sc">|</span> <span class="fu">map_ik</span>(<span class="st">"ik_10"</span>, <span class="st">"As &gt; 10 µg/L (WHO)"</span>) <span class="sc">|</span> <span class="fu">map_ik</span>(<span class="st">"ik_50"</span>, <span class="st">"As &gt; 50 µg/L (Bangladesh)"</span>)</span>
-<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_samp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>p_as <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> mf, <span class="fu">aes</span>(x, y, <span class="at">colour =</span> As), <span class="at">size =</span> <span class="fl">0.55</span>, <span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_gradientn</span>(</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"As (µg/L)"</span>,</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">colours =</span> <span class="fu">c</span>(<span class="st">"green"</span>, <span class="st">"orange"</span>, <span class="st">"red"</span>),</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">200</span>), <span class="at">oob =</span> scales<span class="sc">::</span>squish</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Groundwater As (µg/L)"</span>, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="st">"Northing (m)"</span>) <span class="sc">+</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_sf</span>()</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>map_ik <span class="ot">&lt;-</span> <span class="cf">function</span>(col, title) {</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> mf, <span class="fu">aes</span>(x, y, <span class="at">colour =</span> <span class="fu">factor</span>(.data[[col]])),</span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">size =</span> <span class="fl">0.55</span>, <span class="at">alpha =</span> <span class="fl">0.85</span>) <span class="sc">+</span></span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"#16A34A"</span>, <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"#DC2626"</span>), <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(</span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a>  p_as <span class="sc">|</span></span>
+<span id="cb40-24"><a href="#cb40-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map_ik</span>(<span class="st">"ik_10"</span>, <span class="st">"As &gt; 10 µg/L (WHO)"</span>) <span class="sc">|</span></span>
+<span id="cb40-25"><a href="#cb40-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map_ik</span>(<span class="st">"ik_50"</span>, <span class="st">"As &gt; 50 µg/L (Bangladesh)"</span>)</span>
+<span id="cb40-26"><a href="#cb40-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="1152"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>Green = below the threshold (indicator 0); red = above (indicator 1).</p>
 </section>
 <section id="indicator-semivariograms" class="level2">
 <h2 class="anchored" data-anchor-id="indicator-semivariograms">8. Indicator Semivariograms</h2>
-<p><strong>What is a variogram?</strong><br>
-In geostatistics, the (semi)variogram quantifies how spatial similarity between observations decreases as the distance between them increases. For a spatial variable <span class="math inline">\(Z(\mathbf{s})\)</span>, the <em>semivariogram</em> at a given lag distance <span class="math inline">\(h\)</span> is mathematically defined as:</p>
+<p>The semivariogram quantifies how spatial similarity decays with distance <span class="math inline">\(h\)</span>:</p>
 <p><span class="math display">\[
-\gamma(h) = \frac{1}{2N(h)} \sum_{i,j;\ |\mathbf{s}_i-\mathbf{s}_j| \approx h} [ Z(\mathbf{s}_i) - Z(\mathbf{s}_j) ]^2
+\gamma(h) = \frac{1}{2N(h)} \sum_{i,j;\ |\mathbf{s}_i-\mathbf{s}_j| \approx h} \bigl[ Z(\mathbf{s}_i) - Z(\mathbf{s}_j) \bigr]^2
 \]</span></p>
-<p>where <span class="math inline">\(N(h)\)</span> is the number of sample pairs separated by approximately <span class="math inline">\(h\)</span>.</p>
-<p><strong>What is an indicator variogram?</strong><br>
-An <em>indicator variogram</em> applies the same principle, but to a binary (0/1) transformation of the variable. For example, for a threshold <span class="math inline">\(T\)</span>, the indicator variable <span class="math inline">\(I_T(\mathbf{s})\)</span> is given by:</p>
-<p><span class="math display">\[
-I_T(\mathbf{s}) =
-   \begin{cases}
-     1, &amp; \text{if } Z(\mathbf{s}) &gt; T \\\\
-     0, &amp; \text{otherwise}
-   \end{cases}
-\]</span></p>
-<p>The indicator semivariogram is then:</p>
-<p><span class="math display">\[
-\gamma_{I_T}(h) = \frac{1}{2N(h)} \sum_{i,j;\ |\mathbf{s}_i-\mathbf{s}_j| \approx h} [ I_T(\mathbf{s}_i) - I_T(\mathbf{s}_j) ]^2
-\]</span></p>
-<p>Indicator variograms describe the spatial continuity of high/low risk zones (e.g., areas exceeding an arsenic threshold). In practice, we fit a model (e.g., exponential) to the experimental variogram points to estimate parameters such as nugget, sill, and range.</p>
-<p>In this section, we compute and fit indicator variogram models for each binary risk threshold using <strong>gstat</strong>.</p>
+<p>An <strong>indicator variogram</strong> applies the same formula to <span class="math inline">\(I(\mathbf{s}; z_c)\)</span>. It describes the spatial continuity of high-risk vs low-risk zones rather than of concentration itself.</p>
+<p><code>gstat</code> cannot krige coincident locations, so we drop zero-distance pairs with <code>zerodist()</code> (the original IK workflow). Initial exponential parameters are set by eye, then refined by weighted least squares — the same <code>vgm()</code> / <code>fit.variogram()</code> sequence as the source notebook.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>mf_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(mf, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">st_crs</span>(bd))</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>fit_indicator_variogram <span class="ot">&lt;-</span> <span class="cf">function</span>(sf_pts, zcol, <span class="at">cutoff =</span> <span class="dv">400000</span>, <span class="at">width =</span> <span class="dv">15000</span>) {</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  fml <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(zcol, <span class="st">"~ 1"</span>))</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  v_emp <span class="ot">&lt;-</span> <span class="fu">variogram</span>(fml, sf_pts, <span class="at">cutoff =</span> cutoff, <span class="at">width =</span> width)</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  v_mod <span class="ot">&lt;-</span> <span class="fu">fit.variogram</span>(v_emp, <span class="fu">vgm</span>(<span class="at">psill =</span> <span class="fu">var</span>(sf_pts[[zcol]]), <span class="at">model =</span> <span class="st">"Exp"</span>,</span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">range =</span> <span class="dv">80000</span>, <span class="at">nugget =</span> <span class="fl">0.05</span>))</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">emp =</span> v_emp, <span class="at">fit =</span> v_mod)</span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>vg_10 <span class="ot">&lt;-</span> <span class="fu">fit_indicator_variogram</span>(mf_sf, <span class="st">"ik_10"</span>)</span>
-<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>vg_50 <span class="ot">&lt;-</span> <span class="fu">fit_indicator_variogram</span>(mf_sf, <span class="st">"ik_50"</span>)</span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>print_vgm <span class="ot">&lt;-</span> <span class="cf">function</span>(label, fit) {</span>
-<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"As &gt; %s: sill=%.4f, range=%.0f m, nugget=%.4f</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>              label, fit<span class="sc">$</span>psill[<span class="dv">2</span>], fit<span class="sc">$</span>range[<span class="dv">2</span>], fit<span class="sc">$</span>psill[<span class="dv">1</span>]))</span>
-<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print_vgm</span>(<span class="st">"10 µg/L"</span>, vg_10<span class="sc">$</span>fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Coincident boreholes: keep the first of each zerodist pair</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>ik_sp <span class="ot">&lt;-</span> <span class="fu">as</span>(ik_sf, <span class="st">"Spatial"</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>zd <span class="ot">&lt;-</span> <span class="fu">zerodist</span>(ik_sp)</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>n_coinc <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">is.null</span>(<span class="fu">nrow</span>(zd))) <span class="dv">0</span> <span class="cf">else</span> <span class="fu">nrow</span>(zd)</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (n_coinc <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  ik_sp <span class="ot">&lt;-</span> ik_sp[<span class="sc">-</span>zd[, <span class="dv">1</span>], ]</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>ik_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(ik_sp)</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>mf <span class="ot">&lt;-</span> <span class="fu">st_drop_geometry</span>(ik_sf)</span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Unique sample locations after zerodist(): %s (dropped %d coincident points)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>            <span class="fu">format</span>(<span class="fu">nrow</span>(ik_sf), <span class="at">big.mark =</span> <span class="st">","</span>), n_coinc))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>As &gt; 10 µg/L: sill=0.1144, range=47920 m, nugget=0.1370</code></pre>
+<pre><code>Unique sample locations after zerodist(): 3,420 (dropped 115 coincident points)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print_vgm</span>(<span class="st">"50 µg/L"</span>, vg_50<span class="sc">$</span>fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Experimental indicator variograms (gstat defaults: cutoff ≈ 1/3 bounding-box diagonal)</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>v10 <span class="ot">&lt;-</span> <span class="fu">variogram</span>(ik_10 <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data =</span> ik_sf)</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>v50 <span class="ot">&lt;-</span> <span class="fu">variogram</span>(ik_50 <span class="sc">~</span> <span class="dv">1</span>, <span class="at">data =</span> ik_sf)</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Initial exponential model set by eye, then WLS fit</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>m10 <span class="ot">&lt;-</span> <span class="fu">vgm</span>(<span class="at">psill =</span> <span class="fl">0.15</span>, <span class="at">model =</span> <span class="st">"Exp"</span>, <span class="at">range =</span> <span class="dv">40000</span>, <span class="at">nugget =</span> <span class="fl">0.05</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>m50 <span class="ot">&lt;-</span> <span class="fu">vgm</span>(<span class="at">psill =</span> <span class="fl">0.15</span>, <span class="at">model =</span> <span class="st">"Exp"</span>, <span class="at">range =</span> <span class="dv">40000</span>, <span class="at">nugget =</span> <span class="fl">0.05</span>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>m_f_10 <span class="ot">&lt;-</span> <span class="fu">fit.variogram</span>(v10, m10)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>m_f_50 <span class="ot">&lt;-</span> <span class="fu">fit.variogram</span>(v50, m50)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Fitted indicator variogram  As &gt; 10 µg/L:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>As &gt; 50 µg/L: sill=0.0959, range=53495 m, nugget=0.1016</code></pre>
+<pre><code>Fitted indicator variogram  As &gt; 10 µg/L:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(m_f_10)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  model     psill    range
+1   Nug 0.1346799     0.00
+2   Exp 0.1155823 46860.32</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Fitted indicator variogram  As &gt; 50 µg/L:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Fitted indicator variogram  As &gt; 50 µg/L:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(m_f_50)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  model     psill    range
+1   Nug 0.1005604     0.00
+2   Exp 0.1030162 56236.76</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>plot_variogram <span class="ot">&lt;-</span> <span class="cf">function</span>(vg, title, <span class="at">max_dist =</span> <span class="dv">400000</span>) {</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  emp <span class="ot">&lt;-</span> vg<span class="sc">$</span>emp <span class="sc">%&gt;%</span> <span class="fu">filter</span>(dist <span class="sc">&lt;=</span> max_dist)</span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  h <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, max_dist, <span class="at">length.out =</span> <span class="dv">300</span>)</span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  gamma_model <span class="ot">&lt;-</span> <span class="fu">variogramLine</span>(vg<span class="sc">$</span>fit, <span class="at">dist_vector =</span> h)</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> emp, <span class="fu">aes</span>(dist, gamma), <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> gamma_model, <span class="fu">aes</span>(dist, gamma), <span class="at">colour =</span> <span class="st">"darkblue"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, max_dist)) <span class="sc">+</span></span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Distance (m)"</span>, <span class="at">y =</span> <span class="st">"Semivariance"</span>, <span class="at">title =</span> title)</span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>p_vg <span class="ot">&lt;-</span> <span class="fu">plot_variogram</span>(vg_10, <span class="st">"Indicator variogram</span><span class="sc">\n</span><span class="st">As &gt; 10 µg/L"</span>) <span class="sc">|</span></span>
-<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_variogram</span>(vg_50, <span class="st">"Indicator variogram</span><span class="sc">\n</span><span class="st">As &gt; 50 µg/L"</span>)</span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_vg)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>plot_variogram <span class="ot">&lt;-</span> <span class="cf">function</span>(v_emp, v_fit, title) {</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  h_max <span class="ot">&lt;-</span> <span class="fu">max</span>(v_emp<span class="sc">$</span>dist, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  h <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, h_max, <span class="at">length.out =</span> <span class="dv">300</span>)</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  v_line <span class="ot">&lt;-</span> <span class="fu">variogramLine</span>(v_fit, <span class="at">dist_vector =</span> h)</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> v_emp, <span class="fu">aes</span>(dist, gamma), <span class="at">size =</span> <span class="dv">2</span>, <span class="at">shape =</span> <span class="dv">19</span>) <span class="sc">+</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> v_line, <span class="fu">aes</span>(dist, gamma), <span class="at">colour =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Distance (m)"</span>, <span class="at">y =</span> <span class="st">"Semivariance"</span>, <span class="at">title =</span> title)</span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(</span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_variogram</span>(v10, m_f_10, <span class="st">"Indicator variogram</span><span class="sc">\n</span><span class="st">As &gt; 10 µg/L"</span>) <span class="sc">|</span></span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">plot_variogram</span>(v50, m_f_50, <span class="st">"Indicator variogram</span><span class="sc">\n</span><span class="st">As &gt; 50 µg/L"</span>)</span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1133,53 +1164,105 @@ I_T(\mathbf{s}) =
 </section>
 <section id="cross-validation" class="level2">
 <h2 class="anchored" data-anchor-id="cross-validation">9. Cross-Validation</h2>
-<p>Following the R <code>gstat::krige.cv(..., nfold = 5)</code> workflow, we use <strong>5-fold cross-validation</strong>: each fold is held out, indicator kriging is refit on the training folds, and P(indicator = 1) is predicted at held-out locations. Points are coloured <strong>green</strong> when the indicator is 0 (below threshold) and <strong>red</strong> when 1 (above); symbol size is proportional to predicted probability.</p>
+<p>We run <strong>5-fold cross-validation</strong> (<code>gstat::krige.cv(..., nfold = 5)</code>), the same procedure as in the original IK notebook (described there as leave-one-out in spirit: hold out a fold, predict P(indicator = 1) from the remaining points, compare with the observed 0/1). Predicted probabilities are then clipped to <span class="math inline">\([0, 1]\)</span> — kriging of indicators is not guaranteed to stay inside that interval.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>cv_10 <span class="ot">&lt;-</span> <span class="fu">krige.cv</span>(ik_10 <span class="sc">~</span> <span class="dv">1</span>, mf_sf, <span class="at">model =</span> vg_10<span class="sc">$</span>fit, <span class="at">nfold =</span> <span class="dv">5</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>cv_50 <span class="ot">&lt;-</span> <span class="fu">krige.cv</span>(ik_50 <span class="sc">~</span> <span class="dv">1</span>, mf_sf, <span class="at">model =</span> vg_50<span class="sc">$</span>fit, <span class="at">nfold =</span> <span class="dv">5</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>cv_pred_10 <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(cv_10<span class="sc">$</span>var1.pred, <span class="dv">0</span>), <span class="dv">1</span>)</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>cv_pred_50 <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(cv_50<span class="sc">$</span>var1.pred, <span class="dv">0</span>), <span class="dv">1</span>)</span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>report_cv <span class="ot">&lt;-</span> <span class="cf">function</span>(name, pred, obs) {</span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>  brier <span class="ot">&lt;-</span> <span class="fu">mean</span>((pred <span class="sc">-</span> obs)<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"As &gt; %s: Brier score = %.4f | pred range [%.3f, %.3f]</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>              name, brier, <span class="fu">min</span>(pred, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="fu">max</span>(pred, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span>
-<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a><span class="fu">report_cv</span>(<span class="st">"10 µg/L"</span>, cv_pred_10, mf<span class="sc">$</span>ik_10)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>cv_10 <span class="ot">&lt;-</span> <span class="fu">krige.cv</span>(ik_10 <span class="sc">~</span> <span class="dv">1</span>, <span class="at">locations =</span> ik_sf, <span class="at">model =</span> m_f_10, <span class="at">nfold =</span> <span class="dv">5</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>cv_50 <span class="ot">&lt;-</span> <span class="fu">krige.cv</span>(ik_50 <span class="sc">~</span> <span class="dv">1</span>, <span class="at">locations =</span> ik_sf, <span class="at">model =</span> m_f_50, <span class="at">nfold =</span> <span class="dv">5</span>, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>cv_10<span class="sc">$</span>var1.pred <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="dv">1</span>, <span class="fu">pmax</span>(<span class="dv">0</span>, cv_10<span class="sc">$</span>var1.pred))</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>cv_50<span class="sc">$</span>var1.pred <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="dv">1</span>, <span class="fu">pmax</span>(<span class="dv">0</span>, cv_50<span class="sc">$</span>var1.pred))</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"CV  As &gt; 10 µg/L:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>As &gt; 10 µg/L: Brier score = 0.1484 | pred range [0.000, 1.000]</code></pre>
+<pre><code>CV  As &gt; 10 µg/L:</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">report_cv</span>(<span class="st">"50 µg/L"</span>, cv_pred_50, mf<span class="sc">$</span>ik_50)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(cv_10))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>As &gt; 50 µg/L: Brier score = 0.1109 | pred range [0.000, 1.000]</code></pre>
+<pre><code>   var1.pred         var1.var         observed         residual         
+ Min.   :0.0000   Min.   :0.1449   Min.   :0.0000   Min.   :-0.9950299  
+ 1st Qu.:0.1280   1st Qu.:0.1550   1st Qu.:0.0000   1st Qu.:-0.2474077  
+ Median :0.3954   Median :0.1572   Median :0.0000   Median :-0.0215171  
+ Mean   :0.4227   Mean   :0.1578   Mean   :0.4216   Mean   :-0.0009756  
+ 3rd Qu.:0.6876   3rd Qu.:0.1597   3rd Qu.:1.0000   3rd Qu.: 0.2435354  
+ Max.   :1.0000   Max.   :0.2112   Max.   :1.0000   Max.   : 1.0025479  
+     zscore               fold               geometry   
+ Min.   :-2.508652   Min.   :1.00   POINT        :3420  
+ 1st Qu.:-0.620463   1st Qu.:2.00   epsg:NA      :   0  
+ Median :-0.054180   Median :3.00   +proj=tmer...:   0  
+ Mean   :-0.002278   Mean   :3.01                       
+ 3rd Qu.: 0.615455   3rd Qu.:4.00                       
+ Max.   : 2.537233   Max.   :5.00                       </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">CV  As &gt; 50 µg/L:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+CV  As &gt; 50 µg/L:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(cv_50))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   var1.pred          var1.var         observed        residual         
+ Min.   :0.00000   Min.   :0.1083   Min.   :0.000   Min.   :-0.9928603  
+ 1st Qu.:0.02507   1st Qu.:0.1157   1st Qu.:0.000   1st Qu.:-0.1588994  
+ Median :0.14437   Median :0.1173   Median :0.000   Median :-0.0255594  
+ Mean   :0.25325   Mean   :0.1178   Mean   :0.252   Mean   :-0.0008994  
+ 3rd Qu.:0.40135   3rd Qu.:0.1193   3rd Qu.:1.000   3rd Qu.: 0.0109059  
+ Max.   :1.00000   Max.   :0.1621   Max.   :1.000   Max.   : 1.0070914  
+     zscore              fold                geometry   
+ Min.   :-2.90646   Min.   :1.000   POINT        :3420  
+ 1st Qu.:-0.46499   1st Qu.:2.000   epsg:NA      :   0  
+ Median :-0.07445   Median :3.000   +proj=tmer...:   0  
+ Mean   :-0.00247   Mean   :2.982                       
+ 3rd Qu.: 0.03156   3rd Qu.:4.000                       
+ Max.   : 2.98161   Max.   :5.000                       </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>report_cv <span class="ot">&lt;-</span> <span class="cf">function</span>(name, pred, obs) {</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>  brier <span class="ot">&lt;-</span> <span class="fu">mean</span>((pred <span class="sc">-</span> obs)<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"As &gt; %s: Brier score = %.4f | pred range [%.3f, %.3f]</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>              name, brier, <span class="fu">min</span>(pred, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="fu">max</span>(pred, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="fu">report_cv</span>(<span class="st">"10 µg/L"</span>, cv_10<span class="sc">$</span>var1.pred, cv_10<span class="sc">$</span>observed)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>As &gt; 10 µg/L: Brier score = 0.1454 | pred range [0.000, 1.000]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">report_cv</span>(<span class="st">"50 µg/L"</span>, cv_50<span class="sc">$</span>var1.pred, cv_50<span class="sc">$</span>observed)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>As &gt; 50 µg/L: Brier score = 0.1095 | pred range [0.000, 1.000]</code></pre>
 </div>
 </div>
+<p>Post-plots: symbol <strong>size is proportional to predicted probability</strong>; <strong>green = observed indicator FALSE</strong> (below threshold), <strong>red = TRUE</strong> (above).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>cv_map <span class="ot">&lt;-</span> <span class="cf">function</span>(pred, obs, title) {</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(</span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> mf,</span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">aes</span>(x, y, <span class="at">colour =</span> <span class="fu">factor</span>(obs), <span class="at">size =</span> <span class="dv">10</span> <span class="sc">+</span> <span class="dv">80</span> <span class="sc">*</span> pred),</span>
-<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.6</span></span>
-<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"#16A34A"</span>, <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"#DC2626"</span>), <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_size_identity</span>() <span class="sc">+</span></span>
-<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="st">"Northing (m)"</span>) <span class="sc">+</span></span>
-<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
-<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a>p_cv <span class="ot">&lt;-</span> <span class="fu">cv_map</span>(cv_pred_10, mf<span class="sc">$</span>ik_10, <span class="st">"5-fold CV: P(As &gt; 10 µg/L)"</span>) <span class="sc">|</span></span>
-<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cv_map</span>(cv_pred_50, mf<span class="sc">$</span>ik_50, <span class="st">"5-fold CV: P(As &gt; 50 µg/L)"</span>)</span>
-<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>p_cv <span class="ot">&lt;-</span> p_cv <span class="sc">+</span> <span class="fu">plot_annotation</span>(</span>
-<span id="cb44-18"><a href="#cb44-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Green = below threshold | Red = above | size ∝ predicted probability"</span></span>
-<span id="cb44-19"><a href="#cb44-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb44-20"><a href="#cb44-20" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_cv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>cv_map <span class="ot">&lt;-</span> <span class="cf">function</span>(cv, title) {</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>  xy_cv <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(<span class="fu">st_as_sf</span>(cv))</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>  plot_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x     =</span> xy_cv[, <span class="dv">1</span>],</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">y     =</span> xy_cv[, <span class="dv">2</span>],</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">obs   =</span> <span class="fu">as.integer</span>(cv<span class="sc">$</span>observed <span class="sc">&gt;</span> <span class="fl">0.5</span>),</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">pred  =</span> cv<span class="sc">$</span>var1.pred</span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(</span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> plot_df,</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">aes</span>(x, y, <span class="at">colour =</span> <span class="fu">factor</span>(obs), <span class="at">size =</span> <span class="fl">0.4</span> <span class="sc">+</span> <span class="fl">1.6</span> <span class="sc">*</span> pred),</span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">alpha =</span> <span class="fl">0.65</span>, <span class="at">stroke =</span> <span class="dv">0</span></span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"0"</span> <span class="ot">=</span> <span class="st">"#16A34A"</span>, <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"#DC2626"</span>), <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_size_identity</span>() <span class="sc">+</span></span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="st">"Northing (m)"</span>,</span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">subtitle =</span> <span class="st">"Actual indicator: green / red = FALSE / TRUE; size ∝ predicted probability"</span></span>
+<span id="cb64-21"><a href="#cb64-21" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb64-22"><a href="#cb64-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
+<span id="cb64-23"><a href="#cb64-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb64-24"><a href="#cb64-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-25"><a href="#cb64-25" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(</span>
+<span id="cb64-26"><a href="#cb64-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cv_map</span>(cv_10, <span class="st">"Probability of TRUE indicator (10 µg/L)"</span>) <span class="sc">|</span></span>
+<span id="cb64-27"><a href="#cb64-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cv_map</span>(cv_50, <span class="st">"Probability of TRUE indicator (50 µg/L)"</span>)</span>
+<span id="cb64-28"><a href="#cb64-28" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="1152"></p>
 </figure>
 </div>
 </div>
@@ -1187,67 +1270,108 @@ I_T(\mathbf{s}) =
 </section>
 <section id="indicator-kriging-on-the-prediction-grid" class="level2">
 <h2 class="anchored" data-anchor-id="indicator-kriging-on-the-prediction-grid">10. Indicator Kriging on the Prediction Grid</h2>
-<p>We krige each indicator onto the national prediction grid (<code>bd_grid.csv</code>). Predicted probabilities are clipped to [0, 1].</p>
+<p>Ordinary IK at each grid cell, using the <strong>50 nearest neighbours</strong> (<code>nmax = 50</code>) and the fitted exponential models — matching the original <code>gstat::krige()</code> call.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>grid_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(grid, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">st_crs</span>(bd))</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>ik_grid_10 <span class="ot">&lt;-</span> <span class="fu">krige</span>(ik_10 <span class="sc">~</span> <span class="dv">1</span>, mf_sf, grid_sf, <span class="at">model =</span> vg_10<span class="sc">$</span>fit,</span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">nmax =</span> <span class="dv">40</span>, <span class="at">debug.level =</span> <span class="dv">0</span>)</span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>ik_grid_50 <span class="ot">&lt;-</span> <span class="fu">krige</span>(ik_50 <span class="sc">~</span> <span class="dv">1</span>, mf_sf, grid_sf, <span class="at">model =</span> vg_50<span class="sc">$</span>fit,</span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">nmax =</span> <span class="dv">40</span>, <span class="at">debug.level =</span> <span class="dv">0</span>)</span>
-<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>grid_out <span class="ot">&lt;-</span> grid <span class="sc">%&gt;%</span></span>
-<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_10 =</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(ik_grid_10<span class="sc">$</span>var1.pred, <span class="dv">0</span>), <span class="dv">1</span>),</span>
-<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_50 =</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(ik_grid_50<span class="sc">$</span>var1.pred, <span class="dv">0</span>), <span class="dv">1</span>)</span>
-<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"P(As &gt; 10 µg/L):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>grid_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(grid, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">st_crs</span>(bd), <span class="at">remove =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>ik_grid_10 <span class="ot">&lt;-</span> <span class="fu">krige</span>(ik_10 <span class="sc">~</span> <span class="dv">1</span>, <span class="at">nmax =</span> <span class="dv">50</span>,</span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">locations =</span> ik_sf,</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">newdata =</span> grid_sf,</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">model =</span> m_f_10,</span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">debug.level =</span> <span class="dv">0</span>)</span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>ik_grid_50 <span class="ot">&lt;-</span> <span class="fu">krige</span>(ik_50 <span class="sc">~</span> <span class="dv">1</span>, <span class="at">nmax =</span> <span class="dv">50</span>,</span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>                    <span class="at">locations =</span> ik_sf,</span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a>                    <span class="at">newdata =</span> grid_sf,</span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>                    <span class="at">model =</span> m_f_50,</span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a>                    <span class="at">debug.level =</span> <span class="dv">0</span>)</span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Raw IK  As &gt; 10 µg/L:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>P(As &gt; 10 µg/L):</code></pre>
+<pre><code>Raw IK  As &gt; 10 µg/L:</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(grid_out<span class="sc">$</span>p_as_gt_10))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(ik_grid_10<span class="sc">$</span>var1.pred))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-0.00000 0.09616 0.35949 0.39907 0.67403 1.00000 </code></pre>
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.006402  0.097765  0.368668  0.407622  0.684044  1.000148 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">P(As &gt; 50 µg/L):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Raw IK  As &gt; 50 µg/L:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-P(As &gt; 50 µg/L):</code></pre>
+Raw IK  As &gt; 50 µg/L:</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(grid_out<span class="sc">$</span>p_as_gt_50))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(ik_grid_50<span class="sc">$</span>var1.pred))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+-0.005204  0.014550  0.129556  0.237453  0.378431  1.000370 </code></pre>
+</div>
+</div>
+<p>Clip predicted probabilities to <span class="math inline">\([0, 1]\)</span>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>ik_grid_10<span class="sc">$</span>var1.pred <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="dv">1</span>, <span class="fu">pmax</span>(<span class="dv">0</span>, ik_grid_10<span class="sc">$</span>var1.pred))</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>ik_grid_50<span class="sc">$</span>var1.pred <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="dv">1</span>, <span class="fu">pmax</span>(<span class="dv">0</span>, ik_grid_50<span class="sc">$</span>var1.pred))</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>grid_out <span class="ot">&lt;-</span> grid <span class="sc">%&gt;%</span></span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb73-6"><a href="#cb73-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_10 =</span> ik_grid_10<span class="sc">$</span>var1.pred,</span>
+<span id="cb73-7"><a href="#cb73-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_50 =</span> ik_grid_50<span class="sc">$</span>var1.pred</span>
+<span id="cb73-8"><a href="#cb73-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb73-9"><a href="#cb73-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-10"><a href="#cb73-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Clipped P(As &gt; 10 µg/L):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Clipped P(As &gt; 10 µg/L):</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(grid_out<span class="sc">$</span>p_as_gt_10))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-0.00000 0.01121 0.12078 0.22859 0.36583 0.97538 </code></pre>
+0.00000 0.09777 0.36867 0.40764 0.68404 1.00000 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Clipped P(As &gt; 50 µg/L):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Clipped P(As &gt; 50 µg/L):</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(grid_out<span class="sc">$</span>p_as_gt_50))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.00000 0.01455 0.12956 0.23748 0.37843 1.00000 </code></pre>
 </div>
 </div>
 </section>
 <section id="probability-maps" class="level2">
 <h2 class="anchored" data-anchor-id="probability-maps">11. Probability Maps</h2>
+<p>The original workflow converted the kriging output to a raster (<code>rasterFromXYZ</code>) and plotted it with <code>rasterVis::levelplot()</code> using a blue–green–yellow–red ramp. We build the same surface with <code>geom_tile</code> on the 5 km grid.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>probability_surface <span class="ot">&lt;-</span> <span class="cf">function</span>(grid_df, value_col, title) {</span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> grid_df, <span class="fu">aes</span>(x, y, <span class="at">colour =</span> .data[[value_col]]),</span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">size =</span> <span class="fl">0.4</span>, <span class="at">alpha =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> mf, <span class="fu">aes</span>(x, y), <span class="at">colour =</span> <span class="st">"black"</span>, <span class="at">size =</span> <span class="fl">0.15</span>, <span class="at">alpha =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_gradientn</span>(</span>
-<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">name =</span> <span class="st">"Probability"</span>,</span>
-<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">colours =</span> <span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"green"</span>, <span class="st">"yellow"</span>, <span class="st">"red"</span>),</span>
-<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
-<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="st">"Northing (m)"</span>) <span class="sc">+</span></span>
-<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
-<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a>p_prob <span class="ot">&lt;-</span> <span class="fu">probability_surface</span>(grid_out, <span class="st">"p_as_gt_10"</span>, <span class="st">"P(As &gt; 10 µg/L) — WHO guideline"</span>) <span class="sc">|</span></span>
-<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">probability_surface</span>(grid_out, <span class="st">"p_as_gt_50"</span>, <span class="st">"P(As &gt; 50 µg/L) — Bangladesh standard"</span>)</span>
-<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_prob)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>probability_surface <span class="ot">&lt;-</span> <span class="cf">function</span>(grid_df, value_col, title) {</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_tile</span>(</span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">data =</span> grid_df,</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">aes</span>(x, y, <span class="at">fill =</span> .data[[value_col]]),</span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">width =</span> <span class="dv">5000</span>, <span class="at">height =</span> <span class="dv">5000</span></span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> bd, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">colour =</span> <span class="st">"grey30"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_gradientn</span>(</span>
+<span id="cb81-10"><a href="#cb81-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">name =</span> <span class="st">"Probability"</span>,</span>
+<span id="cb81-11"><a href="#cb81-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">colours =</span> ik_colours,</span>
+<span id="cb81-12"><a href="#cb81-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb81-13"><a href="#cb81-13" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb81-14"><a href="#cb81-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Easting (m)"</span>, <span class="at">y =</span> <span class="st">"Northing (m)"</span>) <span class="sc">+</span></span>
+<span id="cb81-15"><a href="#cb81-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>() <span class="sc">+</span></span>
+<span id="cb81-16"><a href="#cb81-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_map</span>() <span class="sc">+</span></span>
+<span id="cb81-17"><a href="#cb81-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb81-18"><a href="#cb81-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>),</span>
+<span id="cb81-19"><a href="#cb81-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">axis.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">8</span>),</span>
+<span id="cb81-20"><a href="#cb81-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb81-21"><a href="#cb81-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb81-22"><a href="#cb81-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb81-23"><a href="#cb81-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-24"><a href="#cb81-24" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(</span>
+<span id="cb81-25"><a href="#cb81-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">probability_surface</span>(grid_out, <span class="st">"p_as_gt_10"</span>, <span class="st">"Probability As &gt; 10 µg/L"</span>) <span class="sc">|</span></span>
+<span id="cb81-26"><a href="#cb81-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">probability_surface</span>(grid_out, <span class="st">"p_as_gt_50"</span>, <span class="st">"Probability As &gt; 50 µg/L"</span>)</span>
+<span id="cb81-27"><a href="#cb81-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
@@ -1255,70 +1379,70 @@ P(As &gt; 50 µg/L):</code></pre>
 </section>
 <section id="district-level-risk-summary" class="level2">
 <h2 class="anchored" data-anchor-id="district-level-risk-summary">12. District-Level Risk Summary</h2>
-<p>The boundary shapefile labels are sparse, so we summarise risk using the <strong>DISTRICT</strong> field from the BGS borehole survey. For each district we report the fraction of sampled wells exceeding each threshold and the mean IK probability at sample locations (by joining each borehole to its nearest grid cell).</p>
+<p>The original IK notebook stopped at the national probability maps. For health-policy use we summarise, by BGS <strong>DISTRICT</strong>, the fraction of sampled wells exceeding each threshold and the mean IK probability at those well locations (nearest grid cell).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>grid_pts <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(grid_out, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">st_crs</span>(bd))</span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>nn <span class="ot">&lt;-</span> <span class="fu">st_nearest_feature</span>(mf_sf, grid_pts)</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>mf_out <span class="ot">&lt;-</span> mf <span class="sc">%&gt;%</span></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_10 =</span> grid_out<span class="sc">$</span>p_as_gt_10[nn],</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_50 =</span> grid_out<span class="sc">$</span>p_as_gt_50[nn]</span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>district_risk <span class="ot">&lt;-</span> mf_out <span class="sc">%&gt;%</span></span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(DISTRICT) <span class="sc">%&gt;%</span></span>
-<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_wells      =</span> <span class="fu">n</span>(),</span>
-<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">frac_gt_10   =</span> <span class="fu">mean</span>(ik_10),</span>
-<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">frac_gt_50   =</span> <span class="fu">mean</span>(ik_50),</span>
-<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_p_gt_10 =</span> <span class="fu">mean</span>(p_as_gt_10, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_p_gt_50 =</span> <span class="fu">mean</span>(p_as_gt_50, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_as    =</span> <span class="fu">median</span>(As),</span>
-<span id="cb54-18"><a href="#cb54-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
-<span id="cb54-19"><a href="#cb54-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb54-20"><a href="#cb54-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(frac_gt_10))</span>
-<span id="cb54-21"><a href="#cb54-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-22"><a href="#cb54-22" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Top 10 districts by sampled exceedance of WHO guideline (10 µg/L):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>grid_pts <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(grid_out, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">st_crs</span>(bd))</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>nn <span class="ot">&lt;-</span> <span class="fu">st_nearest_feature</span>(ik_sf, grid_pts)</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>mf_out <span class="ot">&lt;-</span> mf <span class="sc">%&gt;%</span></span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_10 =</span> grid_out<span class="sc">$</span>p_as_gt_10[nn],</span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_as_gt_50 =</span> grid_out<span class="sc">$</span>p_as_gt_50[nn]</span>
+<span id="cb82-7"><a href="#cb82-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb82-8"><a href="#cb82-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-9"><a href="#cb82-9" aria-hidden="true" tabindex="-1"></a>district_risk <span class="ot">&lt;-</span> mf_out <span class="sc">%&gt;%</span></span>
+<span id="cb82-10"><a href="#cb82-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(DISTRICT) <span class="sc">%&gt;%</span></span>
+<span id="cb82-11"><a href="#cb82-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb82-12"><a href="#cb82-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_wells      =</span> <span class="fu">n</span>(),</span>
+<span id="cb82-13"><a href="#cb82-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">frac_gt_10   =</span> <span class="fu">mean</span>(ik_10),</span>
+<span id="cb82-14"><a href="#cb82-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">frac_gt_50   =</span> <span class="fu">mean</span>(ik_50),</span>
+<span id="cb82-15"><a href="#cb82-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_p_gt_10 =</span> <span class="fu">mean</span>(p_as_gt_10, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb82-16"><a href="#cb82-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_p_gt_50 =</span> <span class="fu">mean</span>(p_as_gt_50, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb82-17"><a href="#cb82-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_as    =</span> <span class="fu">median</span>(As),</span>
+<span id="cb82-18"><a href="#cb82-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb82-19"><a href="#cb82-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb82-20"><a href="#cb82-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(frac_gt_10))</span>
+<span id="cb82-21"><a href="#cb82-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-22"><a href="#cb82-22" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Top 10 districts by sampled exceedance of WHO guideline (10 µg/L):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Top 10 districts by sampled exceedance of WHO guideline (10 µg/L):</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(district_risk <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">round</span>(.x, <span class="dv">3</span>))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(district_risk <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">round</span>(.x, <span class="dv">3</span>))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 10 × 7
    DISTRICT   n_wells frac_gt_10 frac_gt_50 mean_p_gt_10 mean_p_gt_50 median_as
    &lt;chr&gt;        &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;        &lt;dbl&gt;        &lt;dbl&gt;     &lt;dbl&gt;
- 1 Chandpur        53      0.925      0.906        0.932        0.9       398  
- 2 Meherpur        13      0.923      0.615        0.852        0.565      62.5
- 3 Munshiganj      45      0.911      0.822        0.856        0.781     167  
- 4 Sunamganj       68      0.853      0.397        0.831        0.387      44.4
- 5 Noakhali        45      0.844      0.689        0.825        0.671     107  
- 6 Gopalganj       40      0.825      0.775        0.83         0.776     145  
- 7 Bagerhat        59      0.814      0.593        0.743        0.533     103  
- 8 Chuadanga       32      0.812      0.406        0.793        0.42       45.0
- 9 Lakshmipur      31      0.806      0.581        0.758        0.587      82.6
-10 Satkhira        56      0.804      0.679        0.788        0.646      96.2</code></pre>
+ 1 Chandpur        53      0.981      0.981        0.966        0.953     407  
+ 2 Meherpur        13      0.923      0.615        0.851        0.568      62.5
+ 3 Munshiganj      45      0.911      0.844        0.861        0.804     187  
+ 4 Noakhali        45      0.889      0.756        0.862        0.722     124  
+ 5 Sunamganj       68      0.868      0.412        0.846        0.404      44.4
+ 6 Gopalganj       40      0.85       0.8          0.849        0.795     163  
+ 7 Bagerhat        59      0.831      0.61         0.766        0.559     103  
+ 8 Chuadanga       32      0.812      0.438        0.8          0.454      46.0
+ 9 Satkhira        56      0.804      0.679        0.79         0.644     106  
+10 Lakshmipur      31      0.774      0.581        0.754        0.609      82.6</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>top <span class="ot">&lt;-</span> district_risk <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">12</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">DISTRICT =</span> <span class="fu">fct_reorder</span>(DISTRICT, frac_gt_10))</span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>p_d1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(top, <span class="fu">aes</span>(frac_gt_10, DISTRICT)) <span class="sc">+</span></span>
-<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"coral"</span>, <span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Fraction of wells with As &gt; 10 µg/L"</span>,</span>
-<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">title =</span> <span class="st">"Observed exceedance by district (top 12)"</span>)</span>
-<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>p_d2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(top, <span class="fu">aes</span>(mean_p_gt_10, DISTRICT)) <span class="sc">+</span></span>
-<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Mean P(As &gt; 10 µg/L) at wells"</span>,</span>
-<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">title =</span> <span class="st">"IK probability at well locations (top 12)"</span>)</span>
-<span id="cb58-14"><a href="#cb58-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-15"><a href="#cb58-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_d1 <span class="sc">|</span> p_d2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>top <span class="ot">&lt;-</span> district_risk <span class="sc">%&gt;%</span> <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">12</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">DISTRICT =</span> <span class="fu">fct_reorder</span>(DISTRICT, frac_gt_10))</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a>p_d1 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(top, <span class="fu">aes</span>(frac_gt_10, DISTRICT)) <span class="sc">+</span></span>
+<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"coral"</span>, <span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb86-6"><a href="#cb86-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb86-7"><a href="#cb86-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Fraction of wells with As &gt; 10 µg/L"</span>,</span>
+<span id="cb86-8"><a href="#cb86-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">title =</span> <span class="st">"Observed exceedance by district (top 12)"</span>)</span>
+<span id="cb86-9"><a href="#cb86-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-10"><a href="#cb86-10" aria-hidden="true" tabindex="-1"></a>p_d2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(top, <span class="fu">aes</span>(mean_p_gt_10, DISTRICT)) <span class="sc">+</span></span>
+<span id="cb86-11"><a href="#cb86-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>, <span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb86-12"><a href="#cb86-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Mean P(As &gt; 10 µg/L) at wells"</span>,</span>
+<span id="cb86-13"><a href="#cb86-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">title =</span> <span class="st">"IK probability at well locations (top 12)"</span>)</span>
+<span id="cb86-14"><a href="#cb86-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb86-15"><a href="#cb86-15" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_d1 <span class="sc">|</span> p_d2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB10_Geostatistical_Risk_Analysis_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1328,27 +1452,39 @@ P(As &gt; 50 µg/L):</code></pre>
 <h2 class="anchored" data-anchor-id="interpretation-health-policy-context">13. Interpretation &amp; Health Policy Context</h2>
 <p><strong>Key findings from indicator kriging:</strong></p>
 <ul>
-<li>IK maps show <em>where</em> groundwater is likely unsafe, not just where samples were taken — critical because borehole density is uneven.</li>
-<li>The 10 µg/L (WHO) surface is more extensive than the 50 µg/L (Bangladesh) surface, reflecting the stricter health guideline.</li>
-<li>Probabilities are spatially smooth but locally adjusted to nearby sample indicators.</li>
-<li>Cross-validation Brier scores quantify calibration; lower is better.</li>
+<li>IK maps <em>where</em> groundwater is likely unsafe, not only where boreholes were drilled — essential because sample density is uneven.</li>
+<li>The 10 µg/L (WHO) surface is more extensive than the 50 µg/L (Bangladesh) surface, as expected from the stricter guideline.</li>
+<li>Ordinary kriging of indicators can produce probabilities slightly outside <span class="math inline">\([0, 1]\)</span>; clipping after prediction is standard.</li>
+<li>Cross-validation Brier scores summarise calibration; lower is better.</li>
+<li><code>gstat</code> delivers the probability maps; E-type concentration estimates would require multiple thresholds and CDF reconstruction (AUTO-IK / GSLIB / SGeMS).</li>
 </ul>
-<p><strong>Limitations:</strong> - IK assumes stationarity of the indicator semivariogram. - Censored values at 0.25 µg/L affect indicators only near zero. - E-type concentration estimates require multiple thresholds and CDF reconstruction (Goovaerts AUTO-IK).</p>
-<p><strong>References:</strong> - Goovaerts P. (2009). AUTO-IK: a geostatistical program for indicator kriging. <em>Environ Sci Technol</em>. - BGS Bangladesh arsenic survey: <a href="http://www.bgs.ac.uk/research/groundwater/health/arsenic/Bangladesh/data.html">bgs.ac.uk groundwater health data</a></p>
+<p><strong>Limitations:</strong></p>
+<ul>
+<li>IK assumes stationarity of the indicator semivariogram.</li>
+<li>Half-DL substitution (0.25 / 3.0 µg/L) does not affect the 10 and 50 µg/L indicators, but it would matter for a full IK CDF.</li>
+<li>A single exponential model is a simplification; nested structures or anisotropy can be added if the empirical variogram warrants it.</li>
+</ul>
+<p><strong>References:</strong></p>
+<ul>
+<li>Goovaerts P. (2009). AUTO-IK: a geostatistical program for indicator kriging. <em>Environ Sci Technol</em>.</li>
+<li>BGS Bangladesh arsenic survey: <a href="http://www.bgs.ac.uk/research/groundwater/health/arsenic/Bangladesh/data.html">bgs.ac.uk groundwater health data</a></li>
+</ul>
 </section>
 <section id="knowledge-check" class="level2">
 <h2 class="anchored" data-anchor-id="knowledge-check">14. Knowledge Check</h2>
 <ol type="1">
-<li>Why is indicator kriging preferred over ordinary kriging on log-transformed arsenic for mapping regulatory exceedance?</li>
+<li>Why is indicator kriging preferred over ordinary kriging of log-arsenic when the goal is a <em>regulatory exceedance</em> map?</li>
 <li>What does a predicted probability of 0.7 at an unmonitored grid cell mean for a household relying on a local tube well?</li>
-<li>How would you test whether the exponential variogram model is adequate for the 50 µg/L indicator?</li>
-<li>If the Bangladesh government wanted to prioritise well testing, how would you use the P(As &gt; 50 µg/L) map to rank districts?</li>
-<li>Extend the analysis: add a third threshold (e.g., 200 µg/L) and compare spatial patterns of severe poisoning risk.</li>
+<li>Why does <code>gstat</code> require <code>zerodist()</code> (or equivalent) before kriging, and what would happen if coincident points were left in?</li>
+<li>The original notebook used an exponential model with <code>vgm(0.15, "Exp", 40000, 0.05)</code> as a starting guess. How would you check whether that model is adequate for the 50 µg/L indicator?</li>
+<li>If the government wanted to prioritise well testing, how would you use the P(As &gt; 50 µg/L) map together with the district table to rank districts?</li>
+<li>Extend the analysis: add a third threshold (e.g.&nbsp;200 µg/L) and compare the spatial pattern of <em>severe</em> poisoning risk. What extra step would AUTO-IK take that this notebook does not?</li>
 </ol>
 <hr>
-<p><strong>Next → NB-08: Capstone — Spatial Health Inequity Atlas</strong> (or continue to advanced spatial ML in NB-09)</p>
+<p><strong>Next → Module 08: Reproducible Research &amp; Deployment</strong></p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -1425,7 +1561,7 @@ P(As &gt; 50 µg/L):</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-with-Python\/");
+        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-R\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1754,13 +1890,13 @@ P(As &gt; 50 µg/L):</code></pre>
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="pagination-link" aria-label="Spatial ML - LBC Mortality (Northeast)">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Spatial ML - LBC Mortality (Northeast)</span>
+      <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="pagination-link" aria-label="NB-09 · Spatial ML — LBC Mortality (Northeast)">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">NB-09 · Spatial ML — LBC Mortality (Northeast)</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./MOD08_NB01_Reproducible_Foundations.html" class="pagination-link" aria-label="Reproducible Research Foundations">
-        <span class="nav-page-text">Reproducible Research Foundations</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./MOD08_NB01_Reproducible_Foundations.html" class="pagination-link" aria-label="NB-01 · Reproducible Research Foundations">
+        <span class="nav-page-text">NB-01 · Reproducible Research Foundations</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1772,7 +1908,7 @@ P(As &gt; 50 µg/L):</code></pre>
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB10_Geostatistical_Risk_Analysis.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB10_Geostatistical_Risk_Analysis.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>

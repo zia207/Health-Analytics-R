@@ -1,11 +1,9 @@
----
-title: "Capstone · End-to-End Clinical ML Pipeline"
-subtitle: "Module 04 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 04: Machine Learning for Clinical Prediction
+### Module 04 — Machine Learning for Clinical Prediction
+
+# Capstone · End-to-End Clinical ML Pipeline
+
 ***
 **This capstone integrates NB-01 through NB-07 into a single production-ready ML pipeline.**
 
@@ -330,7 +328,7 @@ print(df_results %>% filter(risk_tier == "Very high (>35%)") %>% slice_head(n = 
 
 ## 8. Publication Summary Figure
 
-```{r}
+```{r, fig.width=16, fig.height=10}
 # A — Data split timeline
 monthly <- df %>%
   mutate(month = as.Date(cut(admit_date, "month"))) %>%

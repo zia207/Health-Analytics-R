@@ -1,11 +1,9 @@
----
-title: "Capstone · Multivariable Inference Pipeline"
-subtitle: "Module 03 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 03: Statistical Inference
+### Module 03 — Capstone · Multivariable Inference Pipeline
+
+# Capstone · Multivariable Inference Pipeline
+
 ***
 **This capstone integrates NB-01 through NB-07 into a single publication-quality inference pipeline.**
 
@@ -559,13 +557,22 @@ if (EPV >= 10) {
 ## Module 03 Complete ✓
 
 You have built the full statistical inference toolkit:
+
 - **NB-01** Hypothesis tests: chi-square, Fisher's, t-test, ANOVA, Mann-Whitney, multiple comparisons
+
 - **NB-02** Effect measures: RR, OR, ARR, NNT, bootstrap CIs, forest plots, Mantel-Haenszel
+
 - **NB-03** Survival analysis: Kaplan-Meier, log-rank, RMST, crossing curves, at-risk tables
+
 - **NB-04** Linear regression: OLS, diagnostics (QQ, Cook's D, residuals), log-transformation
+
 - **NB-05** Logistic regression: adjusted ORs, VIF, ROC, calibration, risk stratification
+
 - **NB-06** Count regression: Poisson, overdispersion test, negative binomial, zero-inflated models
+
 - **NB-07** Confounding & effect modification: DAGs, 10% change rule, interaction tests, E-values
+
 - **NB-08** Capstone: full inference pipeline + publication figure
+
 
 **Next → Module 04: Machine Learning for Clinical Prediction**

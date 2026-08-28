@@ -1,11 +1,7 @@
----
-title: "Health Analytics with R"
-subtitle: "A Comprehensive Tutorial Series"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
 # Health Analytics with R
+
 ## A Comprehensive Tutorial Series
 
 <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -74,7 +70,7 @@ The eight modules form two learning tracks that can be taken independently or se
 │           TRACK B: POPULATION HEALTH & DEPLOYMENT                               │
 │                                                                                 │
 │  MOD-06          MOD-07          MOD-08                                         │
-│  Causal       →  Geospatial  →  Reproducible                                   │
+│  Causal       →  Spatial     →  Reproducible                                   │
 │  Inference       Epidemiology   Research &                                      │
 │                                 Deployment                                      │
 │                                                                                 │
@@ -96,7 +92,7 @@ Each module contains **8 notebooks** following a consistent arc:
 | 04 | **Machine Learning** | Clinical prediction, SHAP, calibration, DCA | `tidymodels`, `xgboost`, `lightgbm`, `DALEX` | 8 |
 | 05 | **NLP for Clinical Text** | De-identification, ICD coding, BERT, summarisation | `quanteda`, `tidytext`, `text2vec` | 8 |
 | 06 | **Causal Inference** | DAGs, PS matching, DiD, ITS, TMLE, mediation | `dagitty`, `MatchIt`, `broom` | 8 |
-| 07 | **Geospatial Epidemiology** | Cluster detection, BYM smoothing, 2SFCA access | `sf`, `spdep`, `GWmodel` | 10 |
+| 07 | **Spatial Epidemiology** | Cluster detection, BYM smoothing, 2SFCA access | `sf`, `spdep`, `GWmodel` | 10 |
 | 08 | **Reproducible Research** | Quarto reports, Shiny, MLflow, plumber, CI/CD | `plumber`, `mlflow`, `shiny` | 8 |
 
 **Total: 62 notebooks · ~450 executable code cells · 8 capstone analyses**

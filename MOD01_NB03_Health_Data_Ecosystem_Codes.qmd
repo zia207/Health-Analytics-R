@@ -1,9 +1,8 @@
----
-title: "NB-03 · Health Data Ecosystem & Codes"
-subtitle: "Module 01 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Module 01 — Health Data Ecosystem & Codes
+
+# Health Data Ecosystem & Codes
 
 ***
 **Learning objectives**

@@ -1,0 +1,501 @@
+patient_id,age,sex,payer,drg_code,drg_label,primary_dx,admit_type,los_days,total_charge
+PT-00001,83,M,Medicare,247,Perc cardiovasc w stent,I50.9,Emergency,1,3684.09
+PT-00002,52,F,Self-pay,291,Heart failure & shock,I50.9,Elective,3,6977.59
+PT-00003,67,M,Medicare,871,Septicemia,M16.11,Urgent,2,5930.21
+PT-00004,72,M,Self-pay,392,Esophagitis/misc GI,J18.9,Urgent,7,24044.64
+PT-00005,68,F,Medicare,690,Kidney/UTI,N39.0,Emergency,6,NA
+PT-00006,60,F,Medicaid,690,Kidney/UTI,N39.0,Elective,2,8107.89
+PT-00007,86,M,Private,690,Kidney/UTI,A41.9,Emergency,2,5231.3
+PT-00008,60,M,Medicare,247,Perc cardiovasc w stent,A41.9,Urgent,1,1800.92
+PT-00009,94,F,Medicare,247,Perc cardiovasc w stent,I50.9,Elective,2,4643.44
+PT-00010,60,M,Private,690,Kidney/UTI,N39.0,Elective,4,7546.23
+PT-00011,82,F,Private,871,Septicemia,I10,Emergency,3,7907.28
+PT-00012,95,M,Medicare,392,Esophagitis/misc GI,J18.9,Elective,3,6105.27
+PT-00013,39,F,Private,871,Septicemia,A41.9,Emergency,3,10658.44
+PT-00014,57,F,Medicare,291,Heart failure & shock,N18.3,Emergency,4,14263.7
+PT-00015,59,F,Self-pay,603,Cellulitis,J18.9,Elective,10,33594.28
+PT-00016,72,M,Medicare,291,Heart failure & shock,N18.3,Emergency,13,51032.65
+PT-00017,57,F,Private,470,Major joint replacement,E11.9,Elective,5,10367.7
+PT-00018,19,F,Medicare,603,Cellulitis,I50.9,Emergency,3,7343.59
+PT-00019,22,M,Private,470,Major joint replacement,M16.11,Emergency,1,3922.83
+PT-00020,83,F,Self-pay,392,Esophagitis/misc GI,J18.9,Urgent,4,NA
+PT-00021,57,M,Medicaid,603,Cellulitis,N18.3,Emergency,5,19820.07
+PT-00022,33,F,Private,470,Major joint replacement,N18.3,Emergency,2,6941.92
+PT-00023,59,F,Private,690,Kidney/UTI,I50.9,Elective,10,40343.34
+PT-00024,81,F,Private,470,Major joint replacement,I10,Emergency,1,3595.53
+PT-00025,92,F,Private,247,Perc cardiovasc w stent,N18.3,Urgent,1,2065.33
+PT-00026,55,F,Medicare,247,Perc cardiovasc w stent,I10,Elective,8,24736.72
+PT-00027,57,F,Private,470,Major joint replacement,A41.9,Elective,1,2615.37
+PT-00028,33,F,Medicaid,291,Heart failure & shock,I10,Elective,4,14161.05
+PT-00029,69,M,Medicaid,392,Esophagitis/misc GI,N18.3,Emergency,7,18329.75
+PT-00030,51,M,Medicaid,193,Simple pneumonia,N39.0,Elective,7,25211.78
+PT-00031,69,M,Medicare,871,Septicemia,E11.9,Emergency,5,12911.23
+PT-00032,73,F,Medicaid,690,Kidney/UTI,I50.9,Newborn,6,14947.09
+PT-00033,78,F,Medicare,871,Septicemia,J18.9,Emergency,5,12433.67
+PT-00034,52,F,Medicaid,291,Heart failure & shock,E11.9,Elective,3,6879.44
+PT-00035,70,F,Medicare,690,Kidney/UTI,N39.0,Elective,8,19924.53
+PT-00036,34,M,Other,193,Simple pneumonia,E11.9,Urgent,7,17057.92
+PT-00037,49,M,Medicare,690,Kidney/UTI,M16.11,Emergency,1,2198.12
+PT-00038,48,M,Medicare,392,Esophagitis/misc GI,E11.9,Emergency,5,10972.32
+PT-00039,23,F,Private,470,Major joint replacement,N18.3,Emergency,7,17417.86
+PT-00040,62,F,Medicaid,470,Major joint replacement,J18.9,Emergency,2,6056.54
+PT-00041,65,M,Self-pay,392,Esophagitis/misc GI,J18.9,Elective,2,5375.67
+PT-00042,56,F,Medicaid,603,Cellulitis,N39.0,Elective,1,4059.71
+PT-00043,74,F,Medicare,690,Kidney/UTI,A41.9,Emergency,6,19105.56
+PT-00044,50,M,Medicare,291,Heart failure & shock,I10,Urgent,12,37069.37
+PT-00045,40,M,Private,247,Perc cardiovasc w stent,N39.0,Emergency,6,21277.79
+PT-00046,68,F,Medicaid,470,Major joint replacement,I10,Emergency,8,20484.41
+PT-00047,49,M,Medicare,470,Major joint replacement,E11.9,Elective,5,18971.24
+PT-00048,85,M,Private,247,Perc cardiovasc w stent,I10,Urgent,1,3386.81
+PT-00049,55,M,Medicaid,193,Simple pneumonia,M16.11,Emergency,5,11539.42
+PT-00050,72,F,Private,392,Esophagitis/misc GI,I10,Emergency,2,5270.74
+PT-00051,67,M,Medicare,392,Esophagitis/misc GI,A41.9,Newborn,7,21285.08
+PT-00052,49,F,Medicaid,690,Kidney/UTI,E11.9,Emergency,5,19873.01
+PT-00053,87,F,Private,603,Cellulitis,N18.3,Emergency,5,20882.96
+PT-00054,72,M,Private,193,Simple pneumonia,J18.9,Elective,1,2501.32
+PT-00055,63,F,Private,193,Simple pneumonia,E11.9,Newborn,2,5146.02
+PT-00056,66,M,Medicaid,690,Kidney/UTI,N18.3,Elective,3,9929.54
+PT-00057,72,M,Medicare,603,Cellulitis,E11.9,Elective,5,18245.76
+PT-00058,63,M,Private,690,Kidney/UTI,A41.9,Elective,2,4700.3
+PT-00059,18,F,Private,603,Cellulitis,A41.9,Emergency,5,11909.77
+PT-00060,66,F,Private,603,Cellulitis,M16.11,Emergency,2,4227.86
+PT-00061,56,F,Private,247,Perc cardiovasc w stent,J18.9,Elective,2,7711.9
+PT-00062,64,M,Other,193,Simple pneumonia,M16.11,Emergency,5,10201.5
+PT-00063,71,F,Medicaid,690,Kidney/UTI,I50.9,Emergency,3,10492.57
+PT-00064,84,F,Medicare,871,Septicemia,N18.3,Emergency,3,9319.85
+PT-00065,50,F,Medicare,871,Septicemia,E11.9,Newborn,3,6690.63
+PT-00066,82,M,Medicaid,690,Kidney/UTI,J18.9,Emergency,1,2265.73
+PT-00067,67,M,Medicare,690,Kidney/UTI,E11.9,Newborn,8,30669.38
+PT-00068,78,F,Other,470,Major joint replacement,A41.9,Elective,1,3416.52
+PT-00069,76,F,Medicaid,871,Septicemia,M16.11,Elective,2,NA
+PT-00070,73,M,Private,193,Simple pneumonia,A41.9,Elective,8,26415.25
+PT-00071,45,M,Medicare,193,Simple pneumonia,I10,Emergency,6,22483.12
+PT-00072,60,F,Self-pay,470,Major joint replacement,J18.9,Elective,7,28294.57
+PT-00073,71,F,Medicare,470,Major joint replacement,I50.9,Elective,4,7227.07
+PT-00074,46,M,Medicare,193,Simple pneumonia,A41.9,Emergency,3,8815.01
+PT-00075,53,F,Private,871,Septicemia,N18.3,Emergency,3,9411.71
+PT-00076,71,M,Private,871,Septicemia,E11.9,Emergency,1,2322.82
+PT-00077,74,M,Medicare,392,Esophagitis/misc GI,I50.9,Emergency,1,4045.75
+PT-00078,69,F,Medicare,193,Simple pneumonia,I10,Urgent,3,12440.11
+PT-00079,47,F,Self-pay,193,Simple pneumonia,I10,Emergency,4,11347.08
+PT-00080,44,F,Medicare,470,Major joint replacement,N39.0,Elective,3,11217.13
+PT-00081,86,F,Private,291,Heart failure & shock,I10,Urgent,2,4825.07
+PT-00082,66,M,Medicare,247,Perc cardiovasc w stent,N39.0,Emergency,7,22493.88
+PT-00083,63,F,Private,871,Septicemia,E11.9,Emergency,3,8558.56
+PT-00084,60,M,Medicare,392,Esophagitis/misc GI,J18.9,Elective,1,2250.56
+PT-00085,42,M,Medicaid,470,Major joint replacement,I10,Elective,6,10923.63
+PT-00086,71,F,Medicare,247,Perc cardiovasc w stent,I50.9,Elective,2,5430.83
+PT-00087,58,M,Private,690,Kidney/UTI,N18.3,Urgent,2,4211.99
+PT-00088,59,M,Medicare,603,Cellulitis,E11.9,Emergency,3,12318.64
+PT-00089,76,M,Private,247,Perc cardiovasc w stent,N18.3,Elective,5,14582.81
+PT-00090,75,F,Private,690,Kidney/UTI,N39.0,Emergency,5,11800.38
+PT-00091,84,M,Medicare,291,Heart failure & shock,A41.9,Elective,1,3715.76
+PT-00092,54,F,Medicaid,193,Simple pneumonia,E11.9,Elective,6,20453.21
+PT-00093,72,M,Medicare,690,Kidney/UTI,N39.0,Emergency,6,19209.45
+PT-00094,84,M,Medicare,291,Heart failure & shock,J18.9,Elective,1,3401.16
+PT-00095,44,F,Medicare,247,Perc cardiovasc w stent,A41.9,Elective,3,10723.33
+PT-00096,48,F,Private,603,Cellulitis,I50.9,Emergency,3,NA
+PT-00097,43,M,Private,247,Perc cardiovasc w stent,I50.9,Emergency,7,15137.01
+PT-00098,38,F,Medicare,690,Kidney/UTI,J18.9,Emergency,1,3255.19
+PT-00099,63,M,Medicare,690,Kidney/UTI,J18.9,Emergency,1,4035.19
+PT-00100,72,M,Private,603,Cellulitis,M16.11,Emergency,4,10859.7
+PT-00101,81,F,Medicaid,291,Heart failure & shock,I50.9,Emergency,3,11758.11
+PT-00102,78,M,Private,392,Esophagitis/misc GI,J18.9,Urgent,6,20880.27
+PT-00103,45,M,Medicaid,291,Heart failure & shock,N39.0,Emergency,2,7111
+PT-00104,91,F,Medicare,871,Septicemia,M16.11,Elective,6,14854.83
+PT-00105,51,F,Private,247,Perc cardiovasc w stent,N18.3,Elective,3,8505.72
+PT-00106,63,M,Medicaid,247,Perc cardiovasc w stent,A41.9,Emergency,4,14171.14
+PT-00107,55,M,Private,247,Perc cardiovasc w stent,M16.11,Emergency,6,22399.79
+PT-00108,60,F,Other,690,Kidney/UTI,N18.3,Emergency,3,8532.35
+PT-00109,65,M,Medicare,871,Septicemia,J18.9,Emergency,1,2442.24
+PT-00110,63,M,Private,871,Septicemia,M16.11,Elective,2,NA
+PT-00111,61,M,Medicare,470,Major joint replacement,A41.9,Emergency,21,47371.67
+PT-00112,63,F,Medicare,690,Kidney/UTI,I50.9,Emergency,2,4392.48
+PT-00113,54,M,Medicare,247,Perc cardiovasc w stent,M16.11,Emergency,5,9155.05
+PT-00114,53,M,Other,247,Perc cardiovasc w stent,E11.9,Emergency,3,8092.6
+PT-00115,35,F,Medicaid,871,Septicemia,I10,Elective,4,12735.59
+PT-00116,55,F,Medicaid,291,Heart failure & shock,I10,Elective,3,11183.57
+PT-00117,53,M,Self-pay,871,Septicemia,A41.9,Elective,6,10949.34
+PT-00118,95,M,Private,690,Kidney/UTI,I10,Emergency,7,27386.79
+PT-00119,40,F,Medicaid,690,Kidney/UTI,I10,Emergency,1,2976.7
+PT-00120,64,M,Self-pay,690,Kidney/UTI,I10,Elective,1,3235.84
+PT-00121,38,M,Medicare,247,Perc cardiovasc w stent,A41.9,Emergency,6,20455.44
+PT-00122,38,M,Self-pay,193,Simple pneumonia,N18.3,Emergency,1,2801.67
+PT-00123,63,M,Self-pay,247,Perc cardiovasc w stent,N39.0,Emergency,1,3684.27
+PT-00124,46,F,Medicare,247,Perc cardiovasc w stent,N39.0,Emergency,3,10701.58
+PT-00125,61,M,Medicaid,193,Simple pneumonia,N18.3,Emergency,3,11495.28
+PT-00126,55,M,Medicaid,291,Heart failure & shock,E11.9,Elective,3,NA
+PT-00127,52,M,Private,247,Perc cardiovasc w stent,J18.9,Emergency,5,17769.71
+PT-00128,29,M,Medicare,193,Simple pneumonia,I10,Emergency,2,7903.25
+PT-00129,42,F,Medicare,193,Simple pneumonia,M16.11,Urgent,8,18144.21
+PT-00130,64,F,Medicare,247,Perc cardiovasc w stent,A41.9,Emergency,2,8314.36
+PT-00131,71,F,Medicare,193,Simple pneumonia,I50.9,Emergency,3,11256.97
+PT-00132,54,M,Medicare,690,Kidney/UTI,I50.9,Emergency,1,3194.93
+PT-00133,62,M,Private,291,Heart failure & shock,A41.9,Emergency,8,NA
+PT-00134,79,F,Medicare,871,Septicemia,A41.9,Elective,7,28149.48
+PT-00135,85,F,Medicaid,603,Cellulitis,I10,Elective,2,3749.35
+PT-00136,44,M,Medicaid,247,Perc cardiovasc w stent,E11.9,Elective,1,3535.88
+PT-00137,60,F,Medicare,193,Simple pneumonia,I50.9,Elective,2,5783.81
+PT-00138,81,F,Medicare,603,Cellulitis,A41.9,Urgent,2,7232.32
+PT-00139,54,F,Other,291,Heart failure & shock,E11.9,Emergency,4,7557.71
+PT-00140,61,M,Self-pay,392,Esophagitis/misc GI,N18.3,Emergency,6,20785.04
+PT-00141,60,F,Medicare,470,Major joint replacement,I50.9,Emergency,1,2150.54
+PT-00142,47,M,Medicaid,603,Cellulitis,E11.9,Urgent,2,4792.28
+PT-00143,54,F,Private,871,Septicemia,N18.3,Urgent,3,NA
+PT-00144,61,M,Medicare,690,Kidney/UTI,J18.9,Emergency,2,6418.1
+PT-00145,55,F,Medicare,392,Esophagitis/misc GI,N18.3,Emergency,11,27155.63
+PT-00146,79,F,Medicare,470,Major joint replacement,J18.9,Elective,2,4777.82
+PT-00147,54,F,Medicare,871,Septicemia,A41.9,Urgent,1,3775.27
+PT-00148,55,F,Self-pay,603,Cellulitis,N39.0,Emergency,8,28927.35
+PT-00149,73,F,Medicare,871,Septicemia,J18.9,Emergency,7,20561.95
+PT-00150,45,F,Medicare,871,Septicemia,N18.3,Urgent,7,14894.75
+PT-00151,61,M,Medicaid,392,Esophagitis/misc GI,N39.0,Newborn,4,8873.77
+PT-00152,37,F,Medicare,603,Cellulitis,J18.9,Elective,4,15991.88
+PT-00153,80,M,Medicare,690,Kidney/UTI,A41.9,Emergency,1,2431.41
+PT-00154,57,M,Other,291,Heart failure & shock,A41.9,Emergency,5,19607.17
+PT-00155,54,F,Medicare,470,Major joint replacement,I50.9,Emergency,8,19825.34
+PT-00156,42,M,Medicaid,392,Esophagitis/misc GI,N18.3,Emergency,3,11838.59
+PT-00157,61,F,Private,690,Kidney/UTI,N39.0,Emergency,4,12716.62
+PT-00158,49,F,Medicare,247,Perc cardiovasc w stent,I10,Elective,5,17148.94
+PT-00159,53,M,Private,247,Perc cardiovasc w stent,I10,Urgent,1,3492.68
+PT-00160,82,F,Other,247,Perc cardiovasc w stent,J18.9,Elective,6,14599.65
+PT-00161,59,M,Private,470,Major joint replacement,N18.3,Emergency,1,2608.61
+PT-00162,44,F,Other,690,Kidney/UTI,E11.9,Urgent,1,2665.24
+PT-00163,64,F,Medicaid,871,Septicemia,J18.9,Emergency,4,10724.44
+PT-00164,56,F,Medicaid,193,Simple pneumonia,M16.11,Emergency,8,20998.48
+PT-00165,71,F,Private,193,Simple pneumonia,N18.3,Elective,5,17373.59
+PT-00166,84,F,Medicare,871,Septicemia,I50.9,Emergency,6,12406.17
+PT-00167,46,F,Medicaid,603,Cellulitis,I10,Elective,2,4523.12
+PT-00168,69,F,Medicare,291,Heart failure & shock,I50.9,Newborn,4,7981.51
+PT-00169,63,M,Medicare,392,Esophagitis/misc GI,I10,Elective,4,11387.29
+PT-00170,76,F,Private,470,Major joint replacement,I50.9,Emergency,6,24046.86
+PT-00171,58,F,Medicare,603,Cellulitis,I10,Emergency,3,8591.73
+PT-00172,75,M,Medicare,193,Simple pneumonia,A41.9,Elective,2,4896.83
+PT-00173,34,M,Private,470,Major joint replacement,M16.11,Emergency,3,6998.93
+PT-00174,89,M,Medicare,247,Perc cardiovasc w stent,I50.9,Urgent,3,11099.34
+PT-00175,75,F,Medicare,392,Esophagitis/misc GI,N39.0,Newborn,1,2411.26
+PT-00176,59,F,Medicare,392,Esophagitis/misc GI,J18.9,Emergency,5,9696.71
+PT-00177,38,F,Medicaid,470,Major joint replacement,N39.0,Emergency,2,5420.48
+PT-00178,72,M,Medicare,871,Septicemia,J18.9,Urgent,6,NA
+PT-00179,69,F,Medicare,690,Kidney/UTI,J18.9,Urgent,1,2253.38
+PT-00180,61,M,Self-pay,193,Simple pneumonia,I10,Elective,2,5288.7
+PT-00181,64,F,Medicaid,193,Simple pneumonia,J18.9,Emergency,2,5817.7
+PT-00182,52,F,Medicaid,193,Simple pneumonia,M16.11,Emergency,4,16381.72
+PT-00183,67,M,Medicare,690,Kidney/UTI,N39.0,Emergency,6,12254.16
+PT-00184,66,F,Medicare,871,Septicemia,A41.9,Emergency,5,9429.06
+PT-00185,57,M,Medicare,392,Esophagitis/misc GI,N39.0,Elective,3,10053.99
+PT-00186,40,M,Private,247,Perc cardiovasc w stent,A41.9,Elective,5,9783.63
+PT-00187,73,F,Medicare,291,Heart failure & shock,I50.9,Newborn,3,7700.06
+PT-00188,70,F,Medicare,291,Heart failure & shock,J18.9,Newborn,5,12145.97
+PT-00189,48,F,Private,470,Major joint replacement,I50.9,Elective,4,14763.22
+PT-00190,36,M,Medicaid,247,Perc cardiovasc w stent,A41.9,Urgent,6,12800.77
+PT-00191,65,M,Medicare,193,Simple pneumonia,M16.11,Emergency,6,20376.74
+PT-00192,56,M,Medicare,392,Esophagitis/misc GI,M16.11,Emergency,4,15912.74
+PT-00193,66,F,Medicare,392,Esophagitis/misc GI,M16.11,Emergency,3,7590.81
+PT-00194,41,F,Medicaid,470,Major joint replacement,A41.9,Emergency,5,17682.14
+PT-00195,46,M,Medicare,690,Kidney/UTI,N39.0,Emergency,2,5347.69
+PT-00196,79,M,Medicaid,470,Major joint replacement,I10,Emergency,5,14191.39
+PT-00197,68,F,Medicaid,603,Cellulitis,E11.9,Emergency,3,10647.85
+PT-00198,71,F,Medicare,291,Heart failure & shock,I50.9,Elective,1,2430.71
+PT-00199,91,M,Medicaid,470,Major joint replacement,M16.11,Urgent,1,3645.53
+PT-00200,64,F,Medicare,193,Simple pneumonia,N18.3,Newborn,3,9073.64
+PT-00201,29,F,Medicare,871,Septicemia,J18.9,Newborn,1,3439.72
+PT-00202,67,F,Medicare,871,Septicemia,E11.9,Emergency,4,11468.54
+PT-00203,80,M,Medicaid,690,Kidney/UTI,N18.3,Emergency,7,23161.36
+PT-00204,94,F,Private,291,Heart failure & shock,M16.11,Elective,3,10152.73
+PT-00205,39,M,Medicare,291,Heart failure & shock,A41.9,Elective,2,3779.69
+PT-00206,43,M,Private,291,Heart failure & shock,I50.9,Elective,6,22061.3
+PT-00207,50,M,Medicare,603,Cellulitis,N18.3,Emergency,2,6228.09
+PT-00208,45,F,Medicare,247,Perc cardiovasc w stent,A41.9,Newborn,2,5696.43
+PT-00209,51,F,Private,690,Kidney/UTI,N39.0,Urgent,11,21860.58
+PT-00210,59,M,Medicaid,392,Esophagitis/misc GI,I50.9,Emergency,2,NA
+PT-00211,42,M,Medicare,247,Perc cardiovasc w stent,A41.9,Elective,4,12290.92
+PT-00212,94,M,Medicaid,193,Simple pneumonia,J18.9,Emergency,1,4067.81
+PT-00213,63,F,Medicaid,470,Major joint replacement,I50.9,Emergency,1,2410.46
+PT-00214,60,F,Medicaid,291,Heart failure & shock,N18.3,Elective,1,3622.84
+PT-00215,69,M,Private,392,Esophagitis/misc GI,I10,Elective,1,2899.17
+PT-00216,62,M,Medicare,392,Esophagitis/misc GI,E11.9,Emergency,7,27629.08
+PT-00217,59,F,Medicaid,193,Simple pneumonia,N18.3,Newborn,2,4171.12
+PT-00218,85,F,Medicare,470,Major joint replacement,E11.9,Emergency,1,3596.99
+PT-00219,58,F,Medicare,690,Kidney/UTI,E11.9,Urgent,5,14216.69
+PT-00220,41,M,Medicaid,392,Esophagitis/misc GI,E11.9,Newborn,2,7589.3
+PT-00221,68,F,Private,392,Esophagitis/misc GI,N39.0,Emergency,5,NA
+PT-00222,56,M,Private,690,Kidney/UTI,N39.0,Elective,4,9769.2
+PT-00223,53,M,Private,247,Perc cardiovasc w stent,N39.0,Elective,5,20592.14
+PT-00224,44,F,Medicare,247,Perc cardiovasc w stent,N39.0,Emergency,2,6849.67
+PT-00225,68,M,Private,247,Perc cardiovasc w stent,I50.9,Emergency,2,3630.78
+PT-00226,59,M,Private,291,Heart failure & shock,E11.9,Elective,2,6978.73
+PT-00227,70,M,Private,603,Cellulitis,E11.9,Elective,4,7670.7
+PT-00228,58,F,Medicaid,291,Heart failure & shock,J18.9,Emergency,1,1977.68
+PT-00229,51,M,Private,291,Heart failure & shock,I50.9,Urgent,1,1986.43
+PT-00230,82,M,Medicare,291,Heart failure & shock,M16.11,Emergency,11,45478.68
+PT-00231,57,M,Private,193,Simple pneumonia,A41.9,Elective,2,NA
+PT-00232,77,F,Private,690,Kidney/UTI,M16.11,Elective,7,19538.3
+PT-00233,42,F,Self-pay,690,Kidney/UTI,J18.9,Emergency,6,24929.22
+PT-00234,54,M,Medicare,871,Septicemia,N39.0,Urgent,2,3731.85
+PT-00235,57,M,Medicaid,690,Kidney/UTI,M16.11,Emergency,3,11484.54
+PT-00236,55,M,Medicare,291,Heart failure & shock,N39.0,Newborn,5,16723.93
+PT-00237,83,M,Medicare,690,Kidney/UTI,E11.9,Emergency,5,14476.3
+PT-00238,61,F,Medicaid,690,Kidney/UTI,N18.3,Emergency,3,11519.53
+PT-00239,65,M,Self-pay,470,Major joint replacement,E11.9,Elective,1,3808.4
+PT-00240,46,F,Medicare,247,Perc cardiovasc w stent,I50.9,Emergency,1,2927.51
+PT-00241,50,M,Private,247,Perc cardiovasc w stent,I10,Emergency,2,8343.03
+PT-00242,77,F,Medicare,690,Kidney/UTI,N18.3,Urgent,3,9332.79
+PT-00243,82,M,Medicare,690,Kidney/UTI,A41.9,Emergency,2,7142.24
+PT-00244,81,M,Medicare,690,Kidney/UTI,A41.9,Elective,4,15436.21
+PT-00245,39,F,Private,470,Major joint replacement,I50.9,Emergency,2,8218.06
+PT-00246,94,M,Medicare,247,Perc cardiovasc w stent,N18.3,Emergency,5,NA
+PT-00247,78,M,Private,690,Kidney/UTI,M16.11,Urgent,3,6304.23
+PT-00248,61,M,Private,871,Septicemia,N18.3,Emergency,4,9532.58
+PT-00249,73,F,Private,392,Esophagitis/misc GI,A41.9,Elective,3,6409.6
+PT-00250,46,M,Medicare,291,Heart failure & shock,E11.9,Emergency,6,18222.66
+PT-00251,44,M,Medicare,871,Septicemia,E11.9,Emergency,5,19286.74
+PT-00252,62,M,Medicaid,193,Simple pneumonia,M16.11,Elective,2,7944.96
+PT-00253,42,F,Medicare,392,Esophagitis/misc GI,M16.11,Elective,11,41282.67
+PT-00254,65,F,Private,291,Heart failure & shock,A41.9,Elective,1,3227.26
+PT-00255,82,M,Self-pay,690,Kidney/UTI,E11.9,Emergency,3,11216.71
+PT-00256,45,F,Medicare,392,Esophagitis/misc GI,I10,Elective,8,28217.2
+PT-00257,50,M,Medicaid,470,Major joint replacement,A41.9,Elective,7,24132.06
+PT-00258,62,F,Medicare,603,Cellulitis,E11.9,Emergency,2,8366.98
+PT-00259,45,F,Medicare,193,Simple pneumonia,N39.0,Urgent,6,15390.53
+PT-00260,55,M,Private,291,Heart failure & shock,N18.3,Emergency,3,8115.21
+PT-00261,75,M,Medicare,392,Esophagitis/misc GI,I10,Emergency,4,15156.96
+PT-00262,77,M,Medicare,193,Simple pneumonia,M16.11,Elective,9,21025.26
+PT-00263,68,M,Self-pay,603,Cellulitis,M16.11,Elective,3,12367.29
+PT-00264,32,F,Medicare,193,Simple pneumonia,I10,Elective,3,11820.13
+PT-00265,61,F,Other,247,Perc cardiovasc w stent,M16.11,Emergency,3,11826.63
+PT-00266,79,M,Self-pay,470,Major joint replacement,A41.9,Emergency,1,2038.27
+PT-00267,75,M,Medicare,603,Cellulitis,M16.11,Elective,1,2000.8
+PT-00268,58,M,Medicare,247,Perc cardiovasc w stent,J18.9,Urgent,4,16290.06
+PT-00269,18,M,Medicare,871,Septicemia,M16.11,Emergency,2,6875.96
+PT-00270,62,F,Medicaid,247,Perc cardiovasc w stent,I50.9,Emergency,3,7420.29
+PT-00271,71,F,Other,193,Simple pneumonia,E11.9,Emergency,2,6023.64
+PT-00272,62,M,Private,871,Septicemia,I10,Emergency,5,15062.17
+PT-00273,64,F,Private,470,Major joint replacement,N18.3,Elective,3,9249.87
+PT-00274,68,F,Medicaid,871,Septicemia,E11.9,Emergency,8,33282.81
+PT-00275,55,M,Private,470,Major joint replacement,M16.11,Emergency,3,8479.06
+PT-00276,82,M,Medicare,392,Esophagitis/misc GI,M16.11,Urgent,1,2501.35
+PT-00277,69,F,Private,871,Septicemia,E11.9,Emergency,5,10233.79
+PT-00278,42,M,Private,193,Simple pneumonia,I50.9,Elective,2,5592
+PT-00279,84,F,Self-pay,193,Simple pneumonia,I10,Emergency,7,23180.39
+PT-00280,81,F,Private,392,Esophagitis/misc GI,N18.3,Emergency,5,9507.12
+PT-00281,75,M,Private,470,Major joint replacement,I10,Urgent,7,27917.72
+PT-00282,35,F,Medicare,291,Heart failure & shock,I50.9,Emergency,11,NA
+PT-00283,52,F,Self-pay,247,Perc cardiovasc w stent,E11.9,Elective,1,4077.93
+PT-00284,72,F,Medicare,291,Heart failure & shock,E11.9,Emergency,7,15137.62
+PT-00285,62,F,Private,470,Major joint replacement,A41.9,Elective,1,3442.47
+PT-00286,67,M,Medicare,392,Esophagitis/misc GI,M16.11,Emergency,9,31744.28
+PT-00287,95,M,Medicaid,690,Kidney/UTI,A41.9,Elective,1,2353.85
+PT-00288,48,M,Private,291,Heart failure & shock,I50.9,Urgent,1,2030.33
+PT-00289,28,F,Medicare,193,Simple pneumonia,M16.11,Elective,4,9887.43
+PT-00290,66,M,Medicare,392,Esophagitis/misc GI,A41.9,Elective,3,9241.13
+PT-00291,50,F,Private,291,Heart failure & shock,J18.9,Emergency,3,7347.29
+PT-00292,69,F,Medicaid,392,Esophagitis/misc GI,N18.3,Emergency,2,6379.66
+PT-00293,49,F,Medicaid,291,Heart failure & shock,A41.9,Emergency,7,24811.28
+PT-00294,95,M,Medicaid,690,Kidney/UTI,I10,Emergency,6,16618.47
+PT-00295,60,M,Private,603,Cellulitis,N39.0,Emergency,4,11105.36
+PT-00296,54,F,Medicare,291,Heart failure & shock,I10,Elective,4,14705.49
+PT-00297,59,M,Self-pay,871,Septicemia,E11.9,Emergency,7,29369.07
+PT-00298,75,F,Medicare,603,Cellulitis,I50.9,Emergency,6,20079.72
+PT-00299,63,M,Other,392,Esophagitis/misc GI,I50.9,Emergency,3,8238.51
+PT-00300,35,F,Medicare,291,Heart failure & shock,M16.11,Elective,2,5924.2
+PT-00301,61,M,Medicaid,871,Septicemia,A41.9,Elective,8,25130.21
+PT-00302,74,M,Medicare,392,Esophagitis/misc GI,E11.9,Emergency,1,3140.82
+PT-00303,62,F,Private,291,Heart failure & shock,M16.11,Newborn,10,28034.04
+PT-00304,73,F,Self-pay,690,Kidney/UTI,I50.9,Emergency,2,4104.17
+PT-00305,59,F,Private,871,Septicemia,N39.0,Elective,7,16972.28
+PT-00306,61,M,Private,871,Septicemia,I50.9,Elective,3,12250.16
+PT-00307,69,M,Medicare,392,Esophagitis/misc GI,I10,Urgent,6,22343.93
+PT-00308,77,M,Medicare,603,Cellulitis,N39.0,Urgent,10,32840.48
+PT-00309,42,M,Other,690,Kidney/UTI,I50.9,Emergency,6,15104.13
+PT-00310,61,F,Private,470,Major joint replacement,M16.11,Elective,2,6058.37
+PT-00311,60,F,Medicare,690,Kidney/UTI,N39.0,Emergency,6,NA
+PT-00312,49,M,Medicare,603,Cellulitis,M16.11,Elective,4,10754.8
+PT-00313,45,F,Private,871,Septicemia,E11.9,Elective,5,NA
+PT-00314,51,F,Private,690,Kidney/UTI,A41.9,Elective,5,12108.07
+PT-00315,71,F,Private,690,Kidney/UTI,I10,Emergency,4,7222.45
+PT-00316,55,F,Private,470,Major joint replacement,A41.9,Elective,1,3894.77
+PT-00317,49,F,Private,470,Major joint replacement,M16.11,Emergency,6,21491.34
+PT-00318,64,M,Medicare,690,Kidney/UTI,N18.3,Elective,5,15755.15
+PT-00319,42,M,Medicare,291,Heart failure & shock,E11.9,Emergency,6,18902.54
+PT-00320,78,F,Medicaid,690,Kidney/UTI,M16.11,Emergency,2,NA
+PT-00321,54,F,Private,603,Cellulitis,N18.3,Emergency,3,6816.3
+PT-00322,65,F,Medicaid,603,Cellulitis,I10,Emergency,1,3731.91
+PT-00323,62,M,Private,291,Heart failure & shock,J18.9,Emergency,8,31940.63
+PT-00324,61,M,Medicare,603,Cellulitis,E11.9,Urgent,12,44125.64
+PT-00325,90,M,Medicaid,291,Heart failure & shock,A41.9,Elective,5,10239.76
+PT-00326,48,M,Medicare,291,Heart failure & shock,A41.9,Emergency,6,16960.92
+PT-00327,80,M,Medicaid,871,Septicemia,I10,Emergency,11,20795.45
+PT-00328,62,M,Medicare,392,Esophagitis/misc GI,E11.9,Emergency,1,2370.32
+PT-00329,48,M,Medicaid,392,Esophagitis/misc GI,E11.9,Emergency,1,2390.56
+PT-00330,60,F,Medicaid,690,Kidney/UTI,N39.0,Emergency,2,4401.35
+PT-00331,73,M,Medicare,690,Kidney/UTI,N39.0,Emergency,7,14584.75
+PT-00332,55,F,Medicaid,392,Esophagitis/misc GI,N18.3,Emergency,13,44656.48
+PT-00333,49,M,Private,392,Esophagitis/misc GI,I50.9,Emergency,18,66318.13
+PT-00334,64,M,Medicare,291,Heart failure & shock,A41.9,Emergency,9,28757.07
+PT-00335,77,M,Private,603,Cellulitis,N39.0,Elective,1,3082.21
+PT-00336,60,M,Medicaid,871,Septicemia,J18.9,Elective,3,6509.73
+PT-00337,39,F,Private,193,Simple pneumonia,J18.9,Elective,2,5307.21
+PT-00338,41,F,Private,247,Perc cardiovasc w stent,M16.11,Emergency,7,21790.29
+PT-00339,49,F,Medicare,291,Heart failure & shock,I10,Emergency,2,6017.88
+PT-00340,53,F,Self-pay,603,Cellulitis,I50.9,Emergency,3,10378.76
+PT-00341,61,M,Self-pay,871,Septicemia,J18.9,Emergency,1,2209.89
+PT-00342,72,F,Medicaid,291,Heart failure & shock,N18.3,Emergency,8,25149.83
+PT-00343,55,M,Medicare,193,Simple pneumonia,I10,Emergency,2,6346.07
+PT-00344,44,M,Other,247,Perc cardiovasc w stent,M16.11,Emergency,1,4013.01
+PT-00345,71,F,Medicare,603,Cellulitis,E11.9,Emergency,8,25449.19
+PT-00346,66,M,Private,690,Kidney/UTI,M16.11,Emergency,1,4129.3
+PT-00347,80,F,Private,291,Heart failure & shock,N18.3,Emergency,1,2931.37
+PT-00348,35,F,Medicaid,392,Esophagitis/misc GI,I10,Emergency,4,14763.98
+PT-00349,63,M,Medicaid,247,Perc cardiovasc w stent,I10,Emergency,4,11989.08
+PT-00350,83,M,Medicaid,291,Heart failure & shock,N18.3,Urgent,2,3751.77
+PT-00351,73,F,Medicaid,470,Major joint replacement,J18.9,Urgent,3,6363.96
+PT-00352,48,M,Private,871,Septicemia,M16.11,Elective,15,58552.57
+PT-00353,73,F,Medicare,470,Major joint replacement,M16.11,Elective,7,26462.61
+PT-00354,48,F,Other,291,Heart failure & shock,M16.11,Elective,4,9248.99
+PT-00355,54,M,Private,470,Major joint replacement,N39.0,Elective,6,11788.72
+PT-00356,81,F,Medicaid,690,Kidney/UTI,I10,Emergency,2,3841.73
+PT-00357,57,F,Medicare,470,Major joint replacement,M16.11,Emergency,9,37520.88
+PT-00358,75,F,Medicaid,690,Kidney/UTI,J18.9,Emergency,1,3323.05
+PT-00359,57,M,Medicaid,690,Kidney/UTI,N18.3,Emergency,7,NA
+PT-00360,36,F,Private,247,Perc cardiovasc w stent,E11.9,Elective,3,9583.9
+PT-00361,48,F,Private,291,Heart failure & shock,J18.9,Elective,5,NA
+PT-00362,44,M,Self-pay,690,Kidney/UTI,N18.3,Emergency,2,5968.41
+PT-00363,54,F,Medicaid,247,Perc cardiovasc w stent,I10,Emergency,3,6034.92
+PT-00364,56,F,Private,193,Simple pneumonia,M16.11,Emergency,2,4936.62
+PT-00365,59,M,Medicaid,470,Major joint replacement,M16.11,Emergency,6,20375.87
+PT-00366,58,F,Medicaid,871,Septicemia,I50.9,Emergency,1,NA
+PT-00367,92,F,Medicare,392,Esophagitis/misc GI,I50.9,Urgent,5,9577.65
+PT-00368,39,F,Medicaid,871,Septicemia,M16.11,Urgent,5,16568.18
+PT-00369,55,M,Private,603,Cellulitis,E11.9,Emergency,8,21957.15
+PT-00370,67,F,Medicaid,470,Major joint replacement,N39.0,Urgent,8,17289.46
+PT-00371,88,F,Medicare,291,Heart failure & shock,A41.9,Emergency,1,3685.12
+PT-00372,63,M,Private,603,Cellulitis,N18.3,Emergency,3,6023.3
+PT-00373,81,F,Medicaid,871,Septicemia,N18.3,Emergency,4,NA
+PT-00374,35,F,Private,690,Kidney/UTI,I10,Urgent,4,7925.14
+PT-00375,85,F,Medicaid,603,Cellulitis,M16.11,Elective,3,9094.68
+PT-00376,50,F,Medicare,871,Septicemia,M16.11,Newborn,2,5849.83
+PT-00377,57,F,Medicare,247,Perc cardiovasc w stent,N39.0,Urgent,1,2774.1
+PT-00378,44,F,Medicare,247,Perc cardiovasc w stent,J18.9,Emergency,13,46190.11
+PT-00379,64,F,Medicare,603,Cellulitis,N39.0,Emergency,6,19496.7
+PT-00380,90,M,Medicare,247,Perc cardiovasc w stent,M16.11,Elective,6,23346.96
+PT-00381,95,F,Medicare,392,Esophagitis/misc GI,J18.9,Emergency,3,NA
+PT-00382,44,M,Medicaid,193,Simple pneumonia,I50.9,Elective,9,35001.79
+PT-00383,69,F,Medicare,690,Kidney/UTI,E11.9,Urgent,8,21184.72
+PT-00384,84,F,Medicare,392,Esophagitis/misc GI,N18.3,Urgent,1,3186.79
+PT-00385,58,M,Medicaid,247,Perc cardiovasc w stent,N18.3,Emergency,3,12348.34
+PT-00386,58,F,Medicaid,871,Septicemia,A41.9,Emergency,2,5713.44
+PT-00387,57,F,Private,291,Heart failure & shock,I50.9,Elective,6,11391.79
+PT-00388,71,M,Medicare,690,Kidney/UTI,I10,Emergency,1,3459.91
+PT-00389,84,F,Medicare,603,Cellulitis,N39.0,Elective,3,12228.16
+PT-00390,73,F,Medicaid,247,Perc cardiovasc w stent,N39.0,Emergency,5,16072.07
+PT-00391,67,F,Medicaid,392,Esophagitis/misc GI,N39.0,Urgent,2,6966.18
+PT-00392,57,M,Medicaid,392,Esophagitis/misc GI,M16.11,Urgent,1,2910.68
+PT-00393,69,F,Medicare,193,Simple pneumonia,M16.11,Urgent,6,NA
+PT-00394,53,M,Medicare,690,Kidney/UTI,M16.11,Elective,2,6527.14
+PT-00395,57,F,Private,470,Major joint replacement,N18.3,Emergency,7,29187.93
+PT-00396,79,M,Medicare,247,Perc cardiovasc w stent,A41.9,Emergency,2,5147.75
+PT-00397,69,F,Medicaid,690,Kidney/UTI,N18.3,Emergency,2,5923.04
+PT-00398,65,F,Medicare,392,Esophagitis/misc GI,I10,Emergency,6,25185.62
+PT-00399,57,M,Medicare,392,Esophagitis/misc GI,N18.3,Emergency,2,8260.3
+PT-00400,76,F,Medicare,291,Heart failure & shock,N18.3,Urgent,2,3620.93
+PT-00401,83,M,Self-pay,291,Heart failure & shock,N39.0,Elective,5,15118.74
+PT-00402,48,F,Medicaid,392,Esophagitis/misc GI,E11.9,Emergency,5,20203.12
+PT-00403,62,M,Self-pay,871,Septicemia,M16.11,Urgent,3,10512.1
+PT-00404,62,F,Private,193,Simple pneumonia,J18.9,Elective,5,20930.41
+PT-00405,52,F,Medicare,690,Kidney/UTI,M16.11,Elective,4,NA
+PT-00406,46,F,Self-pay,392,Esophagitis/misc GI,I50.9,Urgent,2,NA
+PT-00407,61,F,Medicare,193,Simple pneumonia,I50.9,Emergency,2,4447.76
+PT-00408,72,M,Private,690,Kidney/UTI,I50.9,Elective,6,22853.38
+PT-00409,85,F,Medicare,871,Septicemia,I50.9,Elective,4,7418.18
+PT-00410,31,F,Other,871,Septicemia,M16.11,Elective,3,7946.68
+PT-00411,50,F,Medicaid,247,Perc cardiovasc w stent,N18.3,Emergency,2,4881.35
+PT-00412,57,F,Medicare,690,Kidney/UTI,J18.9,Emergency,1,3898.17
+PT-00413,35,F,Medicaid,470,Major joint replacement,J18.9,Emergency,3,NA
+PT-00414,49,F,Medicare,690,Kidney/UTI,M16.11,Elective,3,NA
+PT-00415,49,F,Medicaid,603,Cellulitis,I10,Emergency,2,4248.92
+PT-00416,50,F,Medicare,193,Simple pneumonia,E11.9,Urgent,9,19410.44
+PT-00417,26,M,Self-pay,291,Heart failure & shock,A41.9,Urgent,8,16764.17
+PT-00418,65,F,Self-pay,291,Heart failure & shock,I50.9,Elective,1,2022.18
+PT-00419,51,F,Medicaid,392,Esophagitis/misc GI,A41.9,Emergency,2,5185.75
+PT-00420,86,M,Private,603,Cellulitis,E11.9,Emergency,3,10260.2
+PT-00421,74,F,Medicaid,690,Kidney/UTI,J18.9,Urgent,8,25213.79
+PT-00422,38,F,Self-pay,603,Cellulitis,I10,Emergency,1,2143.18
+PT-00423,63,M,Private,291,Heart failure & shock,N18.3,Emergency,1,2545.06
+PT-00424,52,M,Medicare,871,Septicemia,E11.9,Emergency,5,20030.81
+PT-00425,76,F,Medicare,392,Esophagitis/misc GI,J18.9,Emergency,1,3929.55
+PT-00426,62,M,Medicaid,690,Kidney/UTI,I10,Urgent,1,3482.52
+PT-00427,53,F,Medicare,470,Major joint replacement,I10,Elective,1,3276.24
+PT-00428,69,F,Self-pay,603,Cellulitis,I50.9,Elective,3,10564.42
+PT-00429,64,M,Private,470,Major joint replacement,A41.9,Emergency,8,23723.99
+PT-00430,59,M,Medicare,291,Heart failure & shock,E11.9,Urgent,4,13208.99
+PT-00431,94,F,Self-pay,603,Cellulitis,E11.9,Urgent,5,10621.16
+PT-00432,53,M,Medicare,247,Perc cardiovasc w stent,N39.0,Urgent,10,33747.86
+PT-00433,54,M,Self-pay,871,Septicemia,I10,Emergency,2,4438.7
+PT-00434,37,M,Private,291,Heart failure & shock,N18.3,Emergency,1,3940.31
+PT-00435,61,F,Medicare,470,Major joint replacement,A41.9,Emergency,2,6852.2
+PT-00436,76,M,Private,291,Heart failure & shock,E11.9,Emergency,2,6196.06
+PT-00437,28,F,Medicare,247,Perc cardiovasc w stent,E11.9,Emergency,4,10750.15
+PT-00438,57,M,Private,690,Kidney/UTI,N39.0,Elective,1,3403.78
+PT-00439,43,F,Self-pay,392,Esophagitis/misc GI,N39.0,Emergency,2,7755.23
+PT-00440,85,F,Private,871,Septicemia,A41.9,Elective,1,3142.72
+PT-00441,83,M,Medicare,470,Major joint replacement,I50.9,Emergency,7,13459.51
+PT-00442,67,F,Medicare,603,Cellulitis,J18.9,Emergency,4,15241.69
+PT-00443,84,M,Medicare,193,Simple pneumonia,I50.9,Emergency,4,13260.1
+PT-00444,48,M,Medicare,291,Heart failure & shock,E11.9,Emergency,3,NA
+PT-00445,77,F,Medicaid,470,Major joint replacement,N39.0,Emergency,1,2519.79
+PT-00446,52,M,Medicare,193,Simple pneumonia,E11.9,Elective,4,7912.63
+PT-00447,67,M,Self-pay,193,Simple pneumonia,I10,Emergency,3,12083.88
+PT-00448,57,M,Medicare,871,Septicemia,E11.9,Emergency,6,16576.55
+PT-00449,57,M,Other,247,Perc cardiovasc w stent,I10,Emergency,3,10190.7
+PT-00450,70,M,Private,392,Esophagitis/misc GI,E11.9,Emergency,5,9299.61
+PT-00451,41,M,Medicaid,392,Esophagitis/misc GI,E11.9,Emergency,4,8665.45
+PT-00452,57,M,Medicaid,871,Septicemia,E11.9,Urgent,2,4310.51
+PT-00453,64,M,Medicaid,871,Septicemia,E11.9,Urgent,3,6087.07
+PT-00454,55,F,Medicaid,470,Major joint replacement,N18.3,Emergency,3,NA
+PT-00455,63,F,Medicaid,470,Major joint replacement,E11.9,Emergency,2,6435.84
+PT-00456,56,M,Medicare,193,Simple pneumonia,I10,Emergency,12,25916.45
+PT-00457,87,F,Private,193,Simple pneumonia,E11.9,Urgent,4,10842.37
+PT-00458,73,F,Medicaid,603,Cellulitis,N18.3,Urgent,4,NA
+PT-00459,95,F,Medicare,690,Kidney/UTI,N39.0,Emergency,5,14599.13
+PT-00460,49,F,Medicare,871,Septicemia,M16.11,Emergency,8,NA
+PT-00461,75,M,Medicaid,392,Esophagitis/misc GI,E11.9,Elective,6,17052.25
+PT-00462,95,M,Medicare,690,Kidney/UTI,J18.9,Emergency,4,8799.92
+PT-00463,66,F,Medicare,470,Major joint replacement,A41.9,Emergency,2,7170.1
+PT-00464,44,F,Private,247,Perc cardiovasc w stent,I10,Emergency,1,NA
+PT-00465,45,M,Medicaid,193,Simple pneumonia,N39.0,Elective,18,NA
+PT-00466,61,M,Medicare,392,Esophagitis/misc GI,M16.11,Elective,4,10590.34
+PT-00467,82,F,Medicare,392,Esophagitis/misc GI,J18.9,Elective,6,25196.27
+PT-00468,74,F,Medicaid,193,Simple pneumonia,I10,Emergency,6,21273.07
+PT-00469,27,F,Medicare,193,Simple pneumonia,A41.9,Emergency,4,13110.26
+PT-00470,50,F,Medicare,291,Heart failure & shock,I50.9,Elective,5,15607.17
+PT-00471,61,M,Medicaid,392,Esophagitis/misc GI,I10,Elective,7,17570.28
+PT-00472,38,F,Medicare,247,Perc cardiovasc w stent,M16.11,Emergency,2,5774.91
+PT-00473,73,F,Private,603,Cellulitis,N18.3,Emergency,5,14309.34
+PT-00474,22,M,Medicare,470,Major joint replacement,M16.11,Emergency,2,NA
+PT-00475,64,F,Other,603,Cellulitis,I50.9,Emergency,7,24463.08
+PT-00476,55,F,Private,871,Septicemia,I50.9,Elective,3,5429.9
+PT-00477,54,M,Medicaid,392,Esophagitis/misc GI,N39.0,Elective,4,14275.36
+PT-00478,57,F,Private,193,Simple pneumonia,J18.9,Emergency,4,7427.23
+PT-00479,67,F,Medicaid,193,Simple pneumonia,N18.3,Emergency,4,7564.42
+PT-00480,68,M,Medicaid,470,Major joint replacement,J18.9,Emergency,2,3897.67
+PT-00481,58,F,Medicaid,392,Esophagitis/misc GI,J18.9,Urgent,3,5539.74
+PT-00482,31,M,Medicare,193,Simple pneumonia,E11.9,Emergency,1,2342.52
+PT-00483,38,M,Medicare,871,Septicemia,A41.9,Urgent,1,2914.03
+PT-00484,38,F,Medicare,603,Cellulitis,I50.9,Emergency,1,3892.12
+PT-00485,74,F,Medicare,871,Septicemia,I50.9,Emergency,6,22300.53
+PT-00486,58,M,Medicare,392,Esophagitis/misc GI,I50.9,Urgent,3,7350.32
+PT-00487,66,F,Medicaid,247,Perc cardiovasc w stent,A41.9,Emergency,4,12633.76
+PT-00488,37,M,Medicaid,247,Perc cardiovasc w stent,M16.11,Emergency,2,3740.97
+PT-00489,53,F,Medicaid,690,Kidney/UTI,M16.11,Elective,1,3833.86
+PT-00490,70,M,Medicaid,470,Major joint replacement,I10,Emergency,3,6653.02
+PT-00491,59,M,Medicaid,247,Perc cardiovasc w stent,I10,Emergency,7,23630.8
+PT-00492,60,F,Other,603,Cellulitis,M16.11,Emergency,8,26713.48
+PT-00493,60,F,Medicare,470,Major joint replacement,N39.0,Emergency,4,13532.94
+PT-00494,81,F,Medicaid,871,Septicemia,E11.9,Emergency,3,9843.14
+PT-00495,52,F,Self-pay,392,Esophagitis/misc GI,I10,Elective,2,8176.99
+PT-00496,72,M,Medicare,247,Perc cardiovasc w stent,I10,Newborn,1,2214.46
+PT-00497,76,M,Medicare,247,Perc cardiovasc w stent,N39.0,Emergency,3,6437.47
+PT-00498,42,M,Medicare,470,Major joint replacement,E11.9,Emergency,7,17414.3
+PT-00499,63,F,Medicare,247,Perc cardiovasc w stent,I10,Urgent,9,20831.11
+PT-00500,61,F,Self-pay,392,Esophagitis/misc GI,I50.9,Emergency,8,24852.18

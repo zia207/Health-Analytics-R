@@ -1,35 +1,38 @@
----
-title: "Disease Mapping & Bayesian Smoothing"
-subtitle: "Module 07 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+### Module 07: Spatial Epidemiology
+
+# Disease Mapping & Bayesian Smoothing
+
 ***
 **Learning objectives**
 - Understand the small-area estimation problem: unstable rates in sparse populations
-- Implement empirical Bayes smoothing (James-Stein, gamma-Poisson)
-- Conceptualise the BYM (Besag-York-Mollié) CAR model structure
+- Implement empirical Bayes smoothing (James–Stein, gamma-Poisson)
+- Conceptualise the BYM (Besag–York–Mollié) CAR model structure
 - Compare raw SMR vs smoothed estimates visually and statistically
-- Apply a BYM-style spatial smoother that runs without compiling Stan
+- Apply a BYM-style spatial smoother that runs without compiling Stan or INLA
 - Assess shrinkage patterns in Bayesian disease mapping
+- Build a county-centroid kernel-density relative-risk surface
 
+**Data:** `Data/usa_data.csv` — CDC adult diabetes prevalence and County Health Rankings covariates for 3,108 US counties (CONUS + DC)  
+**Geometries:** `Data/US_COUNTY.shp` — county polygons in NAD83 Albers (EPSG:5070)  
 **Estimated time:** 3 hours | **Level:** Advanced  
-**Libraries:** `sf`, `spdep`, `spatialreg`, `ggplot2`, `MASS`
+**Libraries:** `sf`, `spdep`, `ggplot2`, `dplyr`, `patchwork`
 
 ## 1. Setup
+
+Libraries and plotting theme only. County data are loaded when the first simulation needs them.
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(sf)
 library(spdep)
-library(spatialreg)
 library(patchwork)
 
 set.seed(42)
 out_dir <- file.path(tempdir(), "mod07")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
 theme_set(
   theme_minimal(base_size = 11) +
     theme(
@@ -39,58 +42,53 @@ theme_set(
     )
 )
 
-spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 2) {
-  grid <- matrix(0, nrow = nrow, ncol = ncol)
-  for (i in seq_along(values)) grid[row_idx[i], col_idx[i]] <- values[i]
-  k <- ceiling(3 * sigma)
-  xs <- (-k):k
-  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
-  kern <- kern / sum(kern)
-  pad <- k
-  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
-  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
-  out <- matrix(0, nrow, ncol)
-  for (r in seq_len(nrow)) for (c in seq_len(ncol)) {
-    out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
-  }
-  mapply(function(r, c) out[r, c], row_idx, col_idx)
+theme_map <- function() {
+  theme_void(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
+      plot.subtitle = element_text(size = 9, hjust = 0.5),
+      legend.position = "right"
+    )
 }
 
-NROW <- 10; NCOL <- 20; N <- NROW * NCOL
-row_idx <- rep(seq_len(NROW), each = NCOL)
-col_idx <- rep(seq_len(NCOL), times = NROW)
-lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
-lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
-pct_poverty <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
-pm25 <- 8 + 4 * rgamma(N, 2, 1)
-population <- as.integer(rlnorm(N, 10.5, 1.0))
-spatial_risk <- spatial_smooth(rnorm(N), row_idx, col_idx, NROW, NCOL)
-cvd_rate <- (180 + 1.2 * pct_poverty + 0.5 * pm25 + 15 * spatial_risk + rnorm(N, 0, 12))
-expected <- (cvd_rate / 100000) * population * 5
-observed <- rpois(N, expected)
-smr <- observed / pmax(expected, 1)
-
-df <- tibble(
-  county_id = sprintf("C%03d", seq_len(N) - 1),
-  lon, lat, row = row_idx, col = col_idx,
-  pct_poverty, pm25, population, cvd_rate, observed, expected, smr
-)
-geoms <- Map(function(lo, la) {
-  st_polygon(list(matrix(
-    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
-      lo - 1.25, la + 1, lo - 1.25, la - 1), ncol = 2, byrow = TRUE
-  )))
-}, df$lon, df$lat)
-gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
-cat(sprintf("N=%d | CVD=%.1f | SMR range=[%.2f,%.2f]\n",
-            N, mean(cvd_rate), min(smr), max(smr)))
+sf_fill <- function(gdf_in, column, title, legend = NULL) {
+  ggplot(gdf_in) +
+    geom_sf(aes(fill = .data[[column]]), colour = "white", linewidth = 0.05) +
+    labs(title = title, fill = legend) +
+    theme_map()
+}
 ```
 
-## 2. The Small-Area Estimation Problem
+## 2. The Small-Area Estimation
 
-**Problem:** Observed SMR = O_i / E_i is unstable for areas with small populations.
+Small-Area Estimation (SAE) refers to statistical methods used to produce reliable estimates of quantities (such as disease rates) for small geographic areas or population subgroups, where direct survey data is sparse or highly variable. Instead of relying only on local data — which may be noisy or unreliable for small places — SAE combines information from similar areas, related predictors, or statistical models to "borrow strength." This helps stabilise estimates, reduce random error, and provide more trustworthy results, especially in regions with limited data. In public health, SAE is crucial for mapping disease rates in all counties or neighbourhoods, not just places with large populations or many survey respondents.
 
-A county with expected deaths E=2 and observed O=4 has SMR=2.0, suggesting 100% excess mortality — but this could easily be random variation.
+### 2.1 The Small-Area Estimation Problem
+
+Imagine you run a national health survey and someone asks you for the diabetes rate in *every county*. The catch: a survey designed for national numbers might only catch six people in some small rural county. A rate computed from six people is basically noise — one unlucky draw reads 0%, another reads 33%. That "just use whoever you sampled there" number is called the *direct estimate*, and in small areas it's too wobbly to trust. Small Area Estimation (SAE) is the set of tricks for getting believable numbers for those little areas anyway.
+
+**The core move: borrowing strength.** Instead of trusting those six people alone, SAE blends them with information from outside the county. It borrows from two places:
+
+- *Predictors that exist everywhere.* Obesity, age structure, poverty, food access come from the census and administrative records for every county — no survey needed. If you know how those track with diabetes (a regression), you can predict a county's rate even where you sampled almost nobody.
+- *Neighbouring or similar areas.* Nearby counties carry information about each other, so you let them lend each other statistical weight (spatial smoothing).
+
+Usually you use both.
+
+**The mechanism: shrinkage.** The final estimate is a weighted average of the noisy local direct estimate and the model's prediction — and the weighting is the clever bit, because it adapts to how much local data you have. Big sample in a county → trust the direct number, barely nudge it. Tiny sample → lean hard on the model. Estimates get "shrunk" toward the model prediction by an amount proportional to how unreliable they are. You trade a little bias for a big cut in variance, and on average land much closer to the truth.
+
+The everyday analogy is rating a restaurant from only three reviews: you don't take those three at face value, you nudge them toward what you'd expect from similar restaurants nearby — and the fewer reviews there are, the more you rely on that expectation.
+
+**Names you'll bump into.** When you only have the aggregated estimate per area plus area-level covariates, the classic tool is the *Fay–Herriot* area-level model. When you have individual respondent records plus covariates, it's the *Battese–Harter–Fuller* unit-level model. Bolt on spatial or random effects (often estimated in a Bayesian / INLA framework) and you're in modern SAE.
+
+**Where you've already met it.** The county diabetes prevalence you've been running GWR on is almost certainly an SAE product — CDC's diabetes surveillance and the PLACES project publish county estimates built with model-based small area estimation, precisely because no survey measures every county directly. So your local-regression work sits one layer on top of SAE output.
+
+**The catch.** All of this leans on the model being reasonable. If the model is wrong, or a county is genuinely unusual in a way the covariates don't capture, SAE will cheerfully smooth that real signal away — the precision you gained was borrowed against an assumption. That tension between design-based (trust the sample) and model-based (trust the model) thinking is basically the whole craft of the field.
+
+**Problem:** Observed SMR = $O_i / E_i$ is unstable for areas with small populations.
+
+A county with expected deaths $E=2$ and observed $O=4$ has SMR=2.0, suggesting 100% excess mortality — but this could easily be random variation.
 
 **Key insight:** Raw rates have high variance in low-population areas. Bayesian methods "borrow strength" from neighbouring areas and the overall mean.
 
@@ -101,101 +99,391 @@ A county with expected deaths E=2 and observed O=4 has SMR=2.0, suggesting 100% 
 | BYM/CAR | Spatial neighbours | Yes |
 | Full Bayesian MCMC | Prior + data | Yes (BYM) |
 
+### 2.2 Small Area Estimation on County Level Data
+
+Setup: take the published county diabetes prevalence as the (pretend) **truth**. Simulate a national survey that samples a small, highly variable number of respondents per county, and count diabetes cases as $\mathrm{Binomial}(n_c, p_{\mathrm{true}})$.
+
+- **Direct estimate** $\hat{p} = \mathrm{cases} / \mathrm{respondents}$ (design-based)
+- **Fay–Herriot** area-level model borrows strength from covariates known for every county (obesity, age 65+, exercise access, food environment) and shrinks each noisy direct estimate toward the model fit.
+
+This shows why small samples break the direct estimate and how SAE repairs it.
+
 ```{r}
-p1 <- ggplot(gdf) +
-  geom_sf(aes(fill = smr), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(name = "Raw SMR", palette = "RdBu", direction = -1,
-                       limits = c(0.5, 1.8), oob = scales::squish) +
-  labs(title = "Raw SMR — noisy in small areas", x = "Lon", y = "Lat")
+# Truth + covariates (published prevalence treated as known truth)
+raw <- read_csv("Data/usa_data.csv", show_col_types = FALSE)
 
-p2 <- ggplot(gdf) +
-  geom_sf(aes(fill = log(population)), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(name = "log(Population)", palette = "Blues", direction = 1) +
-  labs(title = "Log population (denominator size)", x = "Lon", y = "Lat")
-
-p3 <- ggplot(gdf) +
-  geom_sf(aes(fill = expected), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(name = "Expected deaths (5-yr)", palette = "YlOrRd", direction = 1) +
-  labs(title = "Expected deaths — reliability indicator", x = "Lon", y = "Lat")
-
-p_sae <- p1 | p2 | p3
-p_sae <- p_sae + plot_annotation(
-  title = "Small-Area Problem: Raw SMR Most Unreliable Where Expected Counts Are Small"
+df <- tibble(
+  county_id       = sprintf("%05d", as.integer(raw$fips)),
+  fips            = as.integer(raw$fips),
+  county          = raw$county,
+  state_abbr      = raw$state_abbr,
+  state_name      = raw$state_name,
+  x_m             = raw$centroid_x_m,
+  y_m             = raw$centroid_y_m,
+  diabetes_prev   = raw$y_diabetes_prevalence_adults_with_diabetes,
+  pct_65plus      = raw$chr_65_and_older_65_and_over,
+  pct_exercise    = raw$chr_access_to_exercise_opportunities,
+  pct_obesity     = raw$chr_adult_obesity,
+  food_env_index  = raw$chr_food_environment_index
 )
-print(p_sae)
-ggsave(file.path(out_dir, "small_area_problem.png"), p_sae, width = 18, height = 5, dpi = 150)
 
-cv_smr <- ifelse(df$expected < 5, "< 5 expected", ">= 5 expected")
-cat("SMR variance by expected count group:\n")
-for (grp in c("< 5 expected", ">= 5 expected")) {
-  mask <- cv_smr == grp
-  cat(sprintf("  %-20s: n=%3d | SMR mean=%.3f | SD=%.3f\n",
-              grp, sum(mask), mean(df$smr[mask]), sd(df$smr[mask])))
+county_shapes <- st_read("Data/US_COUNTY.shp", quiet = TRUE)
+county_shapes$FIPS <- as.integer(county_shapes$FIPS)
+# Shannon County SD (46113) was renamed Oglala Lakota (46102)
+county_shapes$FIPS[county_shapes$FIPS == 46113] <- 46102
+
+gdf <- county_shapes %>%
+  inner_join(df, by = c("FIPS" = "fips"))
+m <- nrow(gdf)
+p_true <- gdf$diabetes_prev / 100
+
+# Simulate the survey (this is the "raw data")
+# respondents per county: median ~25, some as few as 5, a few in the hundreds
+set.seed(7)
+n_c <- pmax(5L, as.integer(round(rlnorm(m, meanlog = log(25), sdlog = 0.9))))
+cases <- rbinom(m, size = n_c, prob = p_true)
+p_dir <- cases / n_c
+
+# Design-based sampling variance of each direct estimate (stabilised)
+p_tilde <- (cases + 0.5) / (n_c + 1)
+D <- p_tilde * (1 - p_tilde) / n_c
+
+# Standardise covariates; intercept + obesity, 65+, exercise, food environment
+Z <- scale(as.matrix(st_drop_geometry(gdf)[,
+  c("pct_obesity", "pct_65plus", "pct_exercise", "food_env_index")
+]))
+X <- cbind(1, Z)
+
+fh_gls <- function(X, y, D, s2) {
+  w <- 1 / (s2 + D)
+  as.vector(solve(crossprod(X, X * w), crossprod(X, y * w)))
 }
+
+# Moment estimate of between-area variance s2, then two GLS refinements
+beta <- as.vector(solve(crossprod(X), crossprod(X, p_dir)))
+resid <- p_dir - as.vector(X %*% beta)
+p_dim <- ncol(X)
+s2 <- max((sum(resid^2) - sum(D)) / (m - p_dim), 1e-6)
+for (i in 1:2) {
+  beta <- fh_gls(X, p_dir, D, s2)
+  resid <- p_dir - as.vector(X %*% beta)
+  s2 <- max(sum(resid^2 * (s2 / (s2 + D))) / (m - p_dim), 1e-6)
+}
+
+gamma <- s2 / (s2 + D)                                 # ~1 big sample, ~0 tiny
+p_fh <- gamma * p_dir + (1 - gamma) * as.vector(X %*% beta)  # EBLUP
+
+rmse_pts <- function(a, b) sqrt(mean((a - b)^2)) * 100  # percentage points
+
+cat(sprintf(
+  "Respondents per county : min %d, median %d, max %d\n",
+  min(n_c), as.integer(median(n_c)), max(n_c)
+))
+cat(sprintf("RMSE vs truth  DIRECT  : %.2f pts\n", rmse_pts(p_dir, p_true)))
+cat(sprintf("RMSE vs truth  FAY-HER.: %.2f pts\n", rmse_pts(p_fh, p_true)))
+small <- n_c <= 15
+cat(sprintf("  among the %d smallest-sample counties (n<=15):\n", sum(small)))
+cat(sprintf("    DIRECT   RMSE       : %.2f pts\n", rmse_pts(p_dir[small], p_true[small])))
+cat(sprintf("    FAY-HER. RMSE       : %.2f pts\n", rmse_pts(p_fh[small], p_true[small])))
+
+gdf$n_respondents <- n_c
+gdf$p_true_pct    <- p_true * 100
+gdf$p_direct_pct  <- p_dir * 100
+gdf$p_fh_pct      <- p_fh * 100
+gdf$direct_err    <- (p_dir - p_true) * 100
+gdf$shrinkage_gamma <- gamma
+
+# Optional: keep the simulated estimates in a temp folder, not Data/
+write_csv(
+  st_drop_geometry(gdf) %>%
+    select(FIPS, county, state_abbr, p_true_pct, n_respondents,
+           p_direct_pct, p_fh_pct, shrinkage_gamma),
+  file.path(out_dir, "sae_simulation.csv")
+)
+```
+
+### 2.3 Fay–Herriot Area-level Model
+
+This method helps us get better estimates for each county, especially where we don't have a lot of data. It takes what we know about each county (like age, obesity, etc.) and combines it with the raw survey results. If a county has few survey responses (very noisy), it "blends" the result with what we predict using the other info. The final estimate is a smart mix: if the county has lots of data, the survey result dominates; if not, the prediction from covariates (and all counties) helps out more.
+
+This model is designed for small area estimation (SAE), where direct estimates can be highly variable due to small sample sizes in each area (here, counties).
+
+The observed (direct) estimate for area $i$, $p^{\mathrm{dir}}_i$, is modelled as:
+
+$$
+p^{\mathrm{dir}} = X\beta + v + e
+$$
+
+- $X$ is the matrix of known county-level covariates (obesity, age structure, exercise access, food environment), and $\beta$ is a vector of regression coefficients.
+- $v$ is a random effect for each area, assumed $v \sim N(0, \sigma^2)$, representing unobserved heterogeneity between counties.
+- $e$ is a sampling error term reflecting survey variability, assumed $e \sim N(0, D)$, where $D$ is the variance of the direct estimator for each county.
+
+The EBLUP is a shrinkage estimator $\hat{p}^{\mathrm{FH}}_i = \gamma_i\,\hat{p}^{\mathrm{dir}}_i + (1-\gamma_i)\,x_i'\hat{\beta}$ with $\gamma_i = \sigma^2 / (\sigma^2 + D_i)$. This hierarchical model borrows strength across counties by shrinking noisy direct estimates toward predictions from the covariates, improving estimates especially in counties with small survey samples.
+
+### 2.4 Visualisation and Mapping
+
+Six panels matching the simulation: truth, sample size, the noisy direct map, a funnel of error versus $n$, the Fay–Herriot repair, and RMSE by sample-size quintile.
+
+```{r}
+#| fig-width: 16
+#| fig-height: 10
+vmin <- 4
+vmax <- 18
+
+p_truth <- ggplot(gdf) +
+  geom_sf(aes(fill = p_true_pct), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "Prevalence (%)", palette = "RdYlBu",
+                       direction = -1, limits = c(vmin, vmax), oob = scales::squish) +
+  labs(title = "1. TRUTH\n(county diabetes prevalence)") +
+  theme_map()
+
+p_n <- ggplot(gdf) +
+  geom_sf(aes(fill = n_respondents), colour = "white", linewidth = 0.05) +
+  scale_fill_viridis_c(name = "Respondents (log)", trans = "log10") +
+  labs(title = "2. Survey respondents per county\n(the 'small area' problem)") +
+  theme_map()
+
+p_direct <- ggplot(gdf) +
+  geom_sf(aes(fill = p_direct_pct), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "Prevalence (%)", palette = "RdYlBu",
+                       direction = -1, limits = c(vmin, vmax), oob = scales::squish) +
+  labs(title = "3. DIRECT estimate\n(cases / respondents — noisy!)") +
+  theme_map()
+
+p_funnel <- ggplot(st_drop_geometry(gdf), aes(n_respondents, direct_err)) +
+  geom_hline(yintercept = 0, colour = "black", linewidth = 0.4) +
+  geom_point(size = 0.6, alpha = 0.35, colour = "#c0392b") +
+  scale_x_log10() +
+  labs(
+    x = "Respondents per county (log)",
+    y = "Direct estimate error (pts)",
+    title = "4. Why it breaks: error explodes\nas the sample shrinks"
+  )
+
+p_fh_map <- ggplot(gdf) +
+  geom_sf(aes(fill = p_fh_pct), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "Prevalence (%)", palette = "RdYlBu",
+                       direction = -1, limits = c(vmin, vmax), oob = scales::squish) +
+  labs(title = "5. FAY–HERRIOT (SAE)\nshrinks toward covariate model") +
+  theme_map()
+
+q <- as.integer(cut(n_c, breaks = quantile(n_c, probs = 0:5 / 5),
+                    include.lowest = TRUE, labels = FALSE))
+edges <- as.integer(quantile(n_c, probs = 0:5 / 5))
+rmse_df <- tibble(
+  quintile = factor(rep(sprintf("%d–%d", edges[1:5], edges[2:6]), 2),
+                    levels = sprintf("%d–%d", edges[1:5], edges[2:6])),
+  method = rep(c("Direct", "Fay–Herriot"), each = 5),
+  rmse = c(
+    vapply(1:5, function(i) rmse_pts(p_dir[q == i], p_true[q == i]), numeric(1)),
+    vapply(1:5, function(i) rmse_pts(p_fh[q == i],  p_true[q == i]), numeric(1))
+  )
+)
+
+p_rmse <- ggplot(rmse_df, aes(quintile, rmse, fill = method)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  scale_fill_manual(values = c("Direct" = "#c0392b", "Fay–Herriot" = "#2471a3")) +
+  labs(
+    x = "Respondents per county (quintile)",
+    y = "RMSE vs truth (pts)",
+    title = "6. The payoff: SAE wins most\nwhere samples are smallest",
+    fill = NULL
+  ) +
+  theme(legend.position = "bottom")
+
+p_sae <- (p_truth | p_n | p_direct) / (p_funnel | p_fh_map | p_rmse) +
+  plot_annotation(
+    title = "The small-area problem — simulated survey on 3,108 US counties",
+    subtitle = "Truth = published county diabetes prevalence"
+  )
+print(p_sae)
+ggsave(file.path(out_dir, "sae_six_panel.png"), p_sae,
+       width = 16, height = 10, dpi = 150)
 ```
 
 ## 3. Empirical Bayes Smoothing
 
-```{r}
-# Gamma-Poisson (conjugate) Empirical Bayes
-# Model: O_i | theta_i ~ Poisson(E_i * theta_i)
-#        theta_i ~ Gamma(alpha, beta)
-# Posterior mean: E[theta_i|O_i] = (O_i + alpha) / (E_i + beta)
-# Shrinkage toward overall rate: alpha/beta
+Empirical Bayes smoothing fixes noisy small-area rates by pulling each one toward the average, based on how much you can trust it.
 
-smr_mean <- mean(df$smr)
-smr_var  <- var(df$smr)
-extra_var <- max(smr_var - smr_mean / mean(df$expected), 0.01)
+The problem: a rate from a small county is unreliable. Two diabetes cases out of a survey of 6 people gives 33%, but that's luck, not truth. A county with thousands of respondents gives a rate you *can* trust.
+
+The fix: nudge every county's raw rate toward the overall average. How hard you nudge depends on the sample:
+
+- Big, well-measured county → barely moved, keep its own number.
+- Tiny, noisy county → pulled most of the way to the average.
+
+That's the whole idea. Reliable areas keep their signal; unreliable ones borrow it from everyone else.
+
+Why "empirical Bayes": Bayes means blending your data with a prior expectation. The "empirical" part is that you don't guess that expectation — you calculate it from all the counties together. The full group tells you what a typical rate looks like, and each shaky county gets pulled toward it.
+
+Why "smoothing": a raw small-area map is all speckle, driven by the wild swings of its least-populated spots. This replaces the speckle with a map you can actually read.
+
+The one catch: it trades a little accuracy for a lot less noise. If a small county is genuinely a real hotspot, smoothing can flatten it toward the average and hide it — which is a problem if hunting hotspots is the whole point.
+
+That's the same move as the Fay–Herriot fix from the simulation — the $\gamma$ weight that pulled small-sample counties toward the model line was empirical Bayes in action.
+
+### 3.1 Gamma-Poisson Empirical Bayes Smoothing on County Data
+
+In this section, we apply Gamma-Poisson Empirical Bayes smoothing to the county-level diabetes data. This statistical technique improves the reliability of disease rate estimates for areas with small sample sizes by "shrinking" their observed rates toward an overall mean, depending on how much data each area has. The approach uses the conjugate relationship between the Gamma prior and Poisson likelihood, producing smoother, less noisy county estimates that better reflect the true underlying risk.
+
+The file has diabetes **prevalence** but no case counts, so we cast it as a small-area screening problem: treat the published prevalence as each county's true risk, screen a limited (and highly variable) number of adults per county, and observe diabetes cases as Poisson. Then apply the conjugate Gamma-Poisson EB smoother.
+
+```{r}
+set.seed(11)
+true_rate <- gdf$diabetes_prev / 100
+screened <- pmax(25L, as.integer(round(rlnorm(m, meanlog = log(400), sdlog = 1.3))))
+overall  <- sum(screened * true_rate) / sum(screened)   # reference rate
+expected <- overall * screened
+observed <- rpois(m, lambda = screened * true_rate)
+smr      <- observed / expected
+
+smr_mean <- mean(smr)
+smr_var  <- var(smr)
+extra_var <- max(smr_var - smr_mean / mean(expected), 0.01)
 alpha_hat <- smr_mean^2 / extra_var
 beta_hat  <- smr_mean / extra_var
 
-cat(sprintf("EB Hyperparameters: alpha=%.3f, beta=%.3f\n", alpha_hat, beta_hat))
+cat(sprintf("EB hyperparameters: alpha=%.3f, beta=%.3f\n", alpha_hat, beta_hat))
 cat(sprintf("Prior mean (overall rate): %.3f\n", alpha_hat / beta_hat))
 
-gdf$smr_eb <- (df$observed + alpha_hat) / (df$expected + beta_hat)
-gdf$smr_shrinkage <- 1 - (df$expected / (df$expected + beta_hat))
-df$smr_eb <- gdf$smr_eb
-df$smr_shrinkage <- gdf$smr_shrinkage
+smr_eb <- (observed + alpha_hat) / (expected + beta_hat)
+smr_shrinkage <- 1 - (expected / (expected + beta_hat))
 
 cat("\nSmoothing results:\n")
-cat(sprintf("  Raw SMR   : mean=%.3f  SD=%.3f  range=[%.2f,%.2f]\n",
-            mean(df$smr), sd(df$smr), min(df$smr), max(df$smr)))
-cat(sprintf("  EB Smooth : mean=%.3f  SD=%.3f  range=[%.2f,%.2f]\n",
-            mean(df$smr_eb), sd(df$smr_eb), min(df$smr_eb), max(df$smr_eb)))
-cat(sprintf("  Mean shrinkage: %.1f%%\n", mean(df$smr_shrinkage) * 100))
-cat(sprintf("  High shrinkage (>50%%): %d counties (low population)\n",
-            sum(df$smr_shrinkage > 0.5)))
+cat(sprintf(
+  "  Raw SMR   : mean=%.3f  SD=%.3f  range=[%.2f, %.2f]\n",
+  mean(smr), sd(smr), min(smr), max(smr)
+))
+cat(sprintf(
+  "  EB Smooth : mean=%.3f  SD=%.3f  range=[%.2f, %.2f]\n",
+  mean(smr_eb), sd(smr_eb), min(smr_eb), max(smr_eb)
+))
+cat(sprintf("  Mean shrinkage: %.1f%%\n", mean(smr_shrinkage) * 100))
+cat(sprintf(
+  "  High shrinkage (>50%%): %d counties (low screened n)\n",
+  sum(smr_shrinkage > 0.5)
+))
+
+gdf$screened      <- screened
+gdf$observed      <- observed
+gdf$expected      <- expected
+gdf$smr           <- smr
+gdf$smr_eb        <- smr_eb
+gdf$smr_shrinkage <- smr_shrinkage
 ```
+
+### 3.2 Visualisation and Mapping
 
 ```{r}
-# Compare raw SMR vs EB smoothed
+#| fig-width: 16
+#| fig-height: 10
+p_scr <- ggplot(gdf) +
+  geom_sf(aes(fill = screened), colour = "white", linewidth = 0.05) +
+  scale_fill_viridis_c(name = "Screened (log)", trans = "log10") +
+  labs(title = "1. Adults screened per county\n(the reliability driver)") +
+  theme_map()
+
 p_raw <- ggplot(gdf) +
-  geom_sf(aes(fill = smr), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(name = "Raw SMR", palette = "RdBu", direction = -1,
-                       limits = c(0.5, 1.8), oob = scales::squish) +
-  labs(title = "Raw SMR", x = "Lon", y = "Lat")
+  geom_sf(aes(fill = smr), colour = "white", linewidth = 0.05) +
+  scale_fill_gradient2(
+    name = "SMR (1 = US avg)", low = "#2166ac", mid = "#f7f7f7", high = "#b2182b",
+    midpoint = 1, limits = c(0.5, 1.5), oob = scales::squish
+  ) +
+  labs(title = "2. RAW SMR\n(observed / expected — noisy)") +
+  theme_map()
 
 p_eb <- ggplot(gdf) +
-  geom_sf(aes(fill = smr_eb), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(name = "EB-Smoothed SMR", palette = "RdBu", direction = -1,
-                       limits = c(0.5, 1.8), oob = scales::squish) +
-  labs(title = "Empirical Bayes Smoothed SMR", x = "Lon", y = "Lat")
+  geom_sf(aes(fill = smr_eb), colour = "white", linewidth = 0.05) +
+  scale_fill_gradient2(
+    name = "SMR (1 = US avg)", low = "#2166ac", mid = "#f7f7f7", high = "#b2182b",
+    midpoint = 1, limits = c(0.5, 1.5), oob = scales::squish
+  ) +
+  labs(title = "3. EB-SMOOTHED SMR\n(shrunk toward US average)") +
+  theme_map()
 
-p_sh <- ggplot(gdf) +
-  geom_sf(aes(fill = smr_shrinkage), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(name = "Shrinkage fraction", palette = "Blues", direction = 1) +
-  labs(title = "Shrinkage: 1 = fully shrunk to mean\n(small areas shrunk more)",
-       x = "Lon", y = "Lat")
+p_shr <- ggplot(gdf) +
+  geom_sf(aes(fill = smr_shrinkage), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "Shrinkage", palette = "YlOrRd", direction = 1,
+                       limits = c(0, quantile(smr_shrinkage, 0.99))) +
+  labs(title = "4. Shrinkage weight\n(high = few screened = trust prior)") +
+  theme_map()
 
-p_eb_all <- (p_raw | p_eb | p_sh) +
-  plot_annotation(title = "Empirical Bayes Smoothing: Stabilising Small-Area Rates")
-print(p_eb_all)
-ggsave(file.path(out_dir, "eb_smoothing.png"), p_eb_all, width = 18, height = 5, dpi = 150)
+p_funnel_smr <- ggplot(st_drop_geometry(gdf), aes(screened, smr)) +
+  geom_hline(yintercept = 1, colour = "black", linewidth = 0.4) +
+  geom_point(size = 0.6, alpha = 0.3, colour = "#8e44ad") +
+  scale_x_log10() +
+  coord_cartesian(ylim = c(0, 3)) +
+  labs(
+    x = "Adults screened (log)", y = "Raw SMR",
+    title = "5. Why smoothing is needed:\nwild SMRs only where n is small"
+  )
+
+p_hist <- ggplot(st_drop_geometry(gdf)) +
+  geom_histogram(aes(smr, fill = "Raw SMR"), bins = 45,
+                 colour = NA, alpha = 0.45) +
+  geom_histogram(aes(smr_eb, fill = "EB SMR"), bins = 45,
+                 colour = NA, alpha = 0.6) +
+  geom_vline(xintercept = 1, colour = "black", linewidth = 0.4) +
+  scale_fill_manual(values = c("Raw SMR" = "#8e44ad", "EB SMR" = "#16a085")) +
+  coord_cartesian(xlim = c(0, 3)) +
+  labs(
+    x = "SMR", y = "Counties", fill = NULL,
+    title = "6. The effect: the noisy tails\ncollapse toward 1"
+  ) +
+  theme(legend.position = "bottom")
+
+p_eb_fig <- (p_scr | p_raw | p_eb) / (p_shr | p_funnel_smr | p_hist) +
+  plot_annotation(
+    title = sprintf(
+      "Empirical Bayes (Gamma-Poisson) smoothing of county diabetes SMRs — %d US counties",
+      m
+    ),
+    subtitle = sprintf(
+      "Prior mean %.2f, mean shrinkage %.0f%%",
+      alpha_hat / beta_hat, mean(smr_shrinkage) * 100
+    )
+  )
+print(p_eb_fig)
+ggsave(file.path(out_dir, "eb_six_panel.png"), p_eb_fig,
+       width = 16, height = 10, dpi = 150)
 ```
 
-## 4. CAR/BYM Model — Conceptual Framework
+## 4. Spatial Upgrade to the Empirical Bayes Smoothing
 
-The **Besag-York-Mollié (BYM)** model decomposes the random effect into:
+In the previous section, we saw how Empirical Bayes (EB) smoothing uses information from all counties to stabilise noisy rates, shrinking extreme county-level values toward the national average. This works well—but it doesn't account for geography: it treats every county as equally related, regardless of location.
+
+The "spatial upgrade" to EB smoothing introduces *spatial structure* into this process, by acknowledging that neighbouring areas are more likely to share similar characteristics. Instead of shrinking every county's estimate only toward the global mean, we partially pool each county toward its local neighbourhood average. This leverages the intuition that neighbouring counties often have similar risk levels due to shared environment, economics, or culture.
+
+Specifically, spatial models (like the CAR and BYM models discussed next) blend information from neighbouring units, letting each area's risk estimate be influenced both by its own data and by the data from its neighbours. Well-sampled counties still reflect mostly their own observations, but counties with sparse or unstable data "borrow strength" mostly from nearby areas instead of the whole country.
+
+In summary, the spatial upgrade enhances Empirical Bayes smoothing by borrowing information *locally* rather than *globally*, resulting in more realistic, geographically coherent risk maps—where random noise is diminished but true spatial patterns are retained.
+
+### 4.1 CAR and BYM Models
+
+The CAR and BYM models are the "smooth toward your neighbours instead of toward the national average" idea made into a proper statistical model. They're the spatial upgrade to the Empirical Bayes smoothing you just ran.
+
+Here's the gap they fill. Global EB pulled every county toward one national number. But that ignores geography: an isolated county sitting in the middle of the diabetes belt gets tugged toward the US average of 1.0, even though everything around it says its true rate is high. Common sense says a shaky county should borrow from its *neighbours*, not from Kansas. CAR is the machinery that makes "borrow from your neighbours" precise.
+
+**CAR = Conditional Autoregressive.** Unpack the name and it's almost self-explaining. *Autoregressive* means a value is modelled in terms of other values of the same variable — here, a county's spatial effect relates to the spatial effects around it. *Conditional* means the rule is written one county at a time: *given* its neighbours, each county's spatial effect is centred on the average of those neighbours, with some wiggle room. Formally, "county $i$'s effect, conditional on the rest, is Normal with mean = average of its neighbours." Stack that rule across all counties and you've defined a smooth spatial surface where nearby areas are pulled toward each other. Neighbours are usually defined by adjacency — sharing a border — so the model needs a map of who-touches-whom, not distances.
+
+The intuition: instead of one national anchor, every county is anchored to its local neighbourhood. Strong data → the county keeps its own signal; weak data → it drifts toward what its neighbours are doing. Hotspots and cold-spots that are real (because a whole cluster shows them) survive; lone speckles from small samples get absorbed into their surroundings.
+
+**Now BYM.** The name is just the authors — Besag, York, Mollié. Their insight was that the messiness in a real map comes from *two different sources*, and a good model should separate them:
+
+- **Structured (spatial) variation** — smooth patterns that cluster geographically, like the diabetes belt. This is the CAR part: it borrows from neighbours.
+- **Unstructured variation** — county-specific noise with no geographic pattern: one county is just idiosyncratic, or its sample was unlucky. This is an ordinary independent random effect, exactly the kind of wobble global EB handled.
+
+BYM puts **both** random effects into the model at once — a CAR term for "what my region is doing" plus an independent term for "what's peculiar to just me" — and lets the data decide how much of each area's deviation is genuine regional signal versus local noise. That split is the whole point: it stops you from either over-smoothing (erasing a real lone hotspot) or under-smoothing (trusting a fluke). The rate you finally map is the overall mean plus these two effects, run through the Poisson count model from the EB example.
+
+**Where it sits relative to what you've built.** Think of a ladder. Raw SMRs = trust each county alone, noisy. Global EB = shrink everyone toward the national mean, ignores geography. CAR = shrink toward the neighbourhood mean, respects geography. BYM = shrink toward the neighbourhood mean *and* separately soak up purely-local noise, the fullest version. GWR, from earlier, is a cousin doing something different — it lets the *relationships between variables* vary across space, whereas BYM smooths the *outcome rate* itself. They answer different questions and are often used together.
+
+**A couple of things worth knowing.** These are almost always fit as full Bayesian hierarchical models — the priors on the two variance terms are what tune the balance between spatial and local — and in practice people fit them with INLA rather than slow MCMC, because it's fast for exactly this structure. One historical wrinkle: in the original BYM the two random effects share the map in a way that makes their variances hard to interpret and the priors fiddly; the modern **BYM2** reparameterisation (Riebler et al.) fixes this with a single, interpretable "how much of the variation is spatial" mixing parameter, and it's what you'd reach for today.
+
+The one caveat, same as every smoother in this series: BYM buys stability by assuming neighbours are alike. Where that assumption is wrong — a sharp real boundary between a high county and a low one right next door — it will blur the edge, smoothing across a discontinuity that actually matters. The structured/unstructured split mitigates this but doesn't eliminate it.
+
+We skip INLA and Stan here so the notebook stays fast to render. The next section ports the same comparison with a Marshall local-EB step and an iterated ICAR smoother that captures the BYM split without MCMC.
+
+The **Besag–York–Mollié (BYM)** model decomposes the random effect into:
 
 ```
 Y_i | theta_i ~ Poisson(E_i * theta_i)
@@ -203,162 +491,271 @@ log(theta_i) = mu + u_i + v_i
 ```
 
 Where:
+
 - `u_i` = **spatially structured** random effect (ICAR prior — neighbours pull toward each other)
 - `v_i` = **unstructured** random effect (i.i.d. normal — pure noise)
 - `mu`  = overall log-relative risk
 
-**ICAR prior for u_i:**
+**ICAR prior for $u_i$:**
+
 ```
 u_i | u_{-i} ~ Normal(mean(u_j for j in neighbours_i), sigma²_u / n_i)
 ```
 
-This is equivalent to a joint Gaussian distribution with precision matrix Q = D - W  
-where D is the diagonal matrix of neighbour counts and W is the adjacency matrix.
+This is equivalent to a joint Gaussian distribution with precision matrix $Q = D - W$ where $D$ is the diagonal matrix of neighbour counts and $W$ is the adjacency matrix.
+
+### 4.2 Estimate Global EB vs Local (CAR-flavoured) EB vs BYM
+
+Queen contiguity from the county polygons. Global EB is the Gamma-Poisson shrinker from §3. Local EB is Marshall's neighbourhood shrinkage: each county is pulled toward the neighbour-mean SMR with a weight that depends on the expected count. The BYM-style step is an iterated ICAR smoother of $\log(\mathrm{SMR})$ — $u_i \leftarrow$ neighbour mean — with the leftover residual treated as unstructured noise (the same structured / unstructured split as a Moran-basis ICAR approximation, without a 3,108 × 3,108 eigendecomposition).
 
 ```{r}
-# Spatial empirical Bayes (Marshall) via spdep::EBlocal
-nb <- vector("list", N)
-W_bin <- matrix(0, N, N)
-for (i in seq_len(N)) {
-  nbrs <- which(pmax(abs(df$row - df$row[i]), abs(df$col - df$col[i])) <= 1)
-  nbrs <- setdiff(nbrs, i)
-  nb[[i]] <- if (length(nbrs)) nbrs else 0L
-  W_bin[i, nbrs] <- 1
+# Queen neighbours (share any boundary point)
+nb_q <- poly2nb(gdf, queen = TRUE)
+lw_q <- nb2listw(nb_q, style = "W", zero.policy = TRUE)
+W_bin <- nb2mat(nb_q, style = "B", zero.policy = TRUE)
+cat(sprintf(
+  "Adjacency: %.1f neighbours/county on average (queen)\n",
+  mean(card(nb_q))
+))
+
+# 1. Global EB (already computed)
+smr_global <- smr_eb
+
+# 2. Local EB (Marshall — neighbourhood shrinkage, include self)
+A <- W_bin + diag(m)
+size  <- rowSums(A)
+sumO  <- as.vector(A %*% observed)
+sumE  <- as.vector(A %*% expected)
+m_i   <- sumO / pmax(sumE, 1e-12)          # neighbourhood mean SMR
+meanE <- sumE / pmax(size, 1)
+SqO   <- as.vector(A %*% (observed^2 / pmax(expected, 1e-12)))
+num   <- SqO - 2 * m_i * sumO + m_i^2 * sumE
+s2_i  <- pmax(num / pmax(sumE, 1e-12) - m_i / pmax(meanE, 1e-12), 0)
+C_i   <- s2_i / (s2_i + m_i / pmax(expected, 1e-12))
+smr_local <- m_i + C_i * (smr - m_i)
+
+# 3. BYM-style: iterated ICAR smoother of log(SMR)
+#    Structured part u: Jacobi averaging toward neighbours
+#    Unstructured part v: residual; BYM rate keeps u + mean(v)
+#    (equivalent in spirit to projecting onto the smoothest graph eigenvectors)
+log_smr <- log(pmax(pmin(smr, 20), 1e-3))
+u <- log_smr
+lambda <- 0.85
+for (iter in 1:12) {
+  u_lag <- lag.listw(lw_q, u, zero.policy = TRUE)
+  u_lag[!is.finite(u_lag)] <- u[!is.finite(u_lag)]
+  u <- (1 - lambda) * u + lambda * u_lag
 }
-class(nb) <- "nb"
-attr(nb, "region.id") <- as.character(seq_len(N))
-lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+v <- log_smr - u
+smr_bym <- exp(u + mean(v))
+# BYM2-style mixing of the two EB estimators (interpretable spatial share)
+phi_hat <- sd(u)^2 / (sd(u)^2 + sd(v)^2)
+smr_bym_mix <- (1 - phi_hat) * smr_global + phi_hat * smr_local
 
-eb_loc <- EBlocal(df$observed, df$expected, nb)
-gdf$smr_eb_local <- eb_loc$est
+ssd <- sd(u)
+isd <- sd(v)
+cat(sprintf(
+  "BYM approx (iterated ICAR): spatial sd=%.3f, iid sd=%.3f  (spatial share %.0f%%)\n",
+  ssd, isd, phi_hat * 100
+))
+cat(sprintf("BYM2-style mix: theta = (1-phi)*global_EB + phi*local_EB, phi=%.2f\n", phi_hat))
 
-# Approximate BYM via Moran eigenvectors of the graph Laplacian (INLA/Stan-free)
-D_diag <- rowSums(W_bin)
-Q <- diag(D_diag) - W_bin
-eig <- eigen(Q, symmetric = TRUE)
-# Smallest non-zero eigenvalues = smoothest spatial patterns
-ord <- order(eig$values)
-spatial_basis <- eig$vectors[, ord[2:11], drop = FALSE]  # skip the zero eigenvalue
-
-log_smr <- log(pmin(pmax(df$smr, 0.01), 5))
-ridge_fit <- MASS::lm.ridge(log_smr ~ spatial_basis, lambda = 1)
-# Reconstruct fitted values from ridge
-X_bym <- cbind(1, spatial_basis)
-# lm.ridge coefs
-b_hat <- coef(ridge_fit)
-log_smr_hat <- as.numeric(X_bym %*% b_hat)
-gdf$smr_bym_approx <- exp(log_smr_hat)
-
-# CAR-like spatial error on log(SMR) as a second Stan-free smoother
-sem_bym <- errorsarlm(log_smr ~ 1, data = df, listw = lw, zero.policy = TRUE)
-gdf$smr_car <- exp(fitted(sem_bym))
-
-p_raw2 <- ggplot(gdf) +
-  geom_sf(aes(fill = smr), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(0.6, 1.7),
-                       oob = scales::squish, name = "SMR") +
-  labs(title = "Raw SMR", x = "Lon", y = "Lat")
-p_eb2 <- ggplot(gdf) +
-  geom_sf(aes(fill = smr_eb), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(0.6, 1.7),
-                       oob = scales::squish, name = "SMR") +
-  labs(title = "EB Smoothed SMR", x = "Lon", y = "Lat")
-p_bym <- ggplot(gdf) +
-  geom_sf(aes(fill = smr_bym_approx), colour = "white", linewidth = 0.15) +
-  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(0.6, 1.7),
-                       oob = scales::squish, name = "SMR") +
-  labs(title = "Approx BYM Smoothed (ICAR basis)", x = "Lon", y = "Lat")
-
-p_bym_all <- (p_raw2 | p_eb2 | p_bym) +
-  plot_annotation(title = "Disease Mapping: Raw SMR → EB → BYM-Approximate Smoothing")
-print(p_bym_all)
-ggsave(file.path(out_dir, "bym_smoothing.png"), p_bym_all, width = 18, height = 5, dpi = 150)
-
-for (item in list(
-  list("Raw", gdf$smr),
-  list("EB", gdf$smr_eb),
-  list("EBlocal", gdf$smr_eb_local),
-  list("BYM-approx", gdf$smr_bym_approx),
-  list("CAR (SEM)", gdf$smr_car)
+for (nm in list(
+  list("Raw", smr),
+  list("Global EB", smr_global),
+  list("Local EB", smr_local),
+  list("BYM-approx", smr_bym)
 )) {
-  col <- item[[2]]
-  cat(sprintf("  %-12s: SD=%.4f | Range=[%.2f,%.2f]\n",
-              item[[1]], sd(col), min(col), max(col)))
+  v_now <- nm[[2]]
+  cat(sprintf(
+    "  %-10s: SD=%.3f  range=[%.2f, %.2f]\n",
+    nm[[1]], sd(v_now), min(v_now), max(v_now)
+  ))
 }
+
+gdf$smr_global <- smr_global
+gdf$smr_local  <- smr_local
+gdf$smr_bym    <- smr_bym
+gdf$bym_struct <- exp(u - mean(u))
+gdf$bym_unstr  <- exp(v - mean(v))
 ```
 
-## 5. brms BYM Starter Code (Stan optional)
-
-A full hierarchical BYM in `brms` requires compiling Stan and is slow for teaching. The **working smoother used above** (spatial EB + Moran-eigenvector / CAR via `spatialreg`) produces smoothed rates without Stan. The template below is for later full-Bayesian work.
+### 4.3 Visualisation and Mapping
 
 ```{r}
-brms_template <- '
-# Requires cmdstanr / rstan — skip if Stan is not installed.
-# library(brms)
-# N <- nrow(df)
-# # Build ICAR adjacency (node1, node2) from queen neighbours
-# edges <- which(W_bin == 1 & upper.tri(W_bin), arr.ind = TRUE)
-# dat <- list(
-#   observed = df$observed, expected = df$expected,
-#   N = N, node1 = edges[, 1], node2 = edges[, 2]
-# )
-# # brms does not expose ICAR out of the box as cleanly as INLA;
-# # a practical brms analogue is a CAR / spatial error or a GP:
-# fit_car <- brm(
-#   observed ~ offset(log(expected)) + gp(lon, lat),
-#   data = df, family = poisson(),
-#   chains = 2, iter = 1000, seed = 42
-# )
-# smr_bym_full <- fitted(fit_car)[, "Estimate"] / df$expected
-'
-cat("brms BYM/GP template saved (optional; not executed).\n")
-cat("To run: install.packages(\"brms\") and a Stan backend.\n\n")
-cat("Key BYM parameters to monitor:\n")
-cat("  sigma_u: spatial random effect SD (larger = more spatial clustering)\n")
-cat("  sigma_v: unstructured random effect SD (larger = more pure noise)\n")
-cat("  u_i: spatially structured relative risk (map this for disease clusters)\n")
-cat("  theta_i: total relative risk = exp(mu + sigma_u*u_i + v_i)\n\n")
-cat("Model selection: DIC or WAIC comparing:\n")
-cat("  Null model (mu only) vs EB (v only) vs BYM (u + v)\n")
-cat("\nStan-free fallback used in this notebook:\n")
-cat("  1. Global gamma-Poisson EB\n")
-cat("  2. spdep::EBlocal (spatial EB)\n")
-cat("  3. Moran-eigenvector ridge smoother (BYM-like convolution)\n")
-cat("  4. spatialreg::errorsarlm CAR-like fit on log(SMR)\n")
+#| fig-width: 16
+#| fig-height: 10
+smr_map <- function(gdf_in, column, title) {
+  ggplot(gdf_in) +
+    geom_sf(aes(fill = .data[[column]]), colour = "white", linewidth = 0.05) +
+    scale_fill_gradient2(
+      name = "SMR (1 = US avg)", low = "#2166ac", mid = "#f7f7f7", high = "#b2182b",
+      midpoint = 1, limits = c(0.5, 1.5), oob = scales::squish
+    ) +
+    labs(title = title) +
+    theme_map()
+}
+
+rr_map <- function(gdf_in, column, title, legend = "Spatial RR") {
+  ggplot(gdf_in) +
+    geom_sf(aes(fill = .data[[column]]), colour = "white", linewidth = 0.05) +
+    scale_fill_gradient2(
+      name = legend, low = "#542788", mid = "#f7f7f7", high = "#b35806",
+      midpoint = 1, limits = c(0.7, 1.3), oob = scales::squish
+    ) +
+    labs(title = title) +
+    theme_map()
+}
+
+p_bym <- (
+  smr_map(gdf, "smr",        sprintf("RAW SMR\nSD=%.2f  (noisy)", sd(smr))) |
+  smr_map(gdf, "smr_global", sprintf("GLOBAL EB\nshrink to US mean · SD=%.2f", sd(smr_global))) |
+  smr_map(gdf, "smr_local",  sprintf("LOCAL EB (CAR-flavoured)\nshrink to neighbours · SD=%.2f", sd(smr_local)))
+) / (
+  smr_map(gdf, "smr_bym",    sprintf("BYM-approx (ICAR + noise)\nSD=%.2f", sd(smr_bym))) |
+  rr_map(gdf, "bym_struct", "BYM structured part\n(smooth regional signal)") |
+  rr_map(gdf, "bym_unstr",  "BYM unstructured part\n(idiosyncratic county noise)", "Local RR")
+) +
+  plot_annotation(
+    title = "From global shrinkage to spatial models — county diabetes SMRs",
+    subtitle = sprintf(
+      "%d counties, queen adjacency; left to right: trust neighbours more",
+      m
+    )
+  )
+print(p_bym)
+ggsave(file.path(out_dir, "bym_compare.png"), p_bym,
+       width = 16, height = 10, dpi = 150)
+```
+
+## 5. Kernel Density Risk
+
+Kernel density risk is the point-pattern version of the observed-over-expected map you've been building all series — but instead of counties and counts, it works directly on the locations of individual people and produces a smooth continuous risk surface with no administrative boundaries at all.
+
+Start with plain KDE. If you have a scatter of point locations — say, the home addresses of everyone diagnosed with a disease — kernel density estimation turns those dots into a smooth surface by dropping a little bump (the kernel) on each point and adding them up. Where points are dense the bumps pile up into a high ridge; where they're sparse the surface is low. The bandwidth sets how wide each bump is, i.e. how much you smooth. It's the same kernel-weighting idea from the GWR work, now used to build a density instead of a local statistic.
+
+Here's the catch that makes plain KDE useless for risk: a density of case locations mostly just shows you *where people live*. Cases pile up in cities because cities have more people, not because cities are riskier. The raw case density is confounded by population — exactly the problem the SMR solved for areal data by dividing observed by expected.
+
+**Kernel density risk fixes it with a ratio.** You estimate two surfaces: one KDE from the *cases*, and one KDE from a *control* group — either non-cases sampled from the same population, or the population at risk itself. Then you divide:
+
+$$
+\rho(s) = \frac{\text{density of cases at } s}{\text{density of controls at } s}
+$$
+
+That ratio is a spatial relative risk. It answers "is disease *more concentrated here than the underlying population would predict?*" — high where cases cluster beyond what the population density explains, low where they're scarcer than expected. It's usually mapped on the log scale so it's symmetric: $\log\rho = 0$ means average risk, positive is elevated, negative is protected. Map the exact same correspondence you already know: the case KDE is the "observed" intensity, the control KDE is the "expected" intensity, and their ratio is the SMR — just continuous and boundary-free instead of chopped into counties.
+
+Why epidemiologists reach for it. It needs no administrative geography, so it sidesteps the modifiable areal unit problem entirely — no arbitrary county lines smearing or splitting a hotspot. It gives you the actual *shape and extent* of a cluster, not a choropleth of polygons. And you can test it: by randomly reshuffling the case/control labels many times (a Monte Carlo permutation), you build a null distribution and draw *tolerance contours* marking where risk is significantly elevated or depressed rather than just noisy.
+
+The choices that matter are the familiar bias–variance ones. The kernel shape (Gaussian, quartic) barely matters; the **bandwidth is everything**. Too small and the surface is spiky, inventing hotspots out of a handful of cases; too large and it oversmooths a real cluster into the background — the identical trade-off as the EB shrinkage weight and the CAR neighbourhood size. The standard practice (Kelsall–Diggle) is to use a common bandwidth for cases and controls so the ratio stays well-behaved.
+
+Where it sits versus the rest of the ladder: BYM and EB smooth *rates aggregated into areas*; kernel density risk smooths the *raw point pattern* and never aggregates. If you have individual case locations, it's the more faithful tool because nothing is lost to arbitrary boundaries. The price is that it demands point data plus a control reference — and individual locations are privacy-sensitive — whereas your county file is already aggregated. We therefore evaluate a common-bandwidth Gaussian kernel **at county centroids** (cases weighted by observed counts, controls by screened adults) and map the ratio with `geom_sf`. That keeps the Kelsall–Diggle idea without `spatstat` or a 6,000-point Monte Carlo.
+
+### 5.1 Estimate Kernel-density Spatial Relative Risk
+
+Gaussian kernel ratio on Albers coordinates. Common bandwidth $h \approx 95\,\mathrm{km}$ (Kelsall–Diggle). Case intensity uses observed counts; control intensity uses screened adults.
+
+```{r}
+h <- 95000
+inv2h2 <- 1 / (2 * h^2)
+tiny <- 1e-12
+x <- gdf$x_m
+y <- gdf$y_m
+dens_c <- numeric(m)
+dens_k <- numeric(m)
+for (i in seq_len(m)) {
+  w <- exp(-((x - x[i])^2 + (y - y[i])^2) * inv2h2)
+  dens_c[i] <- sum(observed * w)
+  dens_k[i] <- sum(screened * w)
+}
+fc <- dens_c / sum(dens_c)
+fk <- dens_k / sum(dens_k)
+logrr <- log((fc + tiny) / (fk + tiny))
+
+gdf$kde_case <- dens_c / max(dens_c)
+gdf$kde_ctrl <- dens_k / max(dens_k)
+gdf$log_rr   <- logrr
+
+cat(sprintf("Common bandwidth %.0f km (Albers metres)\n", h / 1000))
+cat(sprintf("log-RR range: [%.2f, %.2f]\n", min(logrr), max(logrr)))
+cat(sprintf(
+  "Elevated (log RR > 0): %d counties (%.1f%%)\n",
+  sum(logrr > 0), mean(logrr > 0) * 100
+))
+```
+
+### 5.2 Mapping and Visualisation
+
+```{r}
+#| fig-width: 16
+#| fig-height: 10
+rlim <- as.numeric(quantile(abs(logrr), 0.99))
+
+p_kc <- ggplot(gdf) +
+  geom_sf(aes(fill = kde_case), colour = "white", linewidth = 0.05) +
+  scale_fill_viridis_c(name = "Rel. intensity", option = "magma") +
+  labs(title = "1. Case density (Gaussian KDE)\nfollows where people live") +
+  theme_map()
+
+p_kk <- ggplot(gdf) +
+  geom_sf(aes(fill = kde_ctrl), colour = "white", linewidth = 0.05) +
+  scale_fill_viridis_c(name = "Rel. intensity", option = "magma") +
+  labs(title = "2. Control density (Gaussian KDE)\nthe population surface") +
+  theme_map()
+
+p_rr <- ggplot(gdf) +
+  geom_sf(aes(fill = log_rr), colour = "white", linewidth = 0.05) +
+  scale_fill_gradient2(
+    name = "log relative risk", low = "#2166ac", mid = "#f7f7f7", high = "#b2182b",
+    midpoint = 0, limits = c(-rlim, rlim), oob = scales::squish
+  ) +
+  labs(title = "3. Kernel-density RISK\nlog(case / control) — pop. removed") +
+  theme_map()
+
+p_bym_cmp <- ggplot(gdf) +
+  geom_sf(aes(fill = smr_bym), colour = "white", linewidth = 0.05) +
+  scale_fill_gradient2(
+    name = "SMR", low = "#2166ac", mid = "#f7f7f7", high = "#b2182b",
+    midpoint = 1, limits = c(0.5, 1.5), oob = scales::squish
+  ) +
+  labs(title = "4. BYM SMR (areal)\nsame signal, boundary-bound") +
+  theme_map()
+
+p_kde <- (p_kc | p_kk) / (p_rr | p_bym_cmp) +
+  plot_annotation(
+    title = "Kernel-density spatial relative risk — county-centroid Gaussian ratio",
+    subtitle = sprintf("Common bandwidth %.0f km; cases = observed, controls = screened", h / 1000)
+  )
+print(p_kde)
+ggsave(file.path(out_dir, "kde_risk.png"), p_kde,
+       width = 16, height = 10, dpi = 150)
 ```
 
 ## 6. Knowledge Check
-1. A county has O=1 death, E=0.8, so SMR=1.25. The EB-smoothed estimate is 1.02. Why does EB shrink this so aggressively?
-2. BYM model sigma_u >> sigma_v. What does this imply about the nature of spatial clustering?
-3. A researcher uses raw SMR to rank counties for intervention. What are the consequences of not smoothing?
-4. Moran's I for raw SMR = 0.41 but for EB-smoothed SMR = 0.55. Why does smoothing *increase* spatial autocorrelation?
-5. Implement a 2D kernel density smoothed risk surface from the point-level CVD rate data.
+
+1. A county reports $O=1$ death with an expected $E=0.8$, resulting in an SMR of 1.25. However, the Empirical Bayes (EB)-smoothed estimate is 1.02.
+   - **Why does Empirical Bayes shrink this estimate so strongly toward the mean?**
+   > When observed counts are low, estimates are highly variable and more prone to random fluctuations rather than reflecting true underlying risk. Empirical Bayes shrinks these unstable estimates toward the global mean by borrowing information from the overall dataset, thereby reducing the influence of statistical noise—especially for counties with scant data.
+
+2. In the BYM model, suppose the spatial random effect ($\sigma_u$) is much larger than the non-spatial random effect ($\sigma_v$).
+   - **What does this reveal about spatial clustering of risk?**
+   > A large $\sigma_u$ compared to $\sigma_v$ indicates that most variation in risk is explained by spatial structure: neighbouring counties tend to have similar risk, pointing to strong spatial clustering, while non-spatial (random) variation plays a lesser role.
+
+3. What potential issues arise if a researcher ranks counties for interventions using unsmoothed, raw SMR values?
+   > Raw SMR estimates are especially noisy for counties with small populations or expected counts. Apparent 'extremes' can arise simply due to chance in these small-number areas, potentially resulting in intervention resources being misdirected based on statistical artifact rather than genuine need. Smoothing methods help mitigate these random outliers, producing more reliable rankings.
+
+4. Why does the level of spatial autocorrelation (measured by Moran's I) increase after EB smoothing?
+   Moran's I for raw SMR is typically lower than for EB-SMR. **Why does smoothing increase spatial autocorrelation?**
+   > EB smoothing incorporates information from neighbouring regions (or the global mean, which itself reflects spatially clustered covariates), making estimates for geographically proximate counties more similar. This 'bleeds' risk estimates across borders, which strengthens spatial patterns, thereby increasing observed spatial autocorrelation.
 
 ```{r}
-# Exercise 5 — KDE risk surface (population-weighted)
-wts <- df$population / sum(df$population) * df$smr
-wts <- pmax(wts, 0)
-wts <- wts / sum(wts)
-# Sample points proportional to weights, then 2D KDE
-idx <- sample.int(N, size = 4000, replace = TRUE, prob = wts)
-kde <- MASS::kde2d(df$lon[idx], df$lat[idx], n = c(60, 30),
-                   lims = c(range(df$lon), range(df$lat)))
-kde_df <- expand.grid(lon = kde$x, lat = kde$y)
-kde_df$z <- as.vector(kde$z)
-
-p_kde <- ggplot() +
-  geom_contour_filled(data = kde_df, aes(lon, lat, z = z), bins = 12) +
-  geom_sf(data = st_centroid(gdf), colour = "white", size = 0.4, alpha = 0.4,
-          inherit.aes = FALSE) +
-  scale_fill_manual(values = colorRampPalette(c("#FFFFCC", "#FD8D3C", "#800026"))(12),
-                    guide = "none") +
-  labs(
-    x = "Longitude", y = "Latitude",
-    title = "KDE Risk Surface: Population-Weighted CVD Mortality Density"
-  ) +
-  coord_sf()
-print(p_kde)
-ggsave(file.path(out_dir, "kde_risk_surface.png"), p_kde, width = 12, height = 6, dpi = 150)
+# Quick check: Moran's I on raw vs EB SMR (queen weights from §4)
+I_raw <- moran.test(gdf$smr,    lw_q, zero.policy = TRUE)
+I_eb  <- moran.test(gdf$smr_eb, lw_q, zero.policy = TRUE)
+cat(sprintf(
+  "Moran's I  raw SMR = %.3f | EB SMR = %.3f\n",
+  unname(I_raw$estimate["Moran I statistic"]),
+  unname(I_eb$estimate["Moran I statistic"])
+))
 ```
 
 ***

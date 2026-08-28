@@ -1,37 +1,40 @@
----
-title: "Environmental Epidemiology"
-subtitle: "Module 07 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+### Module 07: Spatial Epidemiology
+
+# Environmental Epidemiology
+
 ***
 **Learning objectives**
 - Interpolate point-source pollution data to area-level estimates (kriging, IDW)
 - Assess exposure-response relationships with ecological regression
 - Apply air pollution exposure assessment methods (inverse distance, kriging)
-- Conduct distributed lag non-linear models (DLNM) for time-series exposure
+- Recover spatial range from an empirical semivariogram of a Gaussian random field
 - Build environmental justice metrics: environmental burden by demographic group
 - Address ecological fallacy in spatial health analyses
 
+**Geometries:** `Data/US_COUNTY.shp` — county polygons in NAD83 Albers (EPSG:5070)  
 **Estimated time:** 3 hours | **Level:** Advanced  
-**Libraries:** `sf`, `terra`, `gstat`, `spdep`, `ggplot2`, `broom`
+**Libraries:** `sf`, `gstat`, `ggplot2`, `dplyr`, `patchwork`
 
 ## 1. Setup
+
+This section is dedicated to the setup for the environmental epidemiology analysis. It loads `sf`, `gstat`, `ggplot2`, and `dplyr`, sets visualisation defaults, and establishes a random seed for reproducibility. Spatial and geostatistical parameters (number of sampling points, spatial range, and variance for simulated pollution fields) are defined here.
+
+The workflow is **point-referenced** (geostatistical simulation over CONUS), as a companion to the areal (county) simulation used elsewhere in Module 07. Sampling locations (air-quality monitors / survey sites) are placed at random points on US land. The PM2.5 signal and an unmeasured spatial confounder are drawn as true **Gaussian random fields** with an exponential covariance (known range + partial sill); PM2.5 is then observed with a nugget (measurement error). The same PM2.5 → CVD exposure-response is used as in the areal version (`TRUE_PM25 = 2.5`).
+
+This gives data that (a) yields a recoverable variogram, and (b) exposes measurement-error attenuation of the exposure-response.
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(sf)
-library(terra)
 library(gstat)
-library(spdep)
-library(broom)
 library(patchwork)
 
 set.seed(42)
 out_dir <- file.path(tempdir(), "mod07")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
 theme_set(
   theme_minimal(base_size = 11) +
     theme(
@@ -41,61 +44,224 @@ theme_set(
     )
 )
 
-spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 2) {
-  grid <- matrix(0, nrow = nrow, ncol = ncol)
-  for (i in seq_along(values)) grid[row_idx[i], col_idx[i]] <- values[i]
-  k <- ceiling(3 * sigma)
-  xs <- (-k):k
-  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
-  kern <- kern / sum(kern)
-  pad <- k
-  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
-  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
-  out <- matrix(0, nrow, ncol)
-  for (r in seq_len(nrow)) for (c in seq_len(ncol)) {
-    out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
-  }
-  mapply(function(r, c) out[r, c], row_idx, col_idx)
+theme_map <- function() {
+  theme_void(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
+      plot.subtitle = element_text(size = 9, hjust = 0.5),
+      legend.position = "right"
+    )
 }
 
-NROW <- 10; NCOL <- 20; N <- NROW * NCOL
-row_idx <- rep(seq_len(NROW), each = NCOL)
-col_idx <- rep(seq_len(NCOL), times = NROW)
-lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
-lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
-pct_poverty <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
-population <- as.integer(rlnorm(N, 10.5, 1.0))
-spatial_risk <- spatial_smooth(rnorm(N), row_idx, col_idx, NROW, NCOL)
-# Spatially patterned PM2.5 (higher in industrial areas — western region)
-pm25_base <- 8 + 4 * (lon - min(lon)) / (max(lon) - min(lon))
-pm25 <- pm25_base + spatial_smooth(rgamma(N, 1, 1), row_idx, col_idx, NROW, NCOL, 1.5) +
-  rnorm(N, 0, 1)
-pm25 <- pmin(pmax(pm25, 3), 30)
-TRUE_PM25 <- 2.5
-cvd_rate <- (160 + 1.2 * pct_poverty + TRUE_PM25 * pm25 + 10 * spatial_risk + rnorm(N, 0, 10))
+# 1000 is safer for tutorial render (Cholesky is N×N). Python used 2000.
+N_POINTS   <- 1000
+RANGE_PM   <- 200.0    # PM2.5 field: exponential range parameter (km); eff. range ~3x
+PSILL_PM   <- 4.0      # PM2.5 field: partial sill (spatial variance -> SD ~2 µg/m³)
+NUGGET_SD  <- 1.5      # measurement error SD (µg/m³)
+RANGE_RISK <- 350.0    # spatial-confounder field range (km)
+TRUE_PM25  <- 2.5      # true exposure-response: 1 µg/m³ -> 2.5 CVD deaths/100k
+
+county_shapes <- st_read("Data/US_COUNTY.shp", quiet = TRUE)
+county_shapes$FIPS <- as.integer(county_shapes$FIPS)
+# Shannon County SD (46113) was renamed Oglala Lakota (46102)
+county_shapes$FIPS[county_shapes$FIPS == 46113] <- 46102
+
+# ----------------------------------------------------------------------
+# 1. Sample point locations on US land (inherit county context via join)
+#    Area-weighted counties + jitter inside polygons (faster than st_sample
+#    on a CONUS union, and faster than 2000-point rejection sampling).
+# ----------------------------------------------------------------------
+areas <- as.numeric(st_area(county_shapes))
+pick <- sample.int(nrow(county_shapes), N_POINTS, replace = TRUE, prob = pmax(areas, 1))
+
+crs_albers <- st_crs(county_shapes)
+place_in_poly <- function(geom) {
+  cen <- st_coordinates(st_centroid(geom))[1, ]
+  bb <- st_bbox(geom)
+  sx <- max((bb["xmax"] - bb["xmin"]) / 6, 1)
+  sy <- max((bb["ymax"] - bb["ymin"]) / 6, 1)
+  for (i in 1:15) {
+    xy <- c(cen[1] + rnorm(1, 0, sx), cen[2] + rnorm(1, 0, sy))
+    pt <- st_sfc(st_point(xy), crs = crs_albers)
+    if (as.logical(st_within(pt, geom, sparse = FALSE))) return(pt[[1]])
+  }
+  st_centroid(geom)[[1]]
+}
+
+pt_geoms <- lapply(pick, function(i) place_in_poly(county_shapes$geometry[i]))
+pts <- st_sf(
+  tibble(
+    point_id = sprintf("P%04d", seq_len(N_POINTS) - 1),
+    FIPS     = sprintf("%05d", county_shapes$FIPS[pick]),
+    state    = county_shapes$STATE[pick],
+    county   = county_shapes$COUNTY[pick]
+  ),
+  geometry = st_sfc(pt_geoms, crs = st_crs(county_shapes))
+)
+
+xy  <- st_coordinates(pts)
+ll  <- st_transform(pts, 4326)
+lon <- st_coordinates(ll)[, 1]
+lat <- st_coordinates(ll)[, 2]
+N   <- nrow(pts)
+
+# ----------------------------------------------------------------------
+# 2. Gaussian random fields via exponential covariance
+#    C(h) = psill * exp(-h / range_km), with h in km from Albers metres
+# ----------------------------------------------------------------------
+Dkm <- as.matrix(dist(xy)) / 1000
+
+grf <- function(range_km, psill) {
+  C <- psill * exp(-Dkm / range_km)
+  diag(C) <- diag(C) + 1e-6 * psill
+  # R chol() returns upper U with U'U = C; Python cholesky is lower L
+  as.numeric(t(chol(C)) %*% rnorm(N))
+}
+
+field_pm   <- grf(RANGE_PM,   PSILL_PM)
+field_risk <- grf(RANGE_RISK, 1.0)
+
+# ----------------------------------------------------------------------
+# 3. PM2.5 (signal + nugget), covariates, spatial confounder
+# ----------------------------------------------------------------------
+pm25_base <- 8 + 4 * (lon - min(lon)) / (max(lon) - min(lon))   # W->E trend
+pm25_true <- pmin(pmax(pm25_base + field_pm, 3), 30)            # latent signal
+pm25      <- pmin(pmax(pm25_true + rnorm(N, 0, NUGGET_SD), 3), 30)  # measured
+
+pct_poverty  <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
+population   <- as.integer(rlnorm(N, 10.5, 1.0))
+spatial_risk <- as.numeric(scale(field_risk))                   # unmeasured confounder
+
+# ----------------------------------------------------------------------
+# 4. Outcome  (true exposure-response: 1 µg/m³ -> 2.5 CVD deaths/100k)
+# ----------------------------------------------------------------------
+cvd_rate <- 160 + 1.2 * pct_poverty + TRUE_PM25 * pm25_true +
+  10 * spatial_risk + rnorm(N, 0, 10)
 expected <- (cvd_rate / 100000) * population * 5
 observed <- rpois(N, expected)
-smr <- observed / pmax(expected, 1)
+smr      <- observed / pmax(expected, 1)
 
-df <- tibble(
-  county_id = sprintf("C%03d", seq_len(N) - 1),
-  lon, lat, row = row_idx, col = col_idx,
-  pct_poverty, pm25, population, cvd_rate, observed, expected, smr
-)
-geoms <- Map(function(lo, la) {
-  st_polygon(list(matrix(
-    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
-      lo - 1.25, la + 1, lo - 1.25, la - 1), ncol = 2, byrow = TRUE
-  )))
-}, df$lon, df$lat)
-gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
-cat(sprintf("N=%d | PM2.5 mean=%.1f SD=%.1f | CVD=%.1f/100k\n",
-            N, mean(pm25), sd(pm25), mean(cvd_rate)))
+pts$lon <- lon
+pts$lat <- lat
+pts$x   <- xy[, 1]
+pts$y   <- xy[, 2]
+pts$pm25_true   <- pm25_true
+pts$pm25        <- pm25
+pts$pct_poverty <- pct_poverty
+pts$population  <- population
+pts$spatial_risk <- spatial_risk
+pts$cvd_rate    <- cvd_rate
+pts$observed    <- observed
+pts$expected    <- expected
+pts$smr         <- smr
+
+df <- st_drop_geometry(pts)
+write_csv(df, file.path(out_dir, "point_sim.csv"))
+
+cat(sprintf(
+  "N=%d points | PM2.5 field mean=%.1f | measured mean=%.1f SD=%.1f (range %.1f–%.1f) | CVD=%.1f/100k\n",
+  N, mean(pm25_true), mean(pm25), sd(pm25), min(pm25), max(pm25), mean(cvd_rate)
+))
+cat(sprintf(
+  "states sampled=%d | pop median=%s | observed deaths total=%s\n",
+  n_distinct(pts$state), format(median(population), big.mark = ","),
+  format(sum(observed), big.mark = ",")
+))
 ```
 
-## 2. Exposure Assessment — Interpolating Point Data to Areas
+```{r}
+# ----------------------------------------------------------------------
+# 5. Exposure-response: true field vs measured (regression dilution)
+# ----------------------------------------------------------------------
+slope <- function(...) {
+  X <- cbind(1, ...)
+  unname(coef(lm.fit(X, cvd_rate))[2])
+}
 
-Air quality monitors are located at specific points but we need county-level estimates.
+cat(sprintf("True PM2.5 effect                     = %.2f\n", TRUE_PM25))
+cat(sprintf(
+  "Naive, MEASURED (pm25 only)           = %.2f   <- + confounding\n",
+  slope(pm25)
+))
+cat(sprintf(
+  "Adjusted, TRUE field  (+pov +spatial) = %.2f\n",
+  slope(pm25_true, pct_poverty, spatial_risk)
+))
+cat(sprintf(
+  "Adjusted, MEASURED    (+pov +spatial) = %.2f   <- attenuated by the nugget\n",
+  slope(pm25, pct_poverty, spatial_risk)
+))
+```
+
+The naive regression of CVD on **measured** PM2.5 is biased by the unmeasured spatial confounder. Adjusting for poverty and the spatial-risk field recovers the true coefficient when the **latent** field is used, but the same adjustment on **measured** PM2.5 is attenuated by the nugget — classical measurement-error (regression dilution) bias.
+
+## 2. Empirical semivariogram of detrended PM2.5 (recover the injected range)
+
+The empirical semivariogram is a key tool in geostatistics to summarise how similar or dissimilar measurements are as a function of distance, capturing spatial correlation structure in a dataset.
+
+Here, we use the empirical semivariogram to quantify spatial structure in the detrended PM2.5 field — that is, the PM2.5 data with large-scale geographic trends (longitude/latitude) removed. Detrending focuses on the spatial "nugget" and range instead of broad trends.
+
+This method helps us check if our simulated PM2.5 data (with its built-in spatial correlation/range) can have its effective range visually recovered from the observed data using only spatial patterns in the residuals.
+
+The steps include:
+1. Fit and remove a trend (regression on longitude/latitude) from the PM2.5 point data.
+2. Compute the differences between all pairs of residuals and square them (or use `gstat::variogram`).
+3. Group the squared differences into distance bins — the mean of each bin provides the empirical semivariance (γ) at that distance.
+4. Plot semivariance against distance, which typically increases then plateaus; the "range" is the distance where this flattening occurs, revealing up to what scale points are spatially correlated.
+
+In this notebook, you will see a semivariogram plot showing how PM2.5 residual similarity decays with geographic distance, and a vertical dashed line indicating the effective range that was injected into the simulation. This visualisation confirms if the simulated spatial range is recovered empirically.
+
+```{r, fig.width = 12, fig.height = 5}
+# Detrend measured PM2.5 on lon/lat, then empirical semivariogram via gstat
+pts$resid <- residuals(lm(pm25 ~ lon + lat, data = pts))
+
+v_emp <- variogram(resid ~ 1, pts, cutoff = 1.2e6, width = 8e4)
+
+states <- county_shapes %>%
+  group_by(STATE) %>%
+  summarise(geometry = st_union(geometry), .groups = "drop")
+
+p_pm <- ggplot() +
+  geom_sf(data = states, fill = "grey95", colour = "grey70", linewidth = 0.3) +
+  geom_sf(data = pts, aes(colour = pm25), size = 0.7) +
+  scale_colour_viridis_c(name = "µg/m³") +
+  labs(title = sprintf("Measured PM2.5 at %d sample points", N)) +
+  theme_map()
+
+p_cvd <- ggplot() +
+  geom_sf(data = states, fill = "grey95", colour = "grey70", linewidth = 0.3) +
+  geom_sf(data = pts, aes(colour = cvd_rate), size = 0.7) +
+  scale_colour_viridis_c(name = "/100k", option = "magma") +
+  labs(title = "Simulated CVD rate at sample points") +
+  theme_map()
+
+p_vg <- ggplot(v_emp, aes(dist / 1000, gamma)) +
+  geom_point(size = 2.2, colour = "#2b6cb0") +
+  geom_line(colour = "#2b6cb0") +
+  geom_vline(xintercept = 3 * RANGE_PM, linetype = "dashed", colour = "grey50") +
+  annotate(
+    "text", x = 3 * RANGE_PM + 20, y = min(v_emp$gamma, na.rm = TRUE),
+    label = sprintf("eff. range ≈ %.0f km", 3 * RANGE_PM),
+    hjust = 0, vjust = 0, size = 3, colour = "grey40"
+  ) +
+  labs(
+    x = "Distance (km)", y = "Semivariance γ(h)",
+    title = "Semivariogram — detrended PM2.5"
+  ) +
+  expand_limits(y = 0)
+
+p_maps <- (p_pm | p_cvd | p_vg) +
+  plot_annotation(title = "Point-referenced PM2.5 field, CVD, and empirical semivariogram")
+print(p_maps)
+ggsave(file.path(out_dir, "point_maps.png"), p_maps,
+       width = 18, height = 5, dpi = 130)
+```
+
+## 3. Exposure Assessment: Interpolating Point Data to Areas
+
+Air quality monitors are located at specific points but we need estimates at every sample location (and, in applied work, at county centroids or census tracts).
 
 **Methods:**
 | Method | Principle | Smoothness | Use case |
@@ -105,234 +271,317 @@ Air quality monitors are located at specific points but we need county-level est
 | **Nearest monitor** | Assign to closest monitor | Abrupt | Worst but common |
 | **Land-use regression** | Predict from land use covariates | Flexible | Urban studies |
 
+We place 35 monitors on US land. Each monitor **reads the latent PM2.5 field** (inverse-distance from nearby sample points) plus instrument error, then we interpolate back to all sample locations and compare against the true field.
+
 ```{r}
-# Simulate air quality monitoring stations (fewer than counties)
+idw_knn <- function(query_xy, source_xy, values, p = 2, k = 8) {
+  k <- min(k, nrow(source_xy))
+  nq <- nrow(query_xy)
+  out <- numeric(nq)
+  for (i in seq_len(nq)) {
+    d <- sqrt((source_xy[, 1] - query_xy[i, 1])^2 +
+                (source_xy[, 2] - query_xy[i, 2])^2)
+    idx <- order(d)[seq_len(k)]
+    w <- 1 / (d[idx] + 1e-10)^p
+    out[i] <- sum((w / sum(w)) * values[idx])
+  }
+  out
+}
+
 set.seed(13)
 N_MONITORS <- 35
-mon <- st_as_sf(
-  tibble(
-    lon = runif(N_MONITORS, min(df$lon), max(df$lon)),
-    lat = runif(N_MONITORS, min(df$lat), max(df$lat)),
-    pm25 = pmin(pmax(
-      8 + 4 * (runif(N_MONITORS, min(df$lon), max(df$lon)) - min(df$lon)) /
-        (max(df$lon) - min(df$lon)) + rgamma(N_MONITORS, 1, 1) + rnorm(N_MONITORS, 0, 1.5),
-      3), 28)
-  ),
-  coords = c("lon", "lat"),
-  crs = 4326
+mon_pick <- sample.int(nrow(county_shapes), N_MONITORS, replace = TRUE,
+                       prob = pmax(as.numeric(st_area(county_shapes)), 1))
+mon_geoms <- lapply(mon_pick, function(i) place_in_poly(county_shapes$geometry[i]))
+mon <- st_sf(
+  tibble(mon_id = seq_len(N_MONITORS)),
+  geometry = st_sfc(mon_geoms, crs = st_crs(county_shapes))
 )
+mon_xy <- st_coordinates(mon)
+
+# Monitors sample the true field (IDW from point support) + instrument error
 mon$pm25 <- pmin(pmax(
-  8 + 4 * (st_coordinates(mon)[, 1] - min(df$lon)) / (max(df$lon) - min(df$lon)) +
-    rgamma(N_MONITORS, 1, 1) + rnorm(N_MONITORS, 0, 1.5),
+  idw_knn(mon_xy, xy, pm25_true, p = 2, k = 6) + rnorm(N_MONITORS, 0, 1),
   3), 28)
 
-centroids <- st_centroid(gdf)
+# Nearest monitor
+nn <- st_nearest_feature(pts, mon)
+pts$pm25_nearest <- mon$pm25[nn]
 
-# Method 1: Nearest monitor assignment
-nn <- st_nearest_feature(centroids, mon)
-gdf$pm25_nearest <- mon$pm25[nn]
-
-# Method 2: Inverse Distance Weighting (gstat)
-idw_pred <- idw(pm25 ~ 1, locations = mon, newdata = centroids, idp = 2, nmax = 10)
-gdf$pm25_idw <- idw_pred$var1.pred
-
-# Method 3: Ordinary kriging (gstat) — thin-plate / smooth interpolator analogue
-vgm_emp <- variogram(pm25 ~ 1, mon)
-vgm_fit <- tryCatch(
-  fit.variogram(vgm_emp, vgm("Exp")),
-  error = function(e) vgm(psill = var(mon$pm25), model = "Exp", range = 5, nugget = 0.5)
+# IDW (gstat, p = 2, k = 10)
+idw_pred <- gstat::idw(
+  pm25 ~ 1, locations = mon, newdata = pts,
+  idp = 2, nmax = 10, debug.level = 0
 )
-ok_pred <- krige(pm25 ~ 1, mon, centroids, model = vgm_fit, nmax = 12, debug.level = 0)
-gdf$pm25_rbf <- pmin(pmax(ok_pred$var1.pred, 3), 30)
+pts$pm25_idw <- idw_pred$var1.pred
 
-# Raster overlay with terra: interpolate monitors to a raster, then extract county means
-r <- rast(ext(st_bbox(gdf)), resolution = 0.5, crs = "EPSG:4326")
-mon_vect <- vect(mon)
-r_idw <- tryCatch(
-  interpIDW(r, mon_vect, field = "pm25", radius = 8, power = 2),
-  error = function(e) NULL
+# Ordinary kriging with exponential model matching the injected range
+# (gstat Exp: C(h) = psill * exp(-h/a); a in metres)
+vgm_ok <- vgm(psill = PSILL_PM, model = "Exp",
+              range = RANGE_PM * 1000, nugget = NUGGET_SD^2)
+ok_pred <- krige(
+  pm25 ~ 1, mon, newdata = pts, model = vgm_ok,
+  debug.level = 0
 )
-if (is.null(r_idw)) {
-  gdf$pm25_raster <- gdf$pm25_idw
-} else {
-  ext_pm <- terra::extract(r_idw, vect(gdf), fun = mean, na.rm = TRUE)
-  gdf$pm25_raster <- ext_pm[[2]]
-  gdf$pm25_raster[is.na(gdf$pm25_raster)] <- gdf$pm25_idw[is.na(gdf$pm25_raster)]
+pts$pm25_krige <- pmin(pmax(ok_pred$var1.pred, 3), 30)
+
+df <- st_drop_geometry(pts)
+
+interp_cols <- c(
+  pm25_true    = "True PM2.5 field",
+  pm25_nearest = "Nearest monitor",
+  pm25_idw     = "IDW (p=2, k=10)",
+  pm25_krige   = "Ordinary kriging (Exp)"
+)
+vmin <- as.numeric(quantile(df$pm25_true, 0.05))
+vmax <- as.numeric(quantile(df$pm25_true, 0.95))
+
+interp_plot <- function(col, title) {
+  r <- cor(df$pm25_true, df[[col]])
+  ggplot() +
+    geom_sf(data = states, fill = "grey95", colour = "grey80", linewidth = 0.25) +
+    geom_sf(data = pts, aes(colour = .data[[col]]), size = 0.7) +
+    geom_sf(data = mon, shape = 17, size = 2.2, colour = "#1D4ED8") +
+    scale_colour_distiller(
+      name = "PM2.5", palette = "YlOrBr", direction = 1,
+      limits = c(vmin, vmax), oob = scales::squish
+    ) +
+    labs(title = sprintf("%s (r=%.3f with truth)", title, r)) +
+    theme_map()
 }
 
-plot_exp <- function(col, title) {
-  r_xy <- cor(gdf$pm25, gdf[[col]], use = "complete.obs")
-  ggplot(gdf) +
-    geom_sf(aes(fill = .data[[col]]), colour = "white", linewidth = 0.15) +
-    geom_sf(data = mon, shape = 17, size = 2.5, colour = "#2563EB") +
-    scale_fill_distiller(name = "PM2.5", palette = "YlOrBr", direction = 1) +
-    labs(title = sprintf("%s (r=%.3f with truth)", title, r_xy), x = "Lon", y = "Lat")
-}
+p_interp <- (
+  interp_plot("pm25_true",    interp_cols[["pm25_true"]]) |
+    interp_plot("pm25_nearest", interp_cols[["pm25_nearest"]])
+) / (
+  interp_plot("pm25_idw",     interp_cols[["pm25_idw"]]) |
+    interp_plot("pm25_krige",   interp_cols[["pm25_krige"]])
+) +
+  plot_annotation(
+    title = "PM2.5 exposure assessment: interpolation methods (monitors sample the true field)"
+  )
+print(p_interp)
+ggsave(file.path(out_dir, "pm25_interpolation.png"), p_interp,
+       width = 14, height = 9, dpi = 130)
 
-p_exp <- plot_exp("pm25", "True PM2.5 surface") |
-  plot_exp("pm25_nearest", "Nearest monitor") |
-  plot_exp("pm25_idw", "IDW (p=2, k=10)") |
-  plot_exp("pm25_rbf", "Ordinary kriging (gstat)")
-p_exp <- p_exp + plot_annotation(title = "PM2.5 Exposure Assessment: Interpolation Methods Comparison")
-print(p_exp)
-ggsave(file.path(out_dir, "pm25_interpolation.png"), p_exp, width = 20, height = 4, dpi = 150)
+for (col in c("pm25_nearest", "pm25_idw", "pm25_krige")) {
+  r <- cor(df$pm25_true, df[[col]])
+  rmse <- sqrt(mean((df$pm25_true - df[[col]])^2))
+  cat(sprintf("%-14s r(vs true field)=%.3f  RMSE=%.2f\n", col, r, rmse))
+}
 ```
 
-## 3. Exposure-Response Analysis: Ecological Regression
+Nearest-neighbour assignment is piecewise constant and typically has the highest RMSE. IDW is a fast, parameter-light smoother. Ordinary kriging uses the variogram (here, the exponential model that generated the field) and is the best linear unbiased predictor under that model — provided the variogram is well specified.
 
-```{r}
+## 4. Exposure-Response Analysis: Ecological Regression
+
+Ecological regression is a way to study relationships between group-level variables — like average air pollution and disease rates.
+
+Imagine you want to see if more polluted places have higher disease rates. For each sample location (standing in for a community), you have:
+- the average PM2.5 air pollution value
+- the rate of cardiovascular disease (CVD)
+
+We fit a (linear) model:
+
+**CVD_rate = a + b × PM2.5 + c × poverty + random_noise**
+
+- **CVD_rate**: Disease rate at the location
+- **a**: The "baseline" rate if pollution and poverty are 0
+- **b**: How much the disease rate goes up for each step in PM2.5 (the main thing we care about)
+- **c**: How much poverty affects disease rate
+
+The model tries to find **b** — the change in CVD rate for each additional µg/m³ of PM2.5 — by drawing a line that best fits all location-level data points.
+
+In plain English: we're seeing whether more polluted places have more heart disease, after accounting for poverty.
+
+```{r, fig.width = 10, fig.height = 5}
+# Ecological regression: CVD rate ~ measured PM2.5 + poverty
 model_eco <- lm(cvd_rate ~ pm25 + pct_poverty, data = df)
-print(tidy(model_eco))
-pm25_coef <- coef(model_eco)["pm25"]
+print(summary(model_eco)$coefficients)
+pm25_coef <- coef(model_eco)[["pm25"]]
 cat(sprintf("\nTrue PM2.5 coefficient: %.1f CVD deaths/100k per µg/m³\n", TRUE_PM25))
 cat(sprintf("Estimated coefficient : %.1f\n", pm25_coef))
 cat(sprintf("Bias                  : %+.2f\n", pm25_coef - TRUE_PM25))
 
+x_line <- seq(min(df$pm25), max(df$pm25), length.out = 100)
+y_pred <- (coef(model_eco)[["(Intercept)"]] +
+             coef(model_eco)[["pm25"]] * x_line +
+             coef(model_eco)[["pct_poverty"]] * mean(df$pct_poverty))
+
 p_er <- ggplot(df, aes(pm25, cvd_rate)) +
-  geom_point(alpha = 0.4, size = 2, colour = "#2563EB") +
-  geom_abline(
-    intercept = coef(model_eco)[1] + coef(model_eco)["pct_poverty"] * mean(df$pct_poverty),
-    slope = pm25_coef, colour = "#DC2626", linewidth = 1
-  ) +
+  geom_point(alpha = 0.35, size = 1.1, colour = "#4878CF") +
+  geom_line(data = tibble(pm25 = x_line, cvd_rate = y_pred),
+            colour = "#DC2626", linewidth = 1) +
   labs(
-    x = "County PM2.5 (µg/m³)", y = "CVD rate per 100k",
-    title = "Exposure-Response: PM2.5 → CVD Mortality",
-    subtitle = sprintf("β=%.2f (True: %.1f)", pm25_coef, TRUE_PM25)
+    x = "Measured PM2.5 (µg/m³)",
+    y = "CVD rate per 100k",
+    title = "Exposure-response: PM2.5 → CVD mortality",
+    subtitle = sprintf("β = %.2f (true: %.1f)", pm25_coef, TRUE_PM25)
   )
 
-coefs_m <- tibble(
+coef_by_method <- tibble(
   method = c("Nearest", "IDW", "Kriging"),
-  coef = c(
-    coef(lm(cvd_rate ~ pm25_nearest + pct_poverty, data = st_drop_geometry(gdf)))["pm25_nearest"],
-    coef(lm(cvd_rate ~ pm25_idw + pct_poverty, data = st_drop_geometry(gdf)))["pm25_idw"],
-    coef(lm(cvd_rate ~ pm25_rbf + pct_poverty, data = st_drop_geometry(gdf)))["pm25_rbf"]
-  )
-)
-p_bar <- ggplot(coefs_m, aes(method, coef, fill = method)) +
+  col    = c("pm25_nearest", "pm25_idw", "pm25_krige")
+) %>%
+  rowwise() %>%
+  mutate(
+    beta = coef(lm(df$cvd_rate ~ df[[col]] + df$pct_poverty))[2]
+  ) %>%
+  ungroup()
+
+p_bar <- ggplot(coef_by_method, aes(method, beta, fill = method)) +
   geom_col(width = 0.6, colour = "white") +
-  geom_hline(yintercept = TRUE_PM25, linetype = "dashed", linewidth = 1) +
-  scale_fill_manual(values = c(Nearest = "#DC2626", IDW = "#2563EB", Kriging = "#16A34A")) +
-  labs(y = "PM2.5 coefficient",
-       title = "Coefficient by Exposure Method (exposure measurement error matters!)") +
-  theme(legend.position = "none")
-
-p_er2 <- p_er | p_bar
-print(p_er2)
-ggsave(file.path(out_dir, "exposure_response.png"), p_er2, width = 14, height = 5, dpi = 150)
-```
-
-## 4. Environmental Justice Analysis
-
-```{r}
-set.seed(42)
-gdf$pct_minority   <- pmin(pmax(20 + 15 * rbeta(N, 2, 3), 0), 100)
-gdf$pct_low_income <- pmin(pmax(gdf$pct_poverty * 2.5 + rnorm(N, 0, 5), 0), 100)
-
-gdf$poverty_quintile  <- as.integer(cut(gdf$pct_poverty, quantile(gdf$pct_poverty, 0:5 / 5),
-                                        include.lowest = TRUE, labels = FALSE))
-gdf$minority_quintile <- as.integer(cut(gdf$pct_minority, quantile(gdf$pct_minority, 0:5 / 5),
-                                        include.lowest = TRUE, labels = FALSE))
-
-ej_poverty  <- gdf %>% st_drop_geometry() %>%
-  group_by(poverty_quintile) %>% summarise(pm25 = mean(pm25), .groups = "drop")
-ej_minority <- gdf %>% st_drop_geometry() %>%
-  group_by(minority_quintile) %>% summarise(pm25 = mean(pm25), .groups = "drop")
-
-slope_p <- coef(lm(pm25 ~ poverty_quintile, data = ej_poverty))[2]
-slope_m <- coef(lm(pm25 ~ minority_quintile, data = ej_minority))[2]
-
-p_q1 <- ggplot(ej_poverty, aes(factor(poverty_quintile), pm25, fill = poverty_quintile)) +
-  geom_col(colour = "white") +
-  scale_fill_distiller(palette = "RdYlGn", direction = -1, guide = "none") +
-  labs(x = "Poverty quintile (1=lowest)", y = "Mean PM2.5 (µg/m³)",
-       title = sprintf("PM2.5 by Poverty Quintile (EJ concern: slope=%.2f)", slope_p))
-
-p_q2 <- ggplot(ej_minority, aes(factor(minority_quintile), pm25, fill = minority_quintile)) +
-  geom_col(colour = "white") +
-  scale_fill_distiller(palette = "RdYlGn", direction = -1, guide = "none") +
-  labs(x = "% Minority quintile (1=lowest)", y = "Mean PM2.5 (µg/m³)",
-       title = sprintf("PM2.5 by Minority Share (slope=%.2f)", slope_m))
-
-p_sc <- ggplot(st_drop_geometry(gdf), aes(pct_minority, pm25, colour = pct_poverty)) +
-  geom_point(alpha = 0.5, size = 2) +
-  geom_smooth(method = "lm", se = FALSE, colour = "black") +
-  scale_colour_distiller(palette = "RdYlGn", direction = -1) +
+  geom_hline(yintercept = TRUE_PM25, linetype = "dashed", linewidth = 0.8) +
+  scale_fill_manual(values = c(Nearest = "#D65F5F", IDW = "#4878CF", Kriging = "#6ACC65")) +
+  guides(fill = "none") +
   labs(
-    x = "% Minority", y = "PM2.5 (µg/m³)",
-    title = sprintf("Minority Share vs PM2.5 (r=%.3f)", cor(gdf$pct_minority, gdf$pm25))
+    x = NULL, y = "PM2.5 coefficient",
+    title = "Coefficient by exposure method",
+    subtitle = "Exposure measurement error matters"
   )
 
-p_ej <- (p_q1 | p_q2 | p_sc) +
-  plot_annotation(title = "Environmental Justice Analysis: Disparities in Pollution Exposure")
-print(p_ej)
-ggsave(file.path(out_dir, "ej_analysis.png"), p_ej, width = 18, height = 5, dpi = 150)
-
-assoc <- cor(gdf$pct_minority, gdf$pm25)
-cat("Environmental Justice Summary:\n")
-cat(sprintf("  Correlation: minority%% vs PM2.5 = %.3f\n", assoc))
-cat(sprintf("  Highest poverty quintile PM2.5  : %.1f µg/m³\n", tail(ej_poverty$pm25, 1)))
-cat(sprintf("  Lowest poverty quintile PM2.5   : %.1f µg/m³\n", ej_poverty$pm25[1]))
-cat(sprintf("  Inequality ratio (high/low Q)   : %.2fx\n",
-            tail(ej_poverty$pm25, 1) / ej_poverty$pm25[1]))
+p_eco <- p_er | p_bar
+print(p_eco)
+ggsave(file.path(out_dir, "exposure_response.png"), p_eco,
+       width = 14, height = 5, dpi = 130)
 ```
 
-## 5. Ecological Fallacy — Individual vs Aggregate Data
+## 5. Environmental Justice Analysis
+
+Environmental justice (EJ) analysis asks: are pollution and other environmental risks shared equally among all groups, or do some (often already disadvantaged) groups bear a greater burden?
+
+In this section, we look at whether PM2.5 exposure is higher in communities with more poverty (and, as a simulated demographic, higher minority share). This helps highlight possible inequities in who is most affected by pollution. We compare pollution levels across poverty tertiles, map the burden, and compute disparity ratios.
+
+```{r, fig.width = 12, fig.height = 5}
+set.seed(42)
+df$pct_minority   <- pmin(pmax(20 + 15 * rbeta(N, 2, 3), 0), 100)
+df$pct_low_income <- pmin(pmax(df$pct_poverty * 2.5 + rnorm(N, 0, 5), 0), 100)
+df$poverty_tertile <- factor(
+  ntile(df$pct_poverty, 3),
+  labels = c("Low poverty", "Middle", "High poverty")
+)
+pts$poverty_tertile <- df$poverty_tertile
+pts$pct_minority    <- df$pct_minority
+
+ej <- df %>%
+  group_by(poverty_tertile) %>%
+  summarise(mean_pm25 = mean(pm25), .groups = "drop")
+
+ratio_hl <- ej$mean_pm25[ej$poverty_tertile == "High poverty"] /
+  ej$mean_pm25[ej$poverty_tertile == "Low poverty"]
+
+p_ej_map <- ggplot() +
+  geom_sf(data = states, fill = "grey95", colour = "grey80", linewidth = 0.25) +
+  geom_sf(data = pts, aes(colour = pm25), size = 0.7) +
+  scale_colour_distiller(name = "PM2.5", palette = "YlOrRd", direction = 1) +
+  labs(title = "PM2.5 at sample points") +
+  theme_map()
+
+p_box <- ggplot(df, aes(poverty_tertile, pm25, fill = poverty_tertile)) +
+  geom_boxplot(outlier.size = 0.6, colour = "grey30") +
+  scale_fill_manual(values = c("#A1D99B", "#FEC44F", "#D95F0E")) +
+  guides(fill = "none") +
+  labs(
+    x = NULL, y = "PM2.5 (µg/m³)",
+    title = "PM2.5 by poverty tertile",
+    subtitle = sprintf("High/low disparity ratio = %.2fx", ratio_hl)
+  )
+
+p_bar_ej <- ggplot(ej, aes(poverty_tertile, mean_pm25, fill = poverty_tertile)) +
+  geom_col(colour = "white", width = 0.7) +
+  scale_fill_manual(values = c("#A1D99B", "#FEC44F", "#D95F0E")) +
+  guides(fill = "none") +
+  labs(x = NULL, y = "Mean PM2.5 (µg/m³)", title = "Mean PM2.5 by poverty tertile")
+
+p_min <- ggplot(df, aes(pct_minority, pm25, colour = pct_poverty)) +
+  geom_point(alpha = 0.4, size = 1) +
+  geom_smooth(method = "lm", se = FALSE, colour = "black", linewidth = 0.8) +
+  scale_colour_distiller(name = "% poverty", palette = "RdYlGn", direction = -1) +
+  labs(
+    x = "% minority (simulated)", y = "PM2.5 (µg/m³)",
+    title = sprintf(
+      "Minority share vs PM2.5 (r = %.3f)",
+      cor(df$pct_minority, df$pm25)
+    )
+  )
+
+p_ej <- (p_ej_map | p_box) / (p_bar_ej | p_min) +
+  plot_annotation(title = "Environmental justice analysis: disparities in pollution exposure")
+print(p_ej)
+ggsave(file.path(out_dir, "ej_analysis.png"), p_ej,
+       width = 14, height = 10, dpi = 130)
+
+cat("Environmental justice summary:\n")
+cat(sprintf("  Correlation: minority%% vs PM2.5 = %.3f\n", cor(df$pct_minority, df$pm25)))
+cat(sprintf("  High-poverty tertile PM2.5  : %.1f µg/m³\n",
+            ej$mean_pm25[ej$poverty_tertile == "High poverty"]))
+cat(sprintf("  Low-poverty tertile PM2.5   : %.1f µg/m³\n",
+            ej$mean_pm25[ej$poverty_tertile == "Low poverty"]))
+cat(sprintf("  Inequality ratio (high/low) : %.2fx\n", ratio_hl))
+```
+
+A disparity ratio above 1 means the highest-poverty tertile bears a heavier pollution burden. In real EJ screening (e.g. EPA EJScreen, CalEnviroScreen), this kind of overlay of environmental hazard and socioeconomic vulnerability is the starting point — not a causal claim.
+
+## 6. Ecological Fallacy: Individual vs Aggregate Data
+
+Imagine you want to know if breathing more air pollution (like PM2.5) makes individuals more likely to get heart disease. If you only look at the average air pollution and the average heart disease rates for each community (big groups), you might see a pattern. But this does **not** always mean that the same trend is true for each person.
+
+The **ecological fallacy** happens when you take results from group-level data (like counties or cities) and assume they must be true for individuals within those groups. This is risky because group averages can hide what is really happening among individuals. Other factors can mix things up (like richer counties may have less pollution and better healthcare, but within each county, poor people may still be the most at risk).
+
+**Key takeaway:** just because there is a pattern between pollution and disease at the county level, does not guarantee you will see it (or the same strength) for individual people. Be careful when jumping from group data to conclusions about individuals.
 
 ```{r}
 set.seed(7)
 N_IND <- 10000
-ind_county <- sample.int(N, N_IND, replace = TRUE)
-ind_county_pm25 <- df$pm25[ind_county]
-ind_pm25 <- ind_county_pm25 + rnorm(N_IND, 0, 3)
-ind_poverty <- df$pct_poverty[ind_county] + rnorm(N_IND, 0, 5)
-ind_age <- pmin(pmax(rnorm(N_IND, 55, 15), 20), 90)
 
-TRUE_IND_PM25 <- 0.015  # log-OR per ug/m3 at individual level
-ind_logit <- (-3.5 + TRUE_IND_PM25 * ind_pm25 + 0.02 * (ind_age - 55) +
-                0.015 * (ind_poverty - 10) + rnorm(N_IND, 0, 0.5))
+# Individual PM2.5 (based on assigned location + within-area variation)
+ind_loc      <- sample.int(N, N_IND, replace = TRUE)
+ind_pm25     <- df$pm25[ind_loc] + rnorm(N_IND, 0, 3)
+ind_poverty  <- df$pct_poverty[ind_loc] + rnorm(N_IND, 0, 5)
+ind_age      <- pmin(pmax(rnorm(N_IND, 55, 15), 20), 90)
+
+TRUE_IND_PM25 <- 0.015   # log-OR per µg/m³ at individual level
+ind_logit <- -3.5 + TRUE_IND_PM25 * ind_pm25 + 0.02 * (ind_age - 55) +
+  0.015 * (ind_poverty - 10) + rnorm(N_IND, 0, 0.5)
 ind_cvd <- rbinom(N_IND, 1, 1 / (1 + exp(-ind_logit)))
 
-eco_coef_log_rr <- coef(lm(log(cvd_rate) ~ pm25, data = df))[2]
+eco_coef_log_rr <- coef(lm(log(cvd_rate) ~ pm25, data = df))[["pm25"]]
 ind_fit <- glm(ind_cvd ~ ind_pm25 + ind_age + ind_poverty, family = binomial())
-ind_coef_log_or <- coef(ind_fit)["ind_pm25"]
+ind_coef_log_or <- coef(ind_fit)[["ind_pm25"]]
 
-cat("Ecological Fallacy Demonstration:\n")
+cat("Ecological fallacy demonstration:\n")
 cat(sprintf("  True individual log-OR per µg/m³ PM2.5: %.4f\n", TRUE_IND_PM25))
 cat(sprintf("  Individual-level logistic estimate     : %.4f\n", ind_coef_log_or))
-cat(sprintf("  County-level ecological estimate       : %.4f\n", eco_coef_log_rr))
+cat(sprintf("  Location-level ecological estimate     : %.4f\n", eco_coef_log_rr))
 cat("\nThe ecological and individual-level estimates are on different scales\n")
 cat("(rate ratio vs odds ratio) and answer different questions.\n")
-cat("DO NOT use county-level coefficients to make individual-level inferences!\n")
+cat("DO NOT use group-level coefficients to make individual-level inferences!\n")
 ```
 
-## 6. Knowledge Check
-1. IDW gives PM2.5 coefficient β=2.1 while RBF gives β=2.8. Which should you prefer and why?
-2. PM2.5 exposure and poverty are correlated (r=0.41). How does this affect the ecological regression for PM2.5's health effect?
-3. The EJ analysis shows highest-poverty quintile has 1.4x higher PM2.5 than lowest. Is this statistically significant? How would you test it?
+## 7. Knowledge Check
+1. IDW gives PM2.5 coefficient β = 2.1 while kriging gives β = 2.8. Which should you prefer and why?
+2. PM2.5 exposure and poverty are correlated (r = 0.41). How does this affect the ecological regression for PM2.5's health effect?
+3. The EJ analysis shows the highest-poverty tertile has 1.4× higher PM2.5 than the lowest. Is this statistically significant? How would you test it?
 4. Individual-level PM2.5 log-OR = 0.015 vs ecological log-RR = 0.07. Why do these differ? What is the ecological fallacy specifically?
 5. Implement Moran's I for PM2.5 exposure to quantify spatial patterning of the exposure surface.
 
 ```{r}
-nb <- vector("list", N)
-for (i in seq_len(N)) {
-  nbrs <- which(pmax(abs(df$row - df$row[i]), abs(df$col - df$col[i])) <= 1)
-  nb[[i]] <- setdiff(nbrs, i)
-}
-class(nb) <- "nb"
-attr(nb, "region.id") <- as.character(seq_len(N))
-lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+# Exercise 5 — distance-band Moran's I for measured PM2.5 (no spdep)
+band_km <- 200
+w <- 1 / Dkm
+diag(w) <- 0
+w[Dkm > band_km] <- 0
+rs <- rowSums(w)
+w[rs > 0, ] <- w[rs > 0, ] / rs[rs > 0]
 
-I_pm25 <- moran.test(df$pm25, lw, zero.policy = TRUE)
-I_cvd  <- moran.test(df$cvd_rate, lw, zero.policy = TRUE)
-mc_pm  <- moran.mc(df$pm25, lw, nsim = 499, zero.policy = TRUE)
-mc_cvd <- moran.mc(df$cvd_rate, lw, nsim = 499, zero.policy = TRUE)
-
-cat(sprintf("Moran's I for PM2.5    : %.4f (p=%.4f)\n",
-            unname(I_pm25$estimate["Moran I statistic"]), mc_pm$p.value))
-cat(sprintf("Moran's I for CVD rate : %.4f  (p=%.4f)\n",
-            unname(I_cvd$estimate["Moran I statistic"]), mc_cvd$p.value))
-cat("\nBoth exposure and outcome are spatially autocorrelated.\n")
-cat("This means standard SE in ecological regression are too small -> need spatial model!\n")
+z <- as.numeric(scale(df$pm25, scale = TRUE, center = TRUE))
+n_w <- sum(w)
+moran_i <- as.numeric((N / n_w) * (t(z) %*% w %*% z) / sum(z^2))
+cat(sprintf(
+  "Moran's I for measured PM2.5 (%.0f km distance band): %.3f\n",
+  band_km, moran_i
+))
+cat("I > 0 indicates positive spatial autocorrelation (clustered exposure).\n")
 ```
 
 ***

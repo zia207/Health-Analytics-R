@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Spatial Regression: Lag, Error &amp; GWR – Health Analytics with R</title>
+<title>mod07_nb03_spatial_regression_gwr – Health Analytics with R</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -105,6 +105,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -132,7 +161,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-with-Python"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-R"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -156,7 +185,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB03_Spatial_Regression_GWR.html">Spatial Regression: Lag, Error &amp; GWR</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB03_Spatial_Regression_GWR.html">NB-03 · Spatial Regression: Lag, Error &amp; GWR</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -166,24 +195,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-body"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB03_Spatial_Regression_GWR.html">Spatial Regression: Lag, Error &amp; GWR</a></li></ol></nav>
-      <h1 class="title">Spatial Regression: Lag, Error &amp; GWR</h1>
-            <p class="subtitle lead">Module 07 — Health Analytics with R</p>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB03_Spatial_Regression_GWR.html">NB-03 · Spatial Regression: Lag, Error &amp; GWR</a></li></ol></nav></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
@@ -263,49 +275,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB01_Data_Loading_Profiling.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Loading &amp; Automated Profiling</span></a>
+ <span class="menu-text">NB-01 · Data Loading &amp; Automated Profiling</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB02_Descriptive_Statistics.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Descriptive Statistics for Clinical Variables</span></a>
+ <span class="menu-text">NB-02 · Descriptive Statistics for Clinical Variables</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB03_Clinical_Visualisation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Visualising Clinical Distributions</span></a>
+ <span class="menu-text">NB-03 · Visualising Clinical Distributions</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB04_TimeSeries_Admissions.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Time-Series of Admissions &amp; Clinical Events</span></a>
+ <span class="menu-text">NB-04 · Time-Series of Admissions &amp; Clinical Events</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB05_Missingness_Imputation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Missingness Analysis &amp; Imputation</span></a>
+ <span class="menu-text">NB-05 · Missingness Analysis &amp; Imputation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB06_Comorbidity_Heatmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Comorbidity Co-occurrence Heatmap</span></a>
+ <span class="menu-text">NB-06 · Comorbidity Co-occurrence Heatmap</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB07_Geospatial_Disparities.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Geospatial Health Disparities Map</span></a>
+ <span class="menu-text">NB-07 · Geospatial Health Disparities Map</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB08_Capstone_Readmission_EDA.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End EDA on Readmission Risk</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End EDA on Readmission Risk</span></a>
   </div>
 </li>
       </ul>
@@ -322,49 +334,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB01_Hypothesis_Testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hypothesis Testing for Health Outcomes</span></a>
+ <span class="menu-text">NB-01 · Hypothesis Testing for Health Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB02_RR_OR_CI.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
+ <span class="menu-text">NB-02 · Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB03_Survival_Analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
+ <span class="menu-text">NB-03 · Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB04_Linear_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Linear Regression for Continuous Outcomes</span></a>
+ <span class="menu-text">NB-04 · Linear Regression for Continuous Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB05_Logistic_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Logistic Regression for Binary Outcomes</span></a>
+ <span class="menu-text">NB-05 · Logistic Regression for Binary Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB06_Count_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Poisson &amp; Negative Binomial Regression</span></a>
+ <span class="menu-text">NB-06 · Poisson &amp; Negative Binomial Regression</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB07_Confounding_EffectModification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Confounding &amp; Effect Modification</span></a>
+ <span class="menu-text">NB-07 · Confounding &amp; Effect Modification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB08_Capstone_Inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Multivariable Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Multivariable Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -381,49 +393,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB01_Pipeline_Splits.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ML Pipeline Setup &amp; Train/Test Splits</span></a>
+ <span class="menu-text">NB-01 · ML Pipeline Setup &amp; Train/Test Splits</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB02_DecisionTree_RandomForest.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Decision Trees &amp; Random Forest</span></a>
+ <span class="menu-text">NB-02 · Decision Trees &amp; Random Forest</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB03_XGBoost_LightGBM.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">XGBoost &amp; LightGBM</span></a>
+ <span class="menu-text">NB-03 · XGBoost &amp; LightGBM</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB04_Clinical_Model_Evaluation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Model Evaluation</span></a>
+ <span class="menu-text">NB-04 · Clinical Model Evaluation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB05_Hyperparameter_Tuning.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hyperparameter Tuning &amp; Cross-Validation</span></a>
+ <span class="menu-text">NB-05 · Hyperparameter Tuning &amp; Cross-Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB06_SHAP_Explainability.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SHAP Explainability</span></a>
+ <span class="menu-text">NB-06 · SHAP Explainability</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB07_Clinical_Prediction_Models.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Three Clinical Prediction Models</span></a>
+ <span class="menu-text">NB-07 · Three Clinical Prediction Models</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB08_Capstone_ML_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical ML Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical ML Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -440,49 +452,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB01_Clinical_Text_Preprocessing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Text Preprocessing</span></a>
+ <span class="menu-text">NB-01 · Clinical Text Preprocessing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB02_Clinical_NER.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Named Entity Recognition</span></a>
+ <span class="menu-text">NB-02 · Clinical Named Entity Recognition</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB03_TF_IDF_Classification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TF-IDF &amp; Clinical Text Classification</span></a>
+ <span class="menu-text">NB-03 · TF-IDF &amp; Clinical Text Classification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB04_Word_Embeddings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Word Embeddings &amp; Word2Vec</span></a>
+ <span class="menu-text">NB-04 · Word Embeddings &amp; Word2Vec</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB05_Clinical_BERT.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
+ <span class="menu-text">NB-05 · Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB06_ICD_Coding_Medications.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ICD Coding &amp; Medication Extraction</span></a>
+ <span class="menu-text">NB-06 · ICD Coding &amp; Medication Extraction</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB07_Summarisation_ZeroShot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Summarisation &amp; Zero-Shot NLP</span></a>
+ <span class="menu-text">NB-07 · Summarisation &amp; Zero-Shot NLP</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB08_Capstone_Clinical_NLP.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical NLP Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical NLP Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -499,49 +511,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB01_DAGs_Confounding.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DAGs, Confounding &amp; Identification</span></a>
+ <span class="menu-text">NB-01 · DAGs, Confounding &amp; Identification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB02_Propensity_Scores.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Propensity Score Methods</span></a>
+ <span class="menu-text">NB-02 · Propensity Score Methods</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB03_DiD_EventStudy.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Difference-in-Differences &amp; Event Studies</span></a>
+ <span class="menu-text">NB-03 · Difference-in-Differences &amp; Event Studies</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB04_ITS_SyntheticControl.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Interrupted Time Series &amp; Synthetic Control</span></a>
+ <span class="menu-text">NB-04 · Interrupted Time Series &amp; Synthetic Control</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB05_IV_RDD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Instrumental Variables &amp; RDD</span></a>
+ <span class="menu-text">NB-05 · Instrumental Variables &amp; RDD</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB06_GComp_TMLE.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">G-Computation, TMLE &amp; Mediation</span></a>
+ <span class="menu-text">NB-06 · G-Computation, TMLE &amp; Mediation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB07_Sensitivity_Reporting.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Sensitivity Analysis &amp; Reporting</span></a>
+ <span class="menu-text">NB-07 · Sensitivity Analysis &amp; Reporting</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Causal Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Causal Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -549,7 +561,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
- <span class="menu-text"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</span></a>
+ <span class="menu-text"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -558,61 +570,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB01_Spatial_Data_Choropleth.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Data &amp; Choropleth Mapping</span></a>
+ <span class="menu-text">NB-01 · Spatial Data &amp; Choropleth Mapping</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Autocorrelation &amp; Moran's I</span></a>
+ <span class="menu-text">NB-02 · Spatial Autocorrelation &amp; Moran's I</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB03_Spatial_Regression_GWR.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Spatial Regression: Lag, Error &amp; GWR</span></a>
+ <span class="menu-text">NB-03 · Spatial Regression: Lag, Error &amp; GWR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Disease Mapping &amp; Bayesian Smoothing</span></a>
+ <span class="menu-text">NB-04 · Disease Mapping &amp; Bayesian Smoothing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB05_Cluster_Detection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Cluster Detection</span></a>
+ <span class="menu-text">NB-05 · Spatial Cluster Detection</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB06_Environmental_Epidemiology.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Environmental Epidemiology</span></a>
+ <span class="menu-text">NB-06 · Environmental Epidemiology</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB07_Health_Service_Access.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Health Service Area &amp; Access Metrics</span></a>
+ <span class="menu-text">NB-07 · Health Service Area &amp; Access Metrics</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone - Spatial Health Inequity Atlas</span></a>
+ <span class="menu-text">NB-08 · Capstone · Spatial Health Inequity Atlas</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial ML - LBC Mortality (Northeast)</span></a>
+ <span class="menu-text">NB-09 · Spatial ML — LBC Mortality (Northeast)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Geostatistical Risk Analysis</span></a>
+ <span class="menu-text">NB-10 · Geostatistical Risk Analysis</span></a>
   </div>
 </li>
       </ul>
@@ -629,49 +641,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB01_Reproducible_Foundations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Reproducible Research Foundations</span></a>
+ <span class="menu-text">NB-01 · Reproducible Research Foundations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB02_Quarto_Reports.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Quarto Documents for Health Reports</span></a>
+ <span class="menu-text">NB-02 · Quarto Documents for Health Reports</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB03_Shiny_Dashboards.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Shiny Dashboards</span></a>
+ <span class="menu-text">NB-03 · Shiny Dashboards</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB04_MLflow_Tracking.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">MLflow Model Tracking &amp; Registry</span></a>
+ <span class="menu-text">NB-04 · MLflow Model Tracking &amp; Registry</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB05_Plumber_Serving.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Plumber for Clinical Model Serving</span></a>
+ <span class="menu-text">NB-05 · Plumber for Clinical Model Serving</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB06_Testing_CICD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Testing, CI/CD &amp; Code Quality</span></a>
+ <span class="menu-text">NB-06 · Testing, CI/CD &amp; Code Quality</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB07_ModelCards_Governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Model Cards &amp; Clinical AI Governance</span></a>
+ <span class="menu-text">NB-07 · Model Cards &amp; Clinical AI Governance</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB08_Capstone_Deployment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Full Deployment Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Full Deployment Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -686,19 +698,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology" id="toc-health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="nav-link active" data-scroll-target="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</a></li>
-  <li><a href="#setup-dataset" id="toc-setup-dataset" class="nav-link" data-scroll-target="#setup-dataset">1. Setup &amp; Dataset</a></li>
+  <li><a href="#module-07-spatial-epidemiology" id="toc-module-07-spatial-epidemiology" class="nav-link active" data-scroll-target="#module-07-spatial-epidemiology">Module 07: Spatial Epidemiology</a></li>
+  <li><a href="#spatial-regression-lag-error-gwr" id="toc-spatial-regression-lag-error-gwr" class="nav-link" data-scroll-target="#spatial-regression-lag-error-gwr">Spatial Regression: Lag, Error &amp; GWR</a>
+  <ul class="collapse">
+  <li><a href="#setup-us-county-health-dataset" id="toc-setup-us-county-health-dataset" class="nav-link" data-scroll-target="#setup-us-county-health-dataset">1. Setup &amp; US County Health Dataset</a></li>
   <li><a href="#ols-baseline-and-diagnostic-tests" id="toc-ols-baseline-and-diagnostic-tests" class="nav-link" data-scroll-target="#ols-baseline-and-diagnostic-tests">2. OLS Baseline and Diagnostic Tests</a></li>
-  <li><a href="#spatial-lag-model-slm" id="toc-spatial-lag-model-slm" class="nav-link" data-scroll-target="#spatial-lag-model-slm">3. Spatial Lag Model (SLM)</a></li>
-  <li><a href="#spatial-error-model-sem" id="toc-spatial-error-model-sem" class="nav-link" data-scroll-target="#spatial-error-model-sem">4. Spatial Error Model (SEM)</a></li>
-  <li><a href="#geographically-weighted-regression-gwr" id="toc-geographically-weighted-regression-gwr" class="nav-link" data-scroll-target="#geographically-weighted-regression-gwr">5. Geographically Weighted Regression (GWR)</a></li>
-  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">6. Knowledge Check</a></li>
+  <li><a href="#spatial-regression" id="toc-spatial-regression" class="nav-link" data-scroll-target="#spatial-regression">3. Spatial Regression</a>
+  <ul class="collapse">
+  <li><a href="#spatial-lag-model-slm" id="toc-spatial-lag-model-slm" class="nav-link" data-scroll-target="#spatial-lag-model-slm">3.1 Spatial Lag Model (SLM)</a></li>
+  <li><a href="#spatial-error-model-sem" id="toc-spatial-error-model-sem" class="nav-link" data-scroll-target="#spatial-error-model-sem">3.2 Spatial Error Model (SEM)</a></li>
+  </ul></li>
+  <li><a href="#geographically-weighted-correlation-analysis" id="toc-geographically-weighted-correlation-analysis" class="nav-link" data-scroll-target="#geographically-weighted-correlation-analysis">5. Geographically Weighted Correlation Analysis</a></li>
+  <li><a href="#geographically-weighted-regression-gwr" id="toc-geographically-weighted-regression-gwr" class="nav-link" data-scroll-target="#geographically-weighted-regression-gwr">6. Geographically Weighted Regression (GWR)</a></li>
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">7. Knowledge Check</a></li>
+  </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB03_Spatial_Regression_GWR.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB03_Spatial_Regression_GWR.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
-
 
 
 
@@ -708,15 +726,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><img src="Images/banner_health_analytics.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
-<section id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="level3">
-<h3 class="anchored" data-anchor-id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</h3>
-<hr>
-<p><strong>Learning objectives</strong> - Diagnose spatial autocorrelation in OLS residuals with Lagrange Multiplier tests - Fit Spatial Lag Model (SLM): includes spatially lagged outcome - Fit Spatial Error Model (SEM): includes spatially autocorrelated errors - Compare model fit with AIC, log-likelihood, and pseudo-R² - Implement Geographically Weighted Regression (GWR) with <code>GWmodel</code> - Map spatially varying coefficients from GWR</p>
-<p><strong>Estimated time:</strong> 3 hours | <strong>Level:</strong> Advanced<br>
-<strong>Libraries:</strong> <code>sf</code>, <code>spdep</code>, <code>spatialreg</code>, <code>GWmodel</code>, <code>ggplot2</code>, <code>broom</code></p>
+<section id="module-07-spatial-epidemiology" class="level3">
+<h3 class="anchored" data-anchor-id="module-07-spatial-epidemiology">Module 07: Spatial Epidemiology</h3>
 </section>
-<section id="setup-dataset" class="level2">
-<h2 class="anchored" data-anchor-id="setup-dataset">1. Setup &amp; Dataset</h2>
+<section id="spatial-regression-lag-error-gwr" class="level1">
+<h1>Spatial Regression: Lag, Error &amp; GWR</h1>
+<hr>
+<p><strong>Learning objectives</strong> - Diagnose spatial autocorrelation in OLS residuals with Lagrange Multiplier tests - Fit Spatial Lag Model (SLM): includes spatially lagged outcome - Fit Spatial Error Model (SEM): includes spatially autocorrelated errors - Compare model fit with AIC, log-likelihood, and pseudo-R² - Compute geographically weighted correlation between diabetes and obesity - Fit Geographically Weighted Regression (GWR) and map spatially varying coefficients</p>
+<p><strong>Data:</strong> <code>Data/usa_data.csv</code> — CDC adult diabetes prevalence and County Health Rankings covariates for 3,108 US counties (CONUS + DC)<br>
+<strong>Geometries:</strong> <code>Data/US_COUNTY.shp</code> — county polygons in NAD83 Albers (EPSG:5070)<br>
+<strong>Estimated time:</strong> 3 hours | <strong>Level:</strong> Advanced<br>
+<strong>Libraries:</strong> <code>sf</code>, <code>spdep</code>, <code>spatialreg</code>, <code>GWmodel</code>, <code>ggplot2</code>, <code>broom</code>, <code>patchwork</code></p>
+<section id="setup-us-county-health-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="setup-us-county-health-dataset">1. Setup &amp; US County Health Dataset</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
@@ -730,368 +752,669 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>out_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"mod07"</span>)</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(out_dir, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>spatial_smooth <span class="ot">&lt;-</span> <span class="cf">function</span>(values, row_idx, col_idx, nrow, ncol, <span class="at">sigma =</span> <span class="dv">2</span>) {</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> nrow, <span class="at">ncol =</span> ncol)</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(values)) grid[row_idx[i], col_idx[i]] <span class="ot">&lt;-</span> values[i]</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  k <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="dv">3</span> <span class="sc">*</span> sigma)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  xs <span class="ot">&lt;-</span> (<span class="sc">-</span>k)<span class="sc">:</span>k</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  kern <span class="ot">&lt;-</span> <span class="fu">outer</span>(<span class="fu">dnorm</span>(xs, <span class="at">sd =</span> sigma), <span class="fu">dnorm</span>(xs, <span class="at">sd =</span> sigma))</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  kern <span class="ot">&lt;-</span> kern <span class="sc">/</span> <span class="fu">sum</span>(kern)</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  pad <span class="ot">&lt;-</span> k</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  gp <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, nrow <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> pad, ncol <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> pad)</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  gp[(pad <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span>(pad <span class="sc">+</span> nrow), (pad <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span>(pad <span class="sc">+</span> ncol)] <span class="ot">&lt;-</span> grid</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, nrow, ncol)</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (r <span class="cf">in</span> <span class="fu">seq_len</span>(nrow)) <span class="cf">for</span> (c <span class="cf">in</span> <span class="fu">seq_len</span>(ncol)) {</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    out[r, c] <span class="ot">&lt;-</span> <span class="fu">sum</span>(gp[r<span class="sc">:</span>(r <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> k), c<span class="sc">:</span>(c <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> k)] <span class="sc">*</span> kern)</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mapply</span>(<span class="cf">function</span>(r, c) out[r, c], row_idx, col_idx)</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>NROW <span class="ot">&lt;-</span> <span class="dv">10</span>; NCOL <span class="ot">&lt;-</span> <span class="dv">20</span>; N <span class="ot">&lt;-</span> NROW <span class="sc">*</span> NCOL</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>row_idx <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(NROW), <span class="at">each =</span> NCOL)</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>col_idx <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(NCOL), <span class="at">times =</span> NROW)</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>lon <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">120</span> <span class="sc">+</span> (col_idx <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="fl">2.5</span> <span class="sc">+</span> <span class="fu">rnorm</span>(N, <span class="dv">0</span>, <span class="fl">0.3</span>)</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>lat <span class="ot">&lt;-</span> <span class="dv">28</span> <span class="sc">+</span> (row_idx <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="fl">2.0</span> <span class="sc">+</span> <span class="fu">rnorm</span>(N, <span class="dv">0</span>, <span class="fl">0.2</span>)</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>pct_poverty   <span class="ot">&lt;-</span> <span class="dv">10</span> <span class="sc">+</span> <span class="dv">8</span> <span class="sc">*</span> <span class="fu">rbeta</span>(N, <span class="dv">2</span>, <span class="dv">5</span>) <span class="sc">+</span> <span class="dv">3</span> <span class="sc">*</span> <span class="fu">sin</span>(lon <span class="sc">/</span> <span class="dv">20</span>)</span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>pct_uninsured <span class="ot">&lt;-</span> <span class="dv">8</span> <span class="sc">+</span> <span class="dv">6</span> <span class="sc">*</span> <span class="fu">rbeta</span>(N, <span class="dv">2</span>, <span class="dv">4</span>) <span class="sc">+</span> <span class="fl">0.3</span> <span class="sc">*</span> pct_poverty</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>pm25          <span class="ot">&lt;-</span> <span class="dv">8</span> <span class="sc">+</span> <span class="dv">4</span> <span class="sc">*</span> <span class="fu">rgamma</span>(N, <span class="at">shape =</span> <span class="dv">2</span>, <span class="at">scale =</span> <span class="dv">1</span>)</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>population    <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">rlnorm</span>(N, <span class="fl">10.5</span>, <span class="fl">1.0</span>))</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>spatial_risk  <span class="ot">&lt;-</span> <span class="fu">spatial_smooth</span>(<span class="fu">rnorm</span>(N), row_idx, col_idx, NROW, NCOL)</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>cvd_rate <span class="ot">&lt;-</span> (<span class="dv">180</span> <span class="sc">+</span> <span class="fl">1.2</span> <span class="sc">*</span> pct_poverty <span class="sc">+</span> <span class="fl">0.8</span> <span class="sc">*</span> pct_uninsured <span class="sc">+</span> <span class="fl">0.5</span> <span class="sc">*</span> pm25 <span class="sc">+</span></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>               <span class="dv">15</span> <span class="sc">*</span> spatial_risk <span class="sc">+</span> <span class="fu">rnorm</span>(N, <span class="dv">0</span>, <span class="dv">12</span>))</span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>expected <span class="ot">&lt;-</span> (cvd_rate <span class="sc">/</span> <span class="dv">100000</span>) <span class="sc">*</span> population <span class="sc">*</span> <span class="dv">5</span></span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> <span class="fu">rpois</span>(N, expected)</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>smr <span class="ot">&lt;-</span> observed <span class="sc">/</span> <span class="fu">pmax</span>(expected, <span class="dv">1</span>)</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">county_id =</span> <span class="fu">sprintf</span>(<span class="st">"C%03d"</span>, <span class="fu">seq_len</span>(N) <span class="sc">-</span> <span class="dv">1</span>),</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>  lon, lat, <span class="at">row =</span> row_idx, <span class="at">col =</span> col_idx,</span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>  pct_poverty, pct_uninsured, pm25, population, cvd_rate,</span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>  observed, expected, smr, spatial_risk</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>()</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>theme_map <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">11</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># County Health Rankings + CDC diabetes prevalence (CONUS + DC)</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"Data/usa_data.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(raw, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"centroid_x_m"</span>, <span class="st">"centroid_y_m"</span>), <span class="at">crs =</span> <span class="dv">5070</span>, <span class="at">remove =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>pts_ll <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(pts, <span class="dv">4326</span>)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(pts_ll)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">county_id       =</span> <span class="fu">sprintf</span>(<span class="st">"%05d"</span>, <span class="fu">as.integer</span>(raw<span class="sc">$</span>fips)),</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">fips            =</span> <span class="fu">as.integer</span>(raw<span class="sc">$</span>fips),</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">county          =</span> raw<span class="sc">$</span>county,</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">state_abbr      =</span> raw<span class="sc">$</span>state_abbr,</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">state_name      =</span> raw<span class="sc">$</span>state_name,</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">lon             =</span> xy[, <span class="dv">1</span>],</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">lat             =</span> xy[, <span class="dv">2</span>],</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_m             =</span> raw<span class="sc">$</span>centroid_x_m,</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="at">y_m             =</span> raw<span class="sc">$</span>centroid_y_m,</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">diabetes_prev   =</span> raw<span class="sc">$</span>y_diabetes_prevalence_adults_with_diabetes,</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_65plus      =</span> raw<span class="sc">$</span>chr_65_and_older_65_and_over,</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_exercise    =</span> raw<span class="sc">$</span>chr_access_to_exercise_opportunities,</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_obesity     =</span> raw<span class="sc">$</span>chr_adult_obesity,</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">food_env_index  =</span> raw<span class="sc">$</span>chr_food_environment_index,</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_pcp           =</span> raw<span class="sc">$</span>chr_primary_care_physicians,</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>  <span class="at">rural_pop       =</span> raw<span class="sc">$</span>chr_rural,</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_unemployed    =</span> raw<span class="sc">$</span>chr_unemployment,</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_uninsured     =</span> raw<span class="sc">$</span>chr_uninsured</span>
 <span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>geoms <span class="ot">&lt;-</span> <span class="fu">Map</span>(<span class="cf">function</span>(lo, la) {</span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_polygon</span>(<span class="fu">list</span>(<span class="fu">matrix</span>(</span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(lo <span class="sc">-</span> <span class="fl">1.25</span>, la <span class="sc">-</span> <span class="dv">1</span>, lo <span class="sc">+</span> <span class="fl">1.25</span>, la <span class="sc">-</span> <span class="dv">1</span>, lo <span class="sc">+</span> <span class="fl">1.25</span>, la <span class="sc">+</span> <span class="dv">1</span>,</span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>      lo <span class="sc">-</span> <span class="fl">1.25</span>, la <span class="sc">+</span> <span class="dv">1</span>, lo <span class="sc">-</span> <span class="fl">1.25</span>, la <span class="sc">-</span> <span class="dv">1</span>), <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span></span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>  )))</span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>}, df<span class="sc">$</span>lon, df<span class="sc">$</span>lat)</span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> <span class="fu">st_sf</span>(df, <span class="at">geometry =</span> <span class="fu">st_sfc</span>(geoms, <span class="at">crs =</span> <span class="dv">4326</span>))</span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>nb <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">"list"</span>, N)</span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(N)) {</span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>  nbrs <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">pmax</span>(<span class="fu">abs</span>(df<span class="sc">$</span>row <span class="sc">-</span> df<span class="sc">$</span>row[i]), <span class="fu">abs</span>(df<span class="sc">$</span>col <span class="sc">-</span> df<span class="sc">$</span>col[i])) <span class="sc">&lt;=</span> <span class="dv">1</span>)</span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>  nb[[i]] <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(nbrs, i)</span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(nb) <span class="ot">&lt;-</span> <span class="st">"nb"</span></span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a><span class="fu">attr</span>(nb, <span class="st">"region.id"</span>) <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">seq_len</span>(N))</span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>lw <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(nb, <span class="at">style =</span> <span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>COVARIATES <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"pct_poverty"</span>, <span class="st">"pct_uninsured"</span>, <span class="st">"pm25"</span>)</span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"N=%d | CVD=%.1f/100k | Weights built</span><span class="sc">\n</span><span class="st">"</span>, N, <span class="fu">mean</span>(cvd_rate)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>smr <span class="ot">&lt;-</span> df<span class="sc">$</span>diabetes_prev <span class="sc">/</span> <span class="fu">mean</span>(df<span class="sc">$</span>diabetes_prev, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>N_COUNTIES <span class="ot">&lt;-</span> <span class="fu">nrow</span>(df)</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>  <span class="st">"County dataset: N=%d | Diabetes: %.1f%% (SD=%.1f)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>  N_COUNTIES, <span class="fu">mean</span>(df<span class="sc">$</span>diabetes_prev), <span class="fu">sd</span>(df<span class="sc">$</span>diabetes_prev)</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>N=200 | CVD=217.2/100k | Weights built</code></pre>
+<pre><code>County dataset: N=3108 | Diabetes: 10.5% (SD=2.2)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Obesity: %.1f%% | 65+: %.1f%% | Food env. index: %.1f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(df<span class="sc">$</span>pct_obesity), <span class="fu">mean</span>(df<span class="sc">$</span>pct_65plus), <span class="fu">mean</span>(df<span class="sc">$</span>food_env_index)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Obesity: 36.2% | 65+: 20.1% | Food env. index: 7.4</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>county_shapes <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"Data/US_COUNTY.shp"</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>county_shapes<span class="sc">$</span>FIPS <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(county_shapes<span class="sc">$</span>FIPS)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Shannon County SD (46113) was renamed Oglala Lakota (46102)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>county_shapes<span class="sc">$</span>FIPS[county_shapes<span class="sc">$</span>FIPS <span class="sc">==</span> <span class="dv">46113</span>] <span class="ot">&lt;-</span> <span class="dv">46102</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> county_shapes <span class="sc">%&gt;%</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(df, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"FIPS"</span> <span class="ot">=</span> <span class="st">"fips"</span>))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>bb <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(gdf)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"sf object: %d counties | CRS: %s</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">nrow</span>(gdf), <span class="fu">st_crs</span>(gdf)<span class="sc">$</span>input))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>sf object: 3108 counties | CRS: NAD_1983_Albers</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bounding box (Albers metres): xmin=%.0f ymin=%.0f xmax=%.0f ymax=%.0f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  bb[<span class="st">"xmin"</span>], bb[<span class="st">"ymin"</span>], bb[<span class="st">"xmax"</span>], bb[<span class="st">"ymax"</span>]</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Bounding box (Albers metres): xmin=-2356114 ymin=268091 xmax=2258200 ymax=3172568</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Queen contiguity listw (never a dense n×n matrix)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>nb <span class="ot">&lt;-</span> <span class="fu">poly2nb</span>(gdf, <span class="at">queen =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in poly2nb(gdf, queen = TRUE): some observations have no neighbours;
+if this seems unexpected, try increasing the snap argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in poly2nb(gdf, queen = TRUE): neighbour object has 3 sub-graphs;
+if this sub-graph count seems unexpected, try increasing the snap argument.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>lw <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(nb, <span class="at">style =</span> <span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>n_iso <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">card</span>(nb) <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Queen weights: mean neighbours = %.1f | isolated islands = %d (zero.policy = TRUE)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">card</span>(nb)), n_iso</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Queen weights: mean neighbours = 5.8 | isolated islands = 2 (zero.policy = TRUE)</code></pre>
 </div>
 </div>
 </section>
 <section id="ols-baseline-and-diagnostic-tests" class="level2">
 <h2 class="anchored" data-anchor-id="ols-baseline-and-diagnostic-tests">2. OLS Baseline and Diagnostic Tests</h2>
-<p><strong>OLS model:</strong> CVD_i = β₀ + β₁·Poverty_i + β₂·Uninsured_i + β₃·PM25_i + ε_i</p>
-<p><strong>Spatial diagnostics:</strong> - <strong>Moran’s I on residuals</strong>: global test for residual autocorrelation - <strong>Lagrange Multiplier (LM) Lag test</strong>: tests if spatial lag of Y belongs in model - <strong>LM Error test</strong>: tests if spatial error structure is needed - <strong>Robust LM tests</strong>: account for presence of the other spatial effect</p>
+<p><strong>OLS model:</strong> <span class="math inline">\(\mathrm{diabetes}_i = \beta_0 + \beta_1 \cdot \mathrm{obesity}_i + \beta_2 \cdot (\%\ \mathrm{aged\ 65+})_i + \beta_3 \cdot \mathrm{uninsured}_i + \varepsilon_i\)</span></p>
+<p>Obesity is the focal behavioural risk factor. Percent aged 65+ adjusts for age structure. Uninsured count is a County Health Rankings access/size proxy. (Do not put SPR on the right-hand side: SPR is diabetes / national mean, a rescaling of the outcome.)</p>
+<p><strong>Spatial diagnostics:</strong> - <strong>Moran’s I on residuals</strong>: global test for residual autocorrelation - <strong>Lagrange Multiplier (LM) Lag test</strong>: tests if spatial lag of <span class="math inline">\(Y\)</span> belongs in the model - <strong>LM Error test</strong>: tests if spatial error structure is needed - <strong>Robust LM tests</strong>: account for presence of the other spatial effect</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(cvd_rate <span class="sc">~</span> pct_poverty <span class="sc">+</span> pct_uninsured <span class="sc">+</span> pm25, <span class="at">data =</span> df)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">tidy</span>(ols))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(diabetes_prev <span class="sc">~</span> pct_obesity <span class="sc">+</span> pct_65plus <span class="sc">+</span> n_uninsured, <span class="at">data =</span> gdf)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">tidy</span>(ols, <span class="at">conf.int =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 4 × 5
-  term          estimate std.error statistic  p.value
-  &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1 (Intercept)    163.       13.3       12.3  5.11e-26
-2 pct_poverty      2.11      0.679      3.10 2.21e- 3
-3 pct_uninsured    1.30      0.882      1.47 1.43e- 1
-4 pm25             0.301     0.159      1.89 6.06e- 2</code></pre>
+<pre><code># A tibble: 4 × 7
+  term          estimate  std.error statistic  p.value   conf.low  conf.high
+  &lt;chr&gt;            &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;
+1 (Intercept) -1.24      0.248          -5.01 5.70e- 7 -1.73      -0.755    
+2 pct_obesity  0.351     0.00559        62.8  0         0.340      0.362    
+3 pct_65plus  -0.0527    0.00557        -9.47 5.43e-21 -0.0637    -0.0418   
+4 n_uninsured  0.0000132 0.00000153      8.61 1.17e-17  0.0000102  0.0000162</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">AIC: %.2f | Log-L: %.2f | R²: %.4f</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">AIC</span>(ols), <span class="fu">logLik</span>(ols), <span class="fu">summary</span>(ols)<span class="sc">$</span>r.squared))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">AIC: %.2f | Log-L: %.2f | R²: %.4f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">AIC</span>(ols), <span class="fu">logLik</span>(ols), <span class="fu">summary</span>(ols)<span class="sc">$</span>r.squared))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-AIC: 1584.44 | Log-L: -787.22 | R²: 0.0935</code></pre>
+AIC: 11054.82 | Log-L: -5522.41 | R²: 0.5797</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Moran's I on residuals</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>mt_ols <span class="ot">&lt;-</span> <span class="fu">moran.test</span>(<span class="fu">residuals</span>(ols), lw, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>mc_ols <span class="ot">&lt;-</span> <span class="fu">moran.mc</span>(<span class="fu">residuals</span>(ols), lw, <span class="at">nsim =</span> <span class="dv">499</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>I_ols <span class="ot">&lt;-</span> <span class="fu">unname</span>(mt_ols<span class="sc">$</span>estimate[<span class="st">"Moran I statistic"</span>])</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>p_ols <span class="ot">&lt;-</span> mc_ols<span class="sc">$</span>p.value</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Moran's I (OLS residuals): %.4f, p=%.4f</span><span class="sc">\n</span><span class="st">"</span>, I_ols, p_ols))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>mt_ols <span class="ot">&lt;-</span> <span class="fu">moran.test</span>(<span class="fu">residuals</span>(ols), lw, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, <span class="at">alternative =</span> <span class="st">"two.sided"</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>I_ols <span class="ot">&lt;-</span> <span class="fu">unname</span>(mt_ols<span class="sc">$</span>estimate[<span class="st">"Moran I statistic"</span>])</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>p_ols <span class="ot">&lt;-</span> mt_ols<span class="sc">$</span>p.value</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Moran's I (OLS residuals): %.4f, p=%.4g</span><span class="sc">\n</span><span class="st">"</span>, I_ols, p_ols))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Moran's I (OLS residuals): 0.0359, p=0.1520</code></pre>
+<pre><code>Moran's I (OLS residuals): 0.6357, p=0</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (p_ols <span class="sc">&lt;</span> <span class="fl">0.05</span>) {</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"-&gt; Significant residual spatial autocorrelation: spatial model needed</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># LM tests (Anselin) via spdep</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>lm_tests <span class="ot">&lt;-</span> <span class="fu">lm.LMtests</span>(ols, lw, <span class="at">test =</span> <span class="fu">c</span>(<span class="st">"LMerr"</span>, <span class="st">"LMlag"</span>, <span class="st">"RLMerr"</span>, <span class="st">"RLMlag"</span>, <span class="st">"SARMA"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (p_ols <span class="sc">&lt;</span> <span class="fl">0.05</span>) {</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"-&gt; Significant residual spatial autocorrelation: spatial model needed</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>-&gt; Significant residual spatial autocorrelation: spatial model needed</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Anselin LM / Rao score tests (spdep 1.3-2 renamed LM → RS)</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>lm_tests <span class="ot">&lt;-</span> <span class="fu">lm.LMtests</span>(ols, lw, <span class="at">test =</span> <span class="st">"all"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Please update scripts to use lm.RStests in place of lm.LMtests</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(lm_tests)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(lm_tests)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Rao's score (a.k.a Lagrange multiplier) diagnostics for spatial
     dependence
 
 data:  
-model: lm(formula = cvd_rate ~ pct_poverty + pct_uninsured + pm25, data
-= df)
+model: lm(formula = diabetes_prev ~ pct_obesity + pct_65plus +
+n_uninsured, data = gdf)
 test weights: listw
 
-RSerr = 0.88301, df = 1, p-value = 0.3474
+RSerr = 3489.3, df = 1, p-value &lt; 2.2e-16
 
 
     Rao's score (a.k.a Lagrange multiplier) diagnostics for spatial
     dependence
 
 data:  
-model: lm(formula = cvd_rate ~ pct_poverty + pct_uninsured + pm25, data
-= df)
+model: lm(formula = diabetes_prev ~ pct_obesity + pct_65plus +
+n_uninsured, data = gdf)
 test weights: listw
 
-RSlag = 0.53385, df = 1, p-value = 0.465
+RSlag = 1972.9, df = 1, p-value &lt; 2.2e-16
 
 
     Rao's score (a.k.a Lagrange multiplier) diagnostics for spatial
     dependence
 
 data:  
-model: lm(formula = cvd_rate ~ pct_poverty + pct_uninsured + pm25, data
-= df)
+model: lm(formula = diabetes_prev ~ pct_obesity + pct_65plus +
+n_uninsured, data = gdf)
 test weights: listw
 
-adjRSerr = 0.77585, df = 1, p-value = 0.3784
+adjRSerr = 1543.7, df = 1, p-value &lt; 2.2e-16
 
 
     Rao's score (a.k.a Lagrange multiplier) diagnostics for spatial
     dependence
 
 data:  
-model: lm(formula = cvd_rate ~ pct_poverty + pct_uninsured + pm25, data
-= df)
+model: lm(formula = diabetes_prev ~ pct_obesity + pct_65plus +
+n_uninsured, data = gdf)
 test weights: listw
 
-adjRSlag = 0.42669, df = 1, p-value = 0.5136
+adjRSlag = 27.367, df = 1, p-value = 1.683e-07
 
 
     Rao's score (a.k.a Lagrange multiplier) diagnostics for spatial
     dependence
 
 data:  
-model: lm(formula = cvd_rate ~ pct_poverty + pct_uninsured + pm25, data
-= df)
+model: lm(formula = diabetes_prev ~ pct_obesity + pct_65plus +
+n_uninsured, data = gdf)
 test weights: listw
 
-SARMA = 1.3097, df = 2, p-value = 0.5195</code></pre>
+SARMA = 3516.7, df = 2, p-value &lt; 2.2e-16</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>LM_lag <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(lm_tests<span class="sc">$</span>RSlag<span class="sc">$</span>statistic)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>LM_err <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(lm_tests<span class="sc">$</span>RSerr<span class="sc">$</span>statistic)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>p_lag  <span class="ot">&lt;-</span> lm_tests<span class="sc">$</span>RSlag<span class="sc">$</span>p.value</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>p_err  <span class="ot">&lt;-</span> lm_tests<span class="sc">$</span>RSerr<span class="sc">$</span>p.value</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"LM Lag test: %.4f (p=%.4f)</span><span class="sc">\n</span><span class="st">"</span>, LM_lag, p_lag))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract lag vs error (names differ by spdep version)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>nm <span class="ot">&lt;-</span> <span class="fu">names</span>(lm_tests)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>lag_comp <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="st">"LMlag"</span> <span class="sc">%in%</span> nm) lm_tests<span class="sc">$</span>LMlag <span class="cf">else</span> lm_tests<span class="sc">$</span>RSlag</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>err_comp <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="st">"LMerr"</span> <span class="sc">%in%</span> nm) lm_tests<span class="sc">$</span>LMerr <span class="cf">else</span> lm_tests<span class="sc">$</span>RSerr</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>LM_lag <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(lag_comp<span class="sc">$</span>statistic)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>LM_err <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(err_comp<span class="sc">$</span>statistic)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>p_lag  <span class="ot">&lt;-</span> lag_comp<span class="sc">$</span>p.value</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>p_err  <span class="ot">&lt;-</span> err_comp<span class="sc">$</span>p.value</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"LM Lag test: %.4f (p=%.4g)</span><span class="sc">\n</span><span class="st">"</span>, LM_lag, p_lag))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>LM Lag test: 0.5338 (p=0.4650)</code></pre>
+<pre><code>LM Lag test: 1972.9300 (p=0)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"LM Err test: %.4f (p=%.4f)</span><span class="sc">\n</span><span class="st">"</span>, LM_err, p_err))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"LM Err test: %.4f (p=%.4g)</span><span class="sc">\n</span><span class="st">"</span>, LM_err, p_err))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>LM Err test: 0.8830 (p=0.3474)</code></pre>
+<pre><code>LM Err test: 3489.3055 (p=0)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Decision rule: If both significant, choose the one with larger test statistic</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Decision rule: If both significant, choose the one with larger test statistic</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Decision rule: If both significant, choose the one with larger test statistic</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (LM_lag <span class="sc">&gt;</span> LM_err) {</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"  -&gt; Spatial Lag Model preferred</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"  -&gt; Spatial Error Model preferred</span><span class="sc">\n</span><span class="st">"</span>)</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (LM_lag <span class="sc">&gt;</span> LM_err) {</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"  -&gt; Spatial Lag Model preferred</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"  -&gt; Spatial Error Model preferred</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  -&gt; Spatial Error Model preferred</code></pre>
 </div>
 </div>
+<p><strong>Decision rule (Anselin 1988; Anselin <em>et al.</em> 1996):</strong></p>
+<ul>
+<li>If <strong>only</strong> the LM lag test is significant → fit a <strong>Spatial Lag Model</strong>.</li>
+<li>If <strong>only</strong> the LM error test is significant → fit a <strong>Spatial Error Model</strong>.</li>
+<li>If <strong>both</strong> are significant, compare the <em>robust</em> LM statistics and choose the larger one.</li>
+<li>If neither is significant, OLS is adequate (no residual spatial structure after covariates).</li>
+</ul>
 </section>
-<section id="spatial-lag-model-slm" class="level2">
-<h2 class="anchored" data-anchor-id="spatial-lag-model-slm">3. Spatial Lag Model (SLM)</h2>
+<section id="spatial-regression" class="level2">
+<h2 class="anchored" data-anchor-id="spatial-regression">3. Spatial Regression</h2>
+<p>Sometimes, data from nearby locations are similar just because they are close to each other. Ordinary regression (<span class="math inline">\(y = X\beta + \mathrm{error}\)</span>) assumes observations are independent. With maps and spatial data, that is often not true.</p>
+<p><strong>Spatial regression</strong> methods fix this by adding geography into the regression model.</p>
+<p>There are two main types:</p>
+<ol type="1">
+<li><strong>Spatial Lag Model (SLM)</strong>
+<ul>
+<li>This model assumes your outcome (<span class="math inline">\(y\)</span>) depends not just on your own characteristics (<span class="math inline">\(X\)</span>), but also on the outcome in nearby areas.</li>
+</ul></li>
+<li><strong>Spatial Error Model (SEM)</strong>
+<ul>
+<li>Instead of <span class="math inline">\(y\)</span> depending on neighbours, this model says the <em>errors</em> are spatially correlated. If the regression misses something in one area, it probably misses it nearby too.</li>
+</ul></li>
+</ol>
+<p>So, spatial regression makes sure you’re not ignoring geography, and tries to avoid the problem of “neighbours being similar just because they’re neighbours”.</p>
+<p>(In simple terms, imagine house prices: your house value depends on your house’s properties <em>and</em> on the prices of houses nearby. The same logic applies to county diabetes rates.)</p>
+<p>We fit both models with <code>spatialreg</code> (maximum likelihood). Do <strong>not</strong> grid-search <span class="math inline">\(\rho\)</span> or <span class="math inline">\(\lambda\)</span> by forming dense <span class="math inline">\(|I - \rho W|\)</span> determinants on 3,108 counties — that is <span class="math inline">\(O(n^3)\)</span> per candidate and is exactly what <code>lagsarlm()</code> / <code>errorsarlm()</code> already do efficiently.</p>
+<section id="spatial-lag-model-slm" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-lag-model-slm">3.1 Spatial Lag Model (SLM)</h3>
+<p>The Spatial Lag Model (SLM) understands that things nearby tend to influence each other.</p>
+<p>Imagine you want to predict diabetes prevalence in different counties. In normal regression, we assume each county is independent. But what if nearby counties’ rates affect each other?</p>
+<p>The SLM makes your prediction depend on both the usual factors <strong>and</strong> the values in surrounding places. Think: a county’s diabetes rate depends not only on its own obesity and age structure, but also on diabetes in neighbouring counties (spillover, shared culture, shared food environment).</p>
+<p>The SLM equation:</p>
+<p><span class="math display">\[
+y = \rho\, W y + X\beta + \varepsilon
+\]</span></p>
+<p>Where:</p>
+<ul>
+<li><span class="math inline">\(y\)</span> = outcome (diabetes prevalence)</li>
+<li><span class="math inline">\(X\)</span> = predictors (obesity, % aged 65+, uninsured)</li>
+<li><span class="math inline">\(\beta\)</span> = regression coefficients</li>
+<li><span class="math inline">\(W\)</span> = spatial weights (who is a neighbour)</li>
+<li><span class="math inline">\(\rho\)</span> (rho) = how much neighbours’ values matter</li>
+<li><span class="math inline">\(Wy\)</span> = spatial lag (“neighbourhood average” of <span class="math inline">\(y\)</span>)</li>
+<li><span class="math inline">\(\varepsilon\)</span> = residual noise</li>
+</ul>
+<p>In plain language: “My value is influenced by my neighbours’ values, plus my own characteristics, plus some randomness.”</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SLM: Y = rho*W*Y + X*beta + e  — spatialreg::lagsarlm</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>slm <span class="ot">&lt;-</span> <span class="fu">lagsarlm</span>(cvd_rate <span class="sc">~</span> pct_poverty <span class="sc">+</span> pct_uninsured <span class="sc">+</span> pm25,</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">data =</span> df, <span class="at">listw =</span> lw, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(slm, <span class="at">Nagelkerke =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SLM: y = rho W y + X beta + e  — spatialreg::lagsarlm</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="co"># method = "Matrix" avoids a dense eigen-decomposition of the 3108 × 3108 weights</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>slm <span class="ot">&lt;-</span> <span class="fu">lagsarlm</span>(</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  diabetes_prev <span class="sc">~</span> pct_obesity <span class="sc">+</span> pct_65plus <span class="sc">+</span> n_uninsured,</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> gdf, <span class="at">listw =</span> lw, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, <span class="at">method =</span> <span class="st">"Matrix"</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(slm, <span class="at">Nagelkerke =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-Call:lagsarlm(formula = cvd_rate ~ pct_poverty + pct_uninsured + pm25, 
-    data = df, listw = lw, zero.policy = TRUE)
+Call:lagsarlm(formula = diabetes_prev ~ pct_obesity + pct_65plus + 
+    n_uninsured, data = gdf, listw = lw, method = "Matrix", quiet = TRUE, 
+    zero.policy = TRUE)
 
 Residuals:
      Min       1Q   Median       3Q      Max 
--31.3464  -9.4417  -0.6281   9.6027  28.7606 
+-6.54965 -0.68244 -0.11691  0.55563  6.59526 
 
 Type: lag 
-Coefficients: (asymptotic standard errors) 
-               Estimate Std. Error z value  Pr(&gt;|z|)
-(Intercept)   143.58746   28.55164  5.0290 4.929e-07
-pct_poverty     2.07414    0.67448  3.0752  0.002104
-pct_uninsured   1.32320    0.87109  1.5190  0.128761
-pm25            0.29780    0.15748  1.8910  0.058618
+Regions with no neighbours included:
+ 1333 2089 
+Coefficients: (numerical Hessian approximate standard errors) 
+               Estimate  Std. Error  z value  Pr(&gt;|z|)
+(Intercept) -2.6395e+00  1.8749e-01 -14.0778 &lt; 2.2e-16
+pct_obesity  2.1953e-01  5.0053e-03  43.8601 &lt; 2.2e-16
+pct_65plus  -4.0530e-02  4.1733e-03  -9.7116 &lt; 2.2e-16
+n_uninsured  8.9799e-06  1.1522e-06   7.7941 6.439e-15
 
-Rho: 0.091827, LR test value: 0.53568, p-value: 0.46423
-Asymptotic standard error: 0.12116
-    z-value: 0.7579, p-value: 0.44851
-Wald statistic: 0.57442, p-value: 0.44851
+Rho: 0.56694, LR test value: 1582.3, p-value: &lt; 2.22e-16
+Approximate (numerical Hessian) standard error: 0.011833
+    z-value: 47.912, p-value: &lt; 2.22e-16
+Wald statistic: 2295.5, p-value: &lt; 2.22e-16
 
-Log likelihood: -786.9518 for lag model
-ML residual variance (sigma squared): 152.99, (sigma: 12.369)
-Nagelkerke pseudo-R-squared: 0.095881 
-Number of observations: 200 
+Log likelihood: -4731.25 for lag model
+ML residual variance (sigma squared): 1.1487, (sigma: 1.0718)
+Nagelkerke pseudo-R-squared: 0.74739 
+Number of observations: 3108 
 Number of parameters estimated: 6 
-AIC: 1585.9, (AIC for lm: 1584.4)
-LM test for residual autocorrelation
-test value: 0.86132, p-value: 0.35337</code></pre>
+AIC: 9474.5, (AIC for lm: 11055)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Spatial Lag Model:</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Spatial Lag Model:</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  rho (spatial lag)  : %.4f</span><span class="sc">\n</span><span class="st">"</span>, slm<span class="sc">$</span>rho))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  rho (spatial lag)  : 0.0918</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Log-likelihood     : %.4f</span><span class="sc">\n</span><span class="st">"</span>, slm<span class="sc">$</span>LL))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  Log-likelihood     : -786.9518</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  AIC                : %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">AIC</span>(slm)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  AIC                : 1585.9035</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  OLS AIC            : %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">AIC</span>(ols)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  OLS AIC            : 1584.4392</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>slm_beta <span class="ot">&lt;-</span> <span class="fu">coef</span>(slm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</section>
-<section id="spatial-error-model-sem" class="level2">
-<h2 class="anchored" data-anchor-id="spatial-error-model-sem">4. Spatial Error Model (SEM)</h2>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SEM: Y = X*beta + u, u = lambda*W*u + e  — spatialreg::errorsarlm</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>sem <span class="ot">&lt;-</span> <span class="fu">errorsarlm</span>(cvd_rate <span class="sc">~</span> pct_poverty <span class="sc">+</span> pct_uninsured <span class="sc">+</span> pm25,</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">data =</span> df, <span class="at">listw =</span> lw, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(sem, <span class="at">Nagelkerke =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Spatial Lag Model:</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-Call:errorsarlm(formula = cvd_rate ~ pct_poverty + pct_uninsured + 
-    pm25, data = df, listw = lw, zero.policy = TRUE)
+Spatial Lag Model:</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  rho (spatial lag)  : %.4f</span><span class="sc">\n</span><span class="st">"</span>, slm<span class="sc">$</span>rho))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  rho (spatial lag)  : 0.5669</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Log-likelihood     : %.4f</span><span class="sc">\n</span><span class="st">"</span>, slm<span class="sc">$</span>LL))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Log-likelihood     : -4731.2498</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  AIC                : %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">AIC</span>(slm)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  AIC                : 9474.4997</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  OLS AIC            : %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">AIC</span>(ols)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  OLS AIC            : 11054.8152</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>slm_beta <span class="ot">&lt;-</span> <span class="fu">coef</span>(slm)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  beta (obesity)     : %.4f  (OLS: %.4f)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>            slm_beta[<span class="st">"pct_obesity"</span>], <span class="fu">coef</span>(ols)[<span class="st">"pct_obesity"</span>]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  beta (obesity)     : 0.2195  (OLS: 0.3511)</code></pre>
+</div>
+</div>
+<p>A positive <span class="math inline">\(\rho\)</span> means diabetes in neighbouring counties is associated with diabetes here, <em>beyond</em> what obesity, age, and uninsured count explain. Comparing AIC with OLS tells you whether that extra spatial lag is worth the parameter.</p>
+</section>
+<section id="spatial-error-model-sem" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-error-model-sem">3.2 Spatial Error Model (SEM)</h3>
+<p>The Spatial Error Model (SEM) accounts for <strong>spatial autocorrelation in the errors</strong> — when the unexplained parts of your model (the residuals) look similar for nearby locations.</p>
+<p>The basic regression model is:</p>
+<p><span class="math display">\[
+Y = X\beta + u
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(Y\)</span> is your outcome</li>
+<li><span class="math inline">\(X\beta\)</span> is the effect of your predictors</li>
+<li><span class="math inline">\(u\)</span> is the error (what’s left unexplained)</li>
+</ul>
+<p>In regular regression, we assume <span class="math inline">\(u\)</span> is just random noise. With spatial data, errors in one place are often similar to errors nearby.</p>
+<p>SEM models this by letting:</p>
+<p><span class="math display">\[
+u = \lambda W u + e
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">\(\lambda\)</span> is the spatial error parameter (how much errors “spread” across space)</li>
+<li><span class="math inline">\(W\)</span> is the spatial weights matrix</li>
+<li><span class="math inline">\(e\)</span> is well-behaved noise, but now the composite error depends on neighbouring errors</li>
+</ul>
+<p>In other words, the error for each location is “contagious” — if your neighbours have high residuals, yours probably will too. SEM helps so that estimates of <span class="math inline">\(\beta\)</span> (the effect of obesity, age, uninsured) are not biased by that spatial leftover.</p>
+<p><strong>Math for dummies:</strong></p>
+<ul>
+<li>If <span class="math inline">\(\lambda = 0\)</span>: no spatial effect; it is just regular regression.</li>
+<li>If <span class="math inline">\(|\lambda|\)</span> is big: there is a lot of “spatial noise”, and we need to correct for it.</li>
+<li>The computer searches for the <span class="math inline">\(\lambda\)</span> that makes the observed data most likely (maximum likelihood).</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SEM: Y = X beta + u, u = lambda W u + e  — spatialreg::errorsarlm</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>sem <span class="ot">&lt;-</span> <span class="fu">errorsarlm</span>(</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  diabetes_prev <span class="sc">~</span> pct_obesity <span class="sc">+</span> pct_65plus <span class="sc">+</span> n_uninsured,</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> gdf, <span class="at">listw =</span> lw, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>, <span class="at">method =</span> <span class="st">"Matrix"</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(sem, <span class="at">Nagelkerke =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:errorsarlm(formula = diabetes_prev ~ pct_obesity + pct_65plus + 
+    n_uninsured, data = gdf, listw = lw, method = "Matrix", quiet = TRUE, 
+    zero.policy = TRUE)
 
 Residuals:
       Min        1Q    Median        3Q       Max 
--31.37582  -9.58665  -0.78268   9.67926  28.70076 
+-3.205729 -0.563780 -0.046584  0.499546  5.361241 
 
 Type: error 
+Regions with no neighbours included:
+ 1333 2089 
 Coefficients: (asymptotic standard errors) 
-               Estimate Std. Error z value  Pr(&gt;|z|)
-(Intercept)   162.24992   13.27841 12.2191 &lt; 2.2e-16
-pct_poverty     2.14830    0.68536  3.1346  0.001721
-pct_uninsured   1.33453    0.86891  1.5359  0.124571
-pm25            0.30098    0.15719  1.9147  0.055530
+               Estimate  Std. Error  z value  Pr(&gt;|z|)
+(Intercept)  1.1248e-01  2.3807e-01   0.4725    0.6366
+pct_obesity  3.1460e-01  5.4135e-03  58.1136 &lt; 2.2e-16
+pct_65plus  -5.1663e-02  4.3219e-03 -11.9538 &lt; 2.2e-16
+n_uninsured  6.2510e-06  1.0384e-06   6.0196 1.748e-09
 
-Lambda: 0.1222, LR test value: 0.88674, p-value: 0.34636
-Asymptotic standard error: 0.12396
-    z-value: 0.98583, p-value: 0.32421
-Wald statistic: 0.97187, p-value: 0.32421
+Lambda: 0.78881, LR test value: 2315.1, p-value: &lt; 2.22e-16
+Approximate (numerical Hessian) standard error: 0.011321
+    z-value: 69.679, p-value: &lt; 2.22e-16
+Wald statistic: 4855.1, p-value: &lt; 2.22e-16
 
-Log likelihood: -786.7762 for error model
-ML residual variance (sigma squared): 152.58, (sigma: 12.352)
-Nagelkerke pseudo-R-squared: 0.097466 
-Number of observations: 200 
+Log likelihood: -4364.87 for error model
+ML residual variance (sigma squared): 0.8316, (sigma: 0.91192)
+Nagelkerke pseudo-R-squared: 0.80045 
+Number of observations: 3108 
 Number of parameters estimated: 6 
-AIC: 1585.6, (AIC for lm: 1584.4)</code></pre>
+AIC: 8741.7, (AIC for lm: 11055)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Spatial Error Model:</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Spatial Error Model:</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  lambda (spatial error): %.4f</span><span class="sc">\n</span><span class="st">"</span>, sem<span class="sc">$</span>lambda))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  lambda (spatial error): 0.1222</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Log-likelihood: %.4f</span><span class="sc">\n</span><span class="st">"</span>, sem<span class="sc">$</span>LL))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  Log-likelihood: -786.7762</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  AIC           : %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">AIC</span>(sem)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  AIC           : 1585.5524</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Model comparison:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Spatial Error Model:</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
-Model comparison:</code></pre>
+Spatial Error Model:</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  OLS AIC: %.2f | SLM AIC: %.2f | SEM AIC: %.2f</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">AIC</span>(ols), <span class="fu">AIC</span>(slm), <span class="fu">AIC</span>(sem)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  lambda (spatial error): %.4f</span><span class="sc">\n</span><span class="st">"</span>, sem<span class="sc">$</span>lambda))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  OLS AIC: 1584.44 | SLM AIC: 1585.90 | SEM AIC: 1585.55</code></pre>
+<pre><code>  lambda (spatial error): 0.7888</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  True poverty coefficient: 1.20 | OLS: %.3f | SLM: %.3f | SEM: %.3f</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coef</span>(ols)[<span class="st">"pct_poverty"</span>], slm_beta[<span class="st">"pct_poverty"</span>], <span class="fu">coef</span>(sem)[<span class="st">"pct_poverty"</span>]</span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Log-likelihood: %.4f</span><span class="sc">\n</span><span class="st">"</span>, sem<span class="sc">$</span>LL))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  True poverty coefficient: 1.20 | OLS: 2.106 | SLM: 2.074 | SEM: 2.148</code></pre>
+<pre><code>  Log-likelihood: -4364.8702</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  AIC           : %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">AIC</span>(sem)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  AIC           : 8741.7405</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  beta (obesity): %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">coef</span>(sem)[<span class="st">"pct_obesity"</span>]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  beta (obesity): 0.3146</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Model comparison (lower AIC is better):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Model comparison (lower AIC is better):</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>cmp <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">model =</span> <span class="fu">c</span>(<span class="st">"OLS"</span>, <span class="st">"SLM"</span>, <span class="st">"SEM"</span>),</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">AIC   =</span> <span class="fu">c</span>(<span class="fu">AIC</span>(ols), <span class="fu">AIC</span>(slm), <span class="fu">AIC</span>(sem)),</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">obesity_beta =</span> <span class="fu">c</span>(</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(<span class="fu">coef</span>(ols)[<span class="st">"pct_obesity"</span>]),</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(slm_beta[<span class="st">"pct_obesity"</span>]),</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(<span class="fu">coef</span>(sem)[<span class="st">"pct_obesity"</span>])</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cmp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  model    AIC obesity_beta
+  &lt;chr&gt;  &lt;dbl&gt;        &lt;dbl&gt;
+1 OLS   11055.        0.351
+2 SLM    9474.        0.220
+3 SEM    8742.        0.315</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>best <span class="ot">&lt;-</span> cmp<span class="sc">$</span>model[<span class="fu">which.min</span>(cmp<span class="sc">$</span>AIC)]</span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Preferred by AIC: %s</span><span class="sc">\n</span><span class="st">"</span>, best))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Preferred by AIC: SEM</code></pre>
 </div>
 </div>
+<p>Unlike a simulated data-generating process, there is no “true” coefficient to recover here. Compare the <em>obesity</em> coefficient across OLS / SLM / SEM: if OLS is larger in magnitude, part of what it attributed to obesity was shared spatial structure (omitted regional factors, spillover). SLM and SEM partition that spatial dependence out of <span class="math inline">\(\beta\)</span>.</p>
+</section>
+</section>
+<section id="geographically-weighted-correlation-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="geographically-weighted-correlation-analysis">5. Geographically Weighted Correlation Analysis</h2>
+<p>Geographically Weighted Correlation (GW Correlation) helps us understand how the relationship between two variables (diabetes and obesity rates) changes from place to place.</p>
+<p>For each location (a county), we:</p>
+<ol type="1">
+<li><strong>Look at nearby places:</strong> We give more weight to locations that are “close” and less to those that are “far” using a smooth weighting function (usually a Gaussian, or bell-shaped, curve).
+<ul>
+<li>The weight for each location depends on its distance to our location of interest.</li>
+<li>For distance <span class="math inline">\(d\)</span> between locations, weight: <span class="math display">\[
+w = \exp\left( -\frac{d^2}{2h^2} \right)
+\]</span></li>
+<li>Here, <span class="math inline">\(h\)</span> controls how quickly the weight drops off with distance (the <strong>bandwidth</strong>).</li>
+</ul></li>
+<li><strong>Use these weights to get a “local” Pearson correlation:</strong>
+<ul>
+<li>The normal (global) Pearson correlation measures how two variables change together everywhere.</li>
+<li>The “local” version uses our calculated weights, so it pays more attention to nearby points:
+<ul>
+<li><strong>Local mean for variable 1:</strong> <span class="math display">\[
+\mu_1 = \sum w_i x_i
+\]</span></li>
+<li><strong>Local mean for variable 2:</strong> <span class="math display">\[
+\mu_2 = \sum w_i y_i
+\]</span></li>
+<li><strong>Local correlation:</strong> <span class="math display">\[
+r = \frac{ \sum w_i (x_i - \mu_1)(y_i - \mu_2) }
+         { \sqrt{ \sum w_i (x_i - \mu_1)^2 } \cdot \sqrt{ \sum w_i (y_i - \mu_2)^2 } }
+\]</span></li>
+</ul></li>
+</ul></li>
+</ol>
+<p>For every location, we get a local correlation that tells us how strongly the two variables move together around that spot. This can reveal spatial patterns hidden by the overall (global) correlation.</p>
+<p>We use an <strong>adaptive Gaussian kernel</strong> with <span class="math inline">\(k = 50\)</span> nearest neighbours on Albers centroids. A <span class="math inline">\(3108 \times 3108\)</span> distance matrix is about 77 MB — acceptable. (<code>bw.gwr</code> / <code>gwss</code> AICc search on all counties is much slower, so we fix <span class="math inline">\(k\)</span> rather than optimise it.)</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Adaptive Gaussian GW correlation (k = 50); one n×n distance matrix, then matrix products</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">cbind</span>(gdf<span class="sc">$</span>x_m, gdf<span class="sc">$</span>y_m)</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>d  <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(<span class="fu">dist</span>(xy))</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>k_nn <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>bw <span class="ot">&lt;-</span> <span class="fu">apply</span>(d, <span class="dv">1</span>, <span class="cf">function</span>(row) <span class="fu">sort.int</span>(row, <span class="at">partial =</span> k_nn)[k_nn])</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>bw <span class="ot">&lt;-</span> <span class="fu">pmax</span>(bw, .Machine<span class="sc">$</span>double.eps)</span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a>Wker <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="fl">0.5</span> <span class="sc">*</span> <span class="fu">sweep</span>(d, <span class="dv">1</span>, bw, <span class="st">"/"</span>)<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> gdf<span class="sc">$</span>pct_obesity</span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> gdf<span class="sc">$</span>diabetes_prev</span>
+<span id="cb66-11"><a href="#cb66-11" aria-hidden="true" tabindex="-1"></a>Wsum <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(Wker)</span>
+<span id="cb66-12"><a href="#cb66-12" aria-hidden="true" tabindex="-1"></a>mx <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(Wker <span class="sc">%*%</span> x) <span class="sc">/</span> Wsum</span>
+<span id="cb66-13"><a href="#cb66-13" aria-hidden="true" tabindex="-1"></a>my <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(Wker <span class="sc">%*%</span> y) <span class="sc">/</span> Wsum</span>
+<span id="cb66-14"><a href="#cb66-14" aria-hidden="true" tabindex="-1"></a>cov_w <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(Wker <span class="sc">%*%</span> (x <span class="sc">*</span> y)) <span class="sc">/</span> Wsum <span class="sc">-</span> mx <span class="sc">*</span> my</span>
+<span id="cb66-15"><a href="#cb66-15" aria-hidden="true" tabindex="-1"></a>vx <span class="ot">&lt;-</span> <span class="fu">pmax</span>(<span class="fu">as.vector</span>(Wker <span class="sc">%*%</span> (x<span class="sc">^</span><span class="dv">2</span>)) <span class="sc">/</span> Wsum <span class="sc">-</span> mx<span class="sc">^</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
+<span id="cb66-16"><a href="#cb66-16" aria-hidden="true" tabindex="-1"></a>vy <span class="ot">&lt;-</span> <span class="fu">pmax</span>(<span class="fu">as.vector</span>(Wker <span class="sc">%*%</span> (y<span class="sc">^</span><span class="dv">2</span>)) <span class="sc">/</span> Wsum <span class="sc">-</span> my<span class="sc">^</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
+<span id="cb66-17"><a href="#cb66-17" aria-hidden="true" tabindex="-1"></a>r_local <span class="ot">&lt;-</span> cov_w <span class="sc">/</span> <span class="fu">sqrt</span>(vx <span class="sc">*</span> vy)</span>
+<span id="cb66-18"><a href="#cb66-18" aria-hidden="true" tabindex="-1"></a>r_local <span class="ot">&lt;-</span> <span class="fu">pmax</span>(<span class="fu">pmin</span>(r_local, <span class="dv">1</span>), <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb66-19"><a href="#cb66-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-20"><a href="#cb66-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Parametric p-values using Kish effective sample size (anti-conservative under residual SA)</span></span>
+<span id="cb66-21"><a href="#cb66-21" aria-hidden="true" tabindex="-1"></a>n_eff <span class="ot">&lt;-</span> Wsum<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> <span class="fu">rowSums</span>(Wker<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb66-22"><a href="#cb66-22" aria-hidden="true" tabindex="-1"></a>df_loc <span class="ot">&lt;-</span> n_eff <span class="sc">-</span> <span class="dv">2</span></span>
+<span id="cb66-23"><a href="#cb66-23" aria-hidden="true" tabindex="-1"></a>t_loc <span class="ot">&lt;-</span> r_local <span class="sc">*</span> <span class="fu">sqrt</span>(df_loc <span class="sc">/</span> <span class="fu">pmax</span>(<span class="dv">1</span> <span class="sc">-</span> r_local<span class="sc">^</span><span class="dv">2</span>, <span class="fl">1e-12</span>))</span>
+<span id="cb66-24"><a href="#cb66-24" aria-hidden="true" tabindex="-1"></a>p_local <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">pt</span>(<span class="sc">-</span><span class="fu">abs</span>(t_loc), <span class="at">df =</span> <span class="fu">pmax</span>(df_loc, <span class="dv">1</span>))</span>
+<span id="cb66-25"><a href="#cb66-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-26"><a href="#cb66-26" aria-hidden="true" tabindex="-1"></a>r_glob <span class="ot">&lt;-</span> <span class="fu">cor</span>(x, y)</span>
+<span id="cb66-27"><a href="#cb66-27" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gw_corr  <span class="ot">&lt;-</span> r_local</span>
+<span id="cb66-28"><a href="#cb66-28" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gw_logp  <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">log10</span>(<span class="fu">pmax</span>(p_local, <span class="fl">1e-12</span>))</span>
+<span id="cb66-29"><a href="#cb66-29" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gw_dev   <span class="ot">&lt;-</span> r_local <span class="sc">-</span> r_glob</span>
+<span id="cb66-30"><a href="#cb66-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-31"><a href="#cb66-31" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Global Pearson r : %+.3f</span><span class="sc">\n</span><span class="st">"</span>, r_glob))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Global Pearson r : +0.743</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Local r          : mean %+.3f, range [%+.3f, %+.3f]</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(r_local, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="fu">min</span>(r_local, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">max</span>(r_local, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Local r          : mean +0.726, range [+0.453, +0.898]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Significant (p&lt;.05): %.1f%% of counties (%d / %d)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mean</span>(p_local <span class="sc">&lt;</span> <span class="fl">0.05</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">sum</span>(p_local <span class="sc">&lt;</span> <span class="fl">0.05</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="fu">length</span>(p_local)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Significant (p&lt;.05): 100.0% of counties (3108 / 3108)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Significant &amp; negative: %d counties</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">sum</span>(p_local <span class="sc">&lt;</span> <span class="fl">0.05</span> <span class="sc">&amp;</span> r_local <span class="sc">&lt;</span> <span class="dv">0</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Significant &amp; negative: 0 counties</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Free the large matrices before GWR</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(d, Wker)</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="fu">invisible</span>(<span class="fu">gc</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>p_r <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> gw_corr), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Local r"</span>, <span class="at">palette =</span> <span class="st">"RdBu"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Local correlation r_i"</span>, <span class="at">subtitle =</span> <span class="st">"Diabetes vs obesity"</span>) <span class="sc">+</span></span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a>p_p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> gw_logp), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(<span class="at">name =</span> <span class="st">"-log10(p)"</span>, <span class="at">option =</span> <span class="st">"magma"</span>) <span class="sc">+</span></span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Local significance"</span>, <span class="at">subtitle =</span> <span class="st">"-log10(p_i); ~1.3 = p=0.05"</span>) <span class="sc">+</span></span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-13"><a href="#cb75-13" aria-hidden="true" tabindex="-1"></a>p_dev <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
+<span id="cb75-14"><a href="#cb75-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> gw_dev), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"r_i - r"</span>, <span class="at">palette =</span> <span class="st">"PuOr"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">sprintf</span>(<span class="st">"Local r minus global r (%.2f)"</span>, r_glob),</span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"orange/purple: stronger/weaker than US average"</span></span>
+<span id="cb75-19"><a href="#cb75-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb75-20"><a href="#cb75-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb75-21"><a href="#cb75-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-22"><a href="#cb75-22" aria-hidden="true" tabindex="-1"></a>p_gwc <span class="ot">&lt;-</span> (p_r <span class="sc">|</span> p_p <span class="sc">|</span> p_dev) <span class="sc">+</span></span>
+<span id="cb75-23"><a href="#cb75-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(</span>
+<span id="cb75-24"><a href="#cb75-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">sprintf</span>(</span>
+<span id="cb75-25"><a href="#cb75-25" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Geographically weighted correlation — diabetes vs obesity (adaptive Gaussian, k=%d)"</span>,</span>
+<span id="cb75-26"><a href="#cb75-26" aria-hidden="true" tabindex="-1"></a>      k_nn</span>
+<span id="cb75-27"><a href="#cb75-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb75-28"><a href="#cb75-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb75-29"><a href="#cb75-29" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_gwc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="MOD07_NB03_Spatial_Regression_GWR_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"gwc_diabetes_obesity.png"</span>), p_gwc,</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">16</span>, <span class="at">height =</span> <span class="fl">5.5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>If local <span class="math inline">\(r\)</span> is high in the Mississippi Delta but weaker in the Mountain West, a single national correlation is hiding regional structure — which is exactly the motivation for GWR next.</p>
 </section>
 <section id="geographically-weighted-regression-gwr" class="level2">
-<h2 class="anchored" data-anchor-id="geographically-weighted-regression-gwr">5. Geographically Weighted Regression (GWR)</h2>
+<h2 class="anchored" data-anchor-id="geographically-weighted-regression-gwr">6. Geographically Weighted Regression (GWR)</h2>
+<p><strong>Geographically Weighted Regression (GWR)</strong> is a way to see how the relationship between two things (like diabetes and obesity) changes from place to place.</p>
+<p>Imagine you want to know, <em>“Does living in different counties change how much one thing affects another?”</em></p>
+<p>GWR works by doing a separate regression for every location, but when looking at each place, it gives more importance (“weight”) to data points that are nearby, and less weight to far-away points.</p>
+<p>In regular regression, we try to find the best line to predict <span class="math inline">\(y\)</span> using <span class="math inline">\(x\)</span> (like: <span class="math inline">\(y = a + b \cdot x\)</span>). In GWR, we let the slope and intercept (<span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>) be different in every location.</p>
+<p><strong>The main idea:</strong> - For each place (county <span class="math inline">\(i\)</span>), we fit a regression using all the data, but give the most weight to data closest to county <span class="math inline">\(i\)</span>. - We do this for every place, so every location gets its own “local” regression line.</p>
+<p><strong>The math part (for dummies):</strong> - At each spot <span class="math inline">\(i\)</span>, we find the line: <span class="math inline">\(y = a_i + b_i x\)</span> - <span class="math inline">\(a_i\)</span> and <span class="math inline">\(b_i\)</span> are special to spot <span class="math inline">\(i\)</span> (they change from place to place). - To make <span class="math inline">\(a_i\)</span> and <span class="math inline">\(b_i\)</span> focus on county <span class="math inline">\(i\)</span>, we use weights: nearby counties get high weights, far ones low weights. - These weights are often made using a <strong>Gaussian</strong> (bell curve). So two counties close together matter a lot; two far apart, barely matter at all.</p>
+<p><strong>In symbols:</strong> For each location <span class="math inline">\(i\)</span>: <span class="math display">\[
+y_j \approx a_i + b_i x_j
+\]</span> (for all <span class="math inline">\(j\)</span>, but with weights based on distance from <span class="math inline">\(i\)</span>)</p>
+<ul>
+<li>The weights <span class="math inline">\(w_{ij}\)</span> get smaller as the distance between <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> grows: <span class="math display">\[
+w_{ij} = \exp\left(-\frac{d_{ij}^2}{2h^2}\right)
+\]</span> where <span class="math inline">\(d_{ij}\)</span> is the distance between <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span>, and <span class="math inline">\(h\)</span> controls “how local” you want to be.</li>
+</ul>
+<p>The full GWR model with several covariates is:</p>
+<p><span class="math display">\[
+y_i = \beta_0(u_i, v_i) + \sum_{j=1}^{p} \beta_j(u_i, v_i)\, X_{ij} + \varepsilon_i
+\]</span></p>
+<p><strong>Bandwidth.</strong> <code>GWmodel::bw.gwr(..., approach = "AIC")</code> searches for the AICc-optimal adaptive bandwidth. On 3,108 counties that search is very slow, so we <strong>fix an adaptive bandwidth of 50 nearest neighbours</strong> and note the choice. Smaller <span class="math inline">\(k\)</span> → bumpier local coefficients (risk of overfitting); larger <span class="math inline">\(k\)</span> → smoother surfaces that approach global OLS.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GWR: estimates local coefficients at each location</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Gaussian kernel: k_ij = exp(-d_ij^2 / (2*h^2))</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>spdf <span class="ot">&lt;-</span> df</span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="fu">coordinates</span>(spdf) <span class="ot">&lt;-</span> <span class="er">~</span> lon <span class="sc">+</span> lat</span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="fu">proj4string</span>(spdf) <span class="ot">&lt;-</span> <span class="fu">CRS</span>(<span class="st">"+proj=longlat +datum=WGS84"</span>)</span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Fitting GWR ...</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>spdf <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">st_drop_geometry</span>(gdf))</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="fu">coordinates</span>(spdf) <span class="ot">&lt;-</span> <span class="er">~</span> x_m <span class="sc">+</span> y_m</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Centroids are already NAD83 Albers metres; GWR uses Euclidean distances</span></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Adaptive k = 50; skip bw.gwr() AICc search (too slow at this n)</span></span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>gwr_bw <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Fitting GWR (adaptive Gaussian, k = %d) ...</span><span class="sc">\n</span><span class="st">"</span>, gwr_bw))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Fitting GWR ...</code></pre>
+<pre><code>Fitting GWR (adaptive Gaussian, k = 50) ...</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>gwr_res <span class="ot">&lt;-</span> <span class="fu">gwr.basic</span>(</span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>  cvd_rate <span class="sc">~</span> pct_poverty <span class="sc">+</span> pct_uninsured <span class="sc">+</span> pm25,</span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> spdf,</span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">bw =</span> <span class="fl">8.0</span>,</span>
-<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">kernel =</span> <span class="st">"gaussian"</span>,</span>
-<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">adaptive =</span> <span class="cn">FALSE</span></span>
-<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(gwr_res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>gwr_res <span class="ot">&lt;-</span> <span class="fu">gwr.basic</span>(</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  diabetes_prev <span class="sc">~</span> pct_obesity <span class="sc">+</span> pct_65plus <span class="sc">+</span> n_uninsured,</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> spdf,</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">bw =</span> gwr_bw,</span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">kernel =</span> <span class="st">"gaussian"</span>,</span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">adaptive =</span> <span class="cn">TRUE</span></span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(gwr_res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   ***********************************************************************
    *                       Package   GWmodel                             *
    ***********************************************************************
-   Program starts at: 2026-08-24 00:04:35.932343 
+   Program starts at: 2026-08-27 19:13:30.568521 
    Call:
-   gwr.basic(formula = cvd_rate ~ pct_poverty + pct_uninsured + 
-    pm25, data = spdf, bw = 8, kernel = "gaussian", adaptive = FALSE)
+   gwr.basic(formula = diabetes_prev ~ pct_obesity + pct_65plus + 
+    n_uninsured, data = spdf, bw = gwr_bw, kernel = "gaussian", 
+    adaptive = TRUE)
 
-   Dependent (y) variable:  cvd_rate
-   Independent variables:  pct_poverty pct_uninsured pm25
-   Number of data points: 200
+   Dependent (y) variable:  diabetes_prev
+   Independent variables:  pct_obesity pct_65plus n_uninsured
+   Number of data points: 3108
    ***********************************************************************
    *                    Results of Global Regression                     *
    ***********************************************************************
@@ -1101,168 +1424,143 @@ Model comparison:</code></pre>
 
    Residuals:
     Min      1Q  Median      3Q     Max 
--32.040  -9.307  -0.502   9.421  28.633 
+-4.7085 -1.0210 -0.0768  0.9014  7.3026 
 
    Coefficients:
                  Estimate Std. Error t value Pr(&gt;|t|)    
-   (Intercept)   163.4105    13.3292  12.260  &lt; 2e-16 ***
-   pct_poverty     2.1059     0.6790   3.102  0.00221 ** 
-   pct_uninsured   1.2976     0.8816   1.472  0.14269    
-   pm25            0.3008     0.1594   1.887  0.06058 .  
+   (Intercept) -1.240e+00  2.475e-01  -5.012  5.7e-07 ***
+   pct_obesity  3.511e-01  5.590e-03  62.811  &lt; 2e-16 ***
+   pct_65plus  -5.274e-02  5.570e-03  -9.469  &lt; 2e-16 ***
+   n_uninsured  1.321e-05  1.535e-06   8.607  &lt; 2e-16 ***
 
    ---Significance stars
    Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
-   Residual standard error: 12.52 on 196 degrees of freedom
-   Multiple R-squared: 0.09346
-   Adjusted R-squared: 0.07958 
-   F-statistic: 6.735 on 3 and 196 DF,  p-value: 0.0002394 
+   Residual standard error: 1.431 on 3104 degrees of freedom
+   Multiple R-squared: 0.5797
+   Adjusted R-squared: 0.5793 
+   F-statistic:  1427 on 3 and 3104 DF,  p-value: &lt; 2.2e-16 
    ***Extra Diagnostic information
-   Residual sum of squares: 30718.99
-   Sigma(hat): 12.45578
-   AIC:  1584.439
-   AICc:  1584.748
-   BIC:  1427.422
+   Residual sum of squares: 6358.39
+   Sigma(hat): 1.43078
+   AIC:  11054.82
+   AICc:  11054.83
+   BIC:  8017.233
    ***********************************************************************
    *          Results of Geographically Weighted Regression              *
    ***********************************************************************
 
    *********************Model calibration information*********************
    Kernel function: gaussian 
-   Fixed bandwidth: 8 
+   Adaptive bandwidth: 50 (number of nearest neighbours)
    Regression points: the same locations as observations are used.
    Distance metric: Euclidean distance metric is used.
 
    ****************Summary of GWR coefficient estimates:******************
-                      Min.   1st Qu.    Median   3rd Qu.     Max.
-   Intercept     146.08734 162.08191 166.14082 173.16999 191.3447
-   pct_poverty    -0.11585   0.97759   1.97231   2.71891   4.0969
-   pct_uninsured  -1.11408   0.59027   1.33902   2.07688   2.4064
-   pm25           -0.12587   0.16492   0.33239   0.48863   0.5920
+                      Min.     1st Qu.      Median     3rd Qu.   Max.
+   Intercept   -9.3060e+00 -3.9753e+00 -1.2385e+00  1.1677e+00 5.7096
+   pct_obesity  1.6132e-01  2.5463e-01  3.2727e-01  4.2055e-01 0.5769
+   pct_65plus  -1.3958e-01 -4.9181e-02 -2.3678e-02  7.6124e-04 0.0847
+   n_uninsured -1.7557e-04  4.1445e-06  1.5553e-05  3.2144e-05 0.0001
    ************************Diagnostic information*************************
-   Number of data points: 200 
-   Effective number of parameters (2trace(S) - trace(S'S)): 22.88953 
-   Effective degrees of freedom (n-2trace(S) + trace(S'S)): 177.1105 
-   AICc (GWR book, Fotheringham, et al. 2002, p. 61, eq 2.33): 1594.924 
-   AIC (GWR book, Fotheringham, et al. 2002,GWR p. 96, eq. 4.22): 1572.775 
-   BIC (GWR book, Fotheringham, et al. 2002,GWR p. 61, eq. 2.34): 1443.944 
-   Residual sum of squares: 28044.02 
-   R-square value:  0.1723964 
-   Adjusted R-square value:  0.06483066 
+   Number of data points: 3108 
+   Effective number of parameters (2trace(S) - trace(S'S)): 157.9919 
+   Effective degrees of freedom (n-2trace(S) + trace(S'S)): 2950.008 
+   AICc (GWR book, Fotheringham, et al. 2002, p. 61, eq 2.33): 8164.45 
+   AIC (GWR book, Fotheringham, et al. 2002,GWR p. 96, eq. 4.22): 8042.484 
+   BIC (GWR book, Fotheringham, et al. 2002,GWR p. 61, eq. 2.34): 5719.257 
+   Residual sum of squares: 2334.777 
+   R-square value:  0.8456682 
+   Adjusted R-square value:  0.8373999 
 
    ***********************************************************************
-   Program stops at: 2026-08-24 00:04:35.950938 </code></pre>
+   Program stops at: 2026-08-27 19:13:32.698711 </code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>local_b <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(gwr_res<span class="sc">$</span>SDF)</span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_beta_Intercept     <span class="ot">&lt;-</span> local_b<span class="sc">$</span>Intercept</span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_beta_pct_poverty   <span class="ot">&lt;-</span> local_b<span class="sc">$</span>pct_poverty</span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_beta_pct_uninsured <span class="ot">&lt;-</span> local_b<span class="sc">$</span>pct_uninsured</span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_beta_pm25          <span class="ot">&lt;-</span> local_b<span class="sc">$</span>pm25</span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_pred  <span class="ot">&lt;-</span> local_b<span class="sc">$</span>yhat</span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_resid <span class="ot">&lt;-</span> local_b<span class="sc">$</span>residual</span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>sse_gwr <span class="ot">&lt;-</span> <span class="fu">sum</span>(gdf<span class="sc">$</span>gwr_resid<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>sse_ols <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">residuals</span>(ols)<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"GWR bandwidth: 8.0 degrees</span><span class="sc">\n</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>local_b <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(gwr_res<span class="sc">$</span>SDF)</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="co"># GWmodel names the intercept "Intercept"</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_intercept <span class="ot">&lt;-</span> local_b<span class="sc">$</span>Intercept</span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_obesity   <span class="ot">&lt;-</span> local_b<span class="sc">$</span>pct_obesity</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_pred      <span class="ot">&lt;-</span> local_b<span class="sc">$</span>yhat</span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>gwr_resid     <span class="ot">&lt;-</span> local_b<span class="sc">$</span>residual</span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="st">"Local_R2"</span> <span class="sc">%in%</span> <span class="fu">names</span>(local_b)) gdf<span class="sc">$</span>gwr_localR2 <span class="ot">&lt;-</span> local_b<span class="sc">$</span>Local_R2</span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-9"><a href="#cb81-9" aria-hidden="true" tabindex="-1"></a>ols_b <span class="ot">&lt;-</span> <span class="fu">coef</span>(ols)</span>
+<span id="cb81-10"><a href="#cb81-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Global OLS vs GWR local coefficients:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>GWR bandwidth: 8.0 degrees</code></pre>
+<pre><code>
+Global OLS vs GWR local coefficients:</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"SSE improvement: OLS=%.0f -&gt; GWR=%.0f (%.1f%% reduction)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>            sse_ols, sse_gwr, (<span class="dv">1</span> <span class="sc">-</span> sse_gwr <span class="sc">/</span> sse_ols) <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Intercept  OLS = %.3f | GWR mean = %.3f range = [%.2f, %.2f]</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>            ols_b[<span class="st">"(Intercept)"</span>], <span class="fu">mean</span>(gdf<span class="sc">$</span>gwr_intercept, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">min</span>(gdf<span class="sc">$</span>gwr_intercept, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="fu">max</span>(gdf<span class="sc">$</span>gwr_intercept, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>SSE improvement: OLS=30719 -&gt; GWR=28044 (8.7% reduction)</code></pre>
+<pre><code>  Intercept  OLS = -1.240 | GWR mean = -1.406 range = [-9.31, 5.71]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  Obesity    OLS = %.3f | GWR mean = %.3f range = [%.2f, %.2f]</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>            ols_b[<span class="st">"pct_obesity"</span>], <span class="fu">mean</span>(gdf<span class="sc">$</span>gwr_obesity, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">min</span>(gdf<span class="sc">$</span>gwr_obesity, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="fu">max</span>(gdf<span class="sc">$</span>gwr_obesity, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Obesity    OLS = 0.351 | GWR mean = 0.335 range = [0.16, 0.58]</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  SSE OLS = %.1f | SSE GWR = %.1f (%.1f%% reduction)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">sum</span>(<span class="fu">residuals</span>(ols)<span class="sc">^</span><span class="dv">2</span>), <span class="fu">sum</span>(gdf<span class="sc">$</span>gwr_resid<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>            (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">sum</span>(gdf<span class="sc">$</span>gwr_resid<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">/</span> <span class="fu">sum</span>(<span class="fu">residuals</span>(ols)<span class="sc">^</span><span class="dv">2</span>)) <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  SSE OLS = 6358.4 | SSE GWR = 2334.8 (63.3% reduction)</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Map spatially varying coefficients from GWR</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>covariate_plot <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"pct_poverty"</span>, <span class="st">"pct_uninsured"</span>, <span class="st">"pm25"</span>)</span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>beta_true <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.2</span>, <span class="fl">0.8</span>, <span class="fl">0.5</span>)</span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>ols_b <span class="ot">&lt;-</span> <span class="fu">coef</span>(ols)</span>
-<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>map_beta <span class="ot">&lt;-</span> <span class="cf">function</span>(cov, true_b) {</span>
-<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>  col <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"gwr_beta_"</span>, cov)</span>
-<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
-<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> .data[[col]]), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
-<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Local coefficient"</span>, <span class="at">palette =</span> <span class="st">"RdBu"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
-<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">title =</span> <span class="fu">sprintf</span>(<span class="st">"GWR: Local β for %s"</span>, cov),</span>
-<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Global OLS β=%.3f | True β=%.1f"</span>, ols_b[cov], true_b),</span>
-<span id="cb58-14"><a href="#cb58-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="st">"Lon"</span>, <span class="at">y =</span> <span class="st">"Lat"</span></span>
-<span id="cb58-15"><a href="#cb58-15" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb58-16"><a href="#cb58-16" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb58-17"><a href="#cb58-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-18"><a href="#cb58-18" aria-hidden="true" tabindex="-1"></a>p_gwr <span class="ot">&lt;-</span> <span class="fu">map_beta</span>(<span class="st">"pct_poverty"</span>, <span class="fl">1.2</span>) <span class="sc">|</span> <span class="fu">map_beta</span>(<span class="st">"pct_uninsured"</span>, <span class="fl">0.8</span>) <span class="sc">|</span> <span class="fu">map_beta</span>(<span class="st">"pm25"</span>, <span class="fl">0.5</span>)</span>
-<span id="cb58-19"><a href="#cb58-19" aria-hidden="true" tabindex="-1"></a>p_gwr <span class="ot">&lt;-</span> p_gwr <span class="sc">+</span> <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"GWR Spatially Varying Coefficients"</span>)</span>
-<span id="cb58-20"><a href="#cb58-20" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_gwr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>p_int <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> gwr_intercept), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Local β0"</span>, <span class="at">palette =</span> <span class="st">"PuOr"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"GWR local intercept"</span>,</span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Global OLS intercept = %.2f"</span>, ols_b[<span class="st">"(Intercept)"</span>])</span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb89-9"><a href="#cb89-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-10"><a href="#cb89-10" aria-hidden="true" tabindex="-1"></a>p_ob <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
+<span id="cb89-11"><a href="#cb89-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> gwr_obesity), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb89-12"><a href="#cb89-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Local β"</span>, <span class="at">palette =</span> <span class="st">"RdBu"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb89-13"><a href="#cb89-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb89-14"><a href="#cb89-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"GWR local obesity coefficient"</span>,</span>
+<span id="cb89-15"><a href="#cb89-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"Global OLS β = %.3f"</span>, ols_b[<span class="st">"pct_obesity"</span>])</span>
+<span id="cb89-16"><a href="#cb89-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb89-17"><a href="#cb89-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb89-18"><a href="#cb89-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb89-19"><a href="#cb89-19" aria-hidden="true" tabindex="-1"></a>p_gwr <span class="ot">&lt;-</span> (p_int <span class="sc">|</span> p_ob) <span class="sc">+</span></span>
+<span id="cb89-20"><a href="#cb89-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(</span>
+<span id="cb89-21"><a href="#cb89-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">sprintf</span>(</span>
+<span id="cb89-22"><a href="#cb89-22" aria-hidden="true" tabindex="-1"></a>      <span class="st">"GWR coefficient surfaces — diabetes ~ obesity + age 65+ + uninsured (adaptive k = %d)"</span>,</span>
+<span id="cb89-23"><a href="#cb89-23" aria-hidden="true" tabindex="-1"></a>      gwr_bw</span>
+<span id="cb89-24"><a href="#cb89-24" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb89-25"><a href="#cb89-25" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb89-26"><a href="#cb89-26" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_gwr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB03_Spatial_Regression_GWR_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB03_Spatial_Regression_GWR_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"gwr_coefficients.png"</span>), p_gwr, <span class="at">width =</span> <span class="dv">18</span>, <span class="at">height =</span> <span class="dv">5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"GWR coefficient statistics:</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>GWR coefficient statistics:</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"gwr_coefficients.png"</span>), p_gwr,</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">14</span>, <span class="at">height =</span> <span class="fl">5.5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (cov <span class="cf">in</span> covariate_plot) {</span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> gdf[[<span class="fu">paste0</span>(<span class="st">"gwr_beta_"</span>, cov)]]</span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  %-20s: mean=%.3f | SD=%.3f | range=[%.2f,%.2f]</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>              cov, <span class="fu">mean</span>(b), <span class="fu">sd</span>(b), <span class="fu">min</span>(b), <span class="fu">max</span>(b)))</span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  pct_poverty         : mean=1.911 | SD=1.088 | range=[-0.12,4.10]
-  pct_uninsured       : mean=1.230 | SD=0.934 | range=[-1.11,2.41]
-  pm25                : mean=0.311 | SD=0.194 | range=[-0.13,0.59]</code></pre>
-</div>
-</div>
+<p>A wide range in the local obesity coefficient can reflect genuine regional differences in how obesity relates to diabetes (food systems, health-care access, age mixing) — or it can be a spatial artefact of noisy local fits. Always read GWR maps against the global OLS value and against whether the pattern is geographically coherent.</p>
 </section>
 <section id="knowledge-check" class="level2">
-<h2 class="anchored" data-anchor-id="knowledge-check">6. Knowledge Check</h2>
+<h2 class="anchored" data-anchor-id="knowledge-check">7. Knowledge Check</h2>
 <ol type="1">
-<li>Spatial lag model rho = 0.38. Interpret this parameter in clinical terms.</li>
-<li>SEM has lower AIC than SLM. Under what conceptual assumption should you prefer SEM?</li>
-<li>GWR shows poverty coefficient varying from 0.4 to 2.8 across counties. Is this capturing true heterogeneity or spatial artefact?</li>
-<li>OLS coefficient for poverty = 1.42, SLM = 0.95. Why does controlling for spatial autocorrelation reduce the poverty coefficient?</li>
-<li>Run GWR with two different bandwidths (h=5 and h=15). How does bandwidth affect the spatial smoothness of local coefficients?</li>
+<li>The spatial lag model’s <span class="math inline">\(\rho\)</span> parameter quantifies the extent to which diabetes prevalence in one county is associated with values in neighbouring counties, beyond what is explained by covariates. How would you interpret a <span class="math inline">\(\rho\)</span> of about 0.4 clinically?</li>
+<li>When should you prefer the Spatial Error Model (SEM) over the Spatial Lag Model (SLM)?</li>
+<li>GWR shows the obesity coefficient varying widely across counties (for example from near 0 to well above the global OLS value). How would you decide whether this is true effect modification or a spatial artefact?</li>
+<li>Why can the obesity coefficient shrink when you move from OLS to SLM?</li>
+<li>Bandwidth acts as a smoothing parameter. What happens to local GWR coefficients if you use <span class="math inline">\(k = 20\)</span> nearest neighbours versus <span class="math inline">\(k = 150\)</span>?</li>
 </ol>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exercise 5 — GWR bandwidth sensitivity</span></span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"GWR bandwidth sensitivity (small sample, fast demo):</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>GWR bandwidth sensitivity (small sample, fast demo):</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>sp_sub <span class="ot">&lt;-</span> spdf[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, ]</span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (bw <span class="cf">in</span> <span class="fu">c</span>(<span class="fl">4.0</span>, <span class="fl">8.0</span>, <span class="fl">15.0</span>)) {</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  gwr_bw <span class="ot">&lt;-</span> <span class="fu">gwr.basic</span>(</span>
-<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>    cvd_rate <span class="sc">~</span> pct_poverty <span class="sc">+</span> pct_uninsured <span class="sc">+</span> pm25,</span>
-<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> sp_sub, <span class="at">bw =</span> bw, <span class="at">kernel =</span> <span class="st">"gaussian"</span>, <span class="at">adaptive =</span> <span class="cn">FALSE</span></span>
-<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>  beta_pov <span class="ot">&lt;-</span> gwr_bw<span class="sc">$</span>SDF<span class="sc">$</span>pct_poverty</span>
-<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>  sse_bw <span class="ot">&lt;-</span> <span class="fu">sum</span>(gwr_bw<span class="sc">$</span>SDF<span class="sc">$</span>residual<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"  bandwidth=%.0f: poverty β range=[%.2f,%.2f] SD=%.3f SSE=%.1f</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a>              bw, <span class="fu">min</span>(beta_pov), <span class="fu">max</span>(beta_pov), <span class="fu">sd</span>(beta_pov), sse_bw))</span>
-<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  bandwidth=4: poverty β range=[-4.56,5.28] SD=2.338 SSE=2601.8
-  bandwidth=8: poverty β range=[1.08,3.19] SD=0.488 SSE=4127.7
-  bandwidth=15: poverty β range=[2.32,2.61] SD=0.094 SSE=5240.2</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Smaller bandwidth -&gt; more local variation, higher risk of overfitting</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Smaller bandwidth -&gt; more local variation, higher risk of overfitting</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Larger bandwidth  -&gt; smoother coefficients, approaches global OLS</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Larger bandwidth  -&gt; smoother coefficients, approaches global OLS</code></pre>
-</div>
-</div>
 <hr>
 <p><strong>Next → NB-04: Disease Mapping &amp; Bayesian Smoothing</strong></p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -1339,7 +1637,7 @@ Smaller bandwidth -&gt; more local variation, higher risk of overfitting</code><
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-with-Python\/");
+        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-R\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1668,13 +1966,13 @@ Smaller bandwidth -&gt; more local variation, higher risk of overfitting</code><
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="pagination-link" aria-label="Spatial Autocorrelation &amp; Moran's I">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Spatial Autocorrelation &amp; Moran’s I</span>
+      <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="pagination-link" aria-label="NB-02 · Spatial Autocorrelation &amp; Moran's I">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">NB-02 · Spatial Autocorrelation &amp; Moran’s I</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="pagination-link" aria-label="Disease Mapping &amp; Bayesian Smoothing">
-        <span class="nav-page-text">Disease Mapping &amp; Bayesian Smoothing</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="pagination-link" aria-label="NB-04 · Disease Mapping &amp; Bayesian Smoothing">
+        <span class="nav-page-text">NB-04 · Disease Mapping &amp; Bayesian Smoothing</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1686,7 +1984,7 @@ Smaller bandwidth -&gt; more local variation, higher risk of overfitting</code><
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB03_Spatial_Regression_GWR.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB03_Spatial_Regression_GWR.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>

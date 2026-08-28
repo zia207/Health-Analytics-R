@@ -1,11 +1,9 @@
----
-title: "ML Pipeline Setup & Train/Test Splits"
-subtitle: "Module 04 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 04: Machine Learning for Clinical Prediction
+### Module 04 — Machine Learning for Clinical Prediction
+
+# ML Pipeline Setup & Train/Test Splits
+
 ***
 **Learning objectives**
 - Understand why random splits fail in clinical settings and when temporal splits are required
@@ -120,7 +118,7 @@ Random splitting of clinical data **leaks future information into training** whe
 | Patient-level | Same patient across visits | Prevents same-patient leakage |
 | Geographic | Multi-site data | Tests transportability |
 
-```{r}
+```{r, fig.width=10, fig.height=6}
 # ── Temporal split: train 2019-2021, validate 2022, test 2023 ─────────────────
 df <- df %>% mutate(admit_year = as.integer(format(admit_date, "%Y")))
 df_train <- df %>% filter(admit_year <= 2021)

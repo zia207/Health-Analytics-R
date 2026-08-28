@@ -1,9 +1,8 @@
----
-title: "NB-01 · R Foundations for Health Data"
-subtitle: "Module 01 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
+
+### Module 01 — R Foundations for Health Data
+
+# R Foundations for Health Data
 
 ***
 **Learning objectives**
@@ -148,7 +147,7 @@ head(df, 8)
 
 ```{r}
 # --- 4.1  Save and re-read as CSV (most common EHR export format) ---
-health_dir <- file.path(tempdir(), "health_data")
+health_dir <- file.path("Data")
 dir.create(health_dir, showWarnings = FALSE, recursive = TRUE)
 readr::write_csv(df, file.path(health_dir, "discharges.csv"))
 

@@ -1,11 +1,9 @@
----
-title: "Instrumental Variables & RDD"
-subtitle: "Module 06 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 06: Causal Inference in Health Research
+### Module 06 — Causal Inference in Health Research
+
+# Instrumental Variables & RDD
+
 ***
 **Learning objectives**
 - Understand the three IV assumptions: relevance, exclusion restriction, independence
@@ -242,7 +240,7 @@ cat(sprintf("Statin (sharp): %.1f%% | Statin (fuzzy): %.1f%%\n",
 cat(sprintf("CV event rate: %.1f%%\n", mean(cv_event) * 100))
 ```
 
-```{r}
+```{r, fig.height=6, fig.width=10}
 # Sharp RDD estimation with local linear regression
 BANDWIDTH <- 15  # optimal bandwidth (in practice: use data-driven methods)
 

@@ -1,24 +1,24 @@
----
-title: "Spatial Regression: Lag, Error & GWR"
-subtitle: "Module 07 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+### Module 07: Spatial Epidemiology
+
+# Spatial Regression: Lag, Error & GWR
+
 ***
 **Learning objectives**
 - Diagnose spatial autocorrelation in OLS residuals with Lagrange Multiplier tests
 - Fit Spatial Lag Model (SLM): includes spatially lagged outcome
 - Fit Spatial Error Model (SEM): includes spatially autocorrelated errors
 - Compare model fit with AIC, log-likelihood, and pseudo-R²
-- Implement Geographically Weighted Regression (GWR) with `GWmodel`
-- Map spatially varying coefficients from GWR
+- Compute geographically weighted correlation between diabetes and obesity
+- Fit Geographically Weighted Regression (GWR) and map spatially varying coefficients
 
+**Data:** `Data/usa_data.csv` — CDC adult diabetes prevalence and County Health Rankings covariates for 3,108 US counties (CONUS + DC)  
+**Geometries:** `Data/US_COUNTY.shp` — county polygons in NAD83 Albers (EPSG:5070)  
 **Estimated time:** 3 hours | **Level:** Advanced  
-**Libraries:** `sf`, `spdep`, `spatialreg`, `GWmodel`, `ggplot2`, `broom`
+**Libraries:** `sf`, `spdep`, `spatialreg`, `GWmodel`, `ggplot2`, `broom`, `patchwork`
 
-## 1. Setup & Dataset
+## 1. Setup & US County Health Dataset
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -33,6 +33,7 @@ library(patchwork)
 set.seed(42)
 out_dir <- file.path(tempdir(), "mod07")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
 theme_set(
   theme_minimal(base_size = 11) +
     theme(
@@ -42,103 +43,127 @@ theme_set(
     )
 )
 
-spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 2) {
-  grid <- matrix(0, nrow = nrow, ncol = ncol)
-  for (i in seq_along(values)) grid[row_idx[i], col_idx[i]] <- values[i]
-  k <- ceiling(3 * sigma)
-  xs <- (-k):k
-  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
-  kern <- kern / sum(kern)
-  pad <- k
-  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
-  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
-  out <- matrix(0, nrow, ncol)
-  for (r in seq_len(nrow)) for (c in seq_len(ncol)) {
-    out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
-  }
-  mapply(function(r, c) out[r, c], row_idx, col_idx)
+theme_map <- function() {
+  theme_void(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
+      plot.subtitle = element_text(size = 9, hjust = 0.5),
+      legend.position = "right"
+    )
 }
 
-NROW <- 10; NCOL <- 20; N <- NROW * NCOL
-row_idx <- rep(seq_len(NROW), each = NCOL)
-col_idx <- rep(seq_len(NCOL), times = NROW)
-lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
-lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
-pct_poverty   <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
-pct_uninsured <- 8 + 6 * rbeta(N, 2, 4) + 0.3 * pct_poverty
-pm25          <- 8 + 4 * rgamma(N, shape = 2, scale = 1)
-population    <- as.integer(rlnorm(N, 10.5, 1.0))
-spatial_risk  <- spatial_smooth(rnorm(N), row_idx, col_idx, NROW, NCOL)
-cvd_rate <- (180 + 1.2 * pct_poverty + 0.8 * pct_uninsured + 0.5 * pm25 +
-               15 * spatial_risk + rnorm(N, 0, 12))
-expected <- (cvd_rate / 100000) * population * 5
-observed <- rpois(N, expected)
-smr <- observed / pmax(expected, 1)
+# County Health Rankings + CDC diabetes prevalence (CONUS + DC)
+raw <- read_csv("Data/usa_data.csv", show_col_types = FALSE)
+
+pts <- st_as_sf(raw, coords = c("centroid_x_m", "centroid_y_m"), crs = 5070, remove = FALSE)
+pts_ll <- st_transform(pts, 4326)
+xy <- st_coordinates(pts_ll)
 
 df <- tibble(
-  county_id = sprintf("C%03d", seq_len(N) - 1),
-  lon, lat, row = row_idx, col = col_idx,
-  pct_poverty, pct_uninsured, pm25, population, cvd_rate,
-  observed, expected, smr, spatial_risk
+  county_id       = sprintf("%05d", as.integer(raw$fips)),
+  fips            = as.integer(raw$fips),
+  county          = raw$county,
+  state_abbr      = raw$state_abbr,
+  state_name      = raw$state_name,
+  lon             = xy[, 1],
+  lat             = xy[, 2],
+  x_m             = raw$centroid_x_m,
+  y_m             = raw$centroid_y_m,
+  diabetes_prev   = raw$y_diabetes_prevalence_adults_with_diabetes,
+  pct_65plus      = raw$chr_65_and_older_65_and_over,
+  pct_exercise    = raw$chr_access_to_exercise_opportunities,
+  pct_obesity     = raw$chr_adult_obesity,
+  food_env_index  = raw$chr_food_environment_index,
+  n_pcp           = raw$chr_primary_care_physicians,
+  rural_pop       = raw$chr_rural,
+  n_unemployed    = raw$chr_unemployment,
+  n_uninsured     = raw$chr_uninsured
 )
-geoms <- Map(function(lo, la) {
-  st_polygon(list(matrix(
-    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
-      lo - 1.25, la + 1, lo - 1.25, la - 1), ncol = 2, byrow = TRUE
-  )))
-}, df$lon, df$lat)
-gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
 
-nb <- vector("list", N)
-for (i in seq_len(N)) {
-  nbrs <- which(pmax(abs(df$row - df$row[i]), abs(df$col - df$col[i])) <= 1)
-  nb[[i]] <- setdiff(nbrs, i)
-}
-class(nb) <- "nb"
-attr(nb, "region.id") <- as.character(seq_len(N))
+df$smr <- df$diabetes_prev / mean(df$diabetes_prev, na.rm = TRUE)
+
+N_COUNTIES <- nrow(df)
+cat(sprintf(
+  "County dataset: N=%d | Diabetes: %.1f%% (SD=%.1f)\n",
+  N_COUNTIES, mean(df$diabetes_prev), sd(df$diabetes_prev)
+))
+cat(sprintf(
+  "Obesity: %.1f%% | 65+: %.1f%% | Food env. index: %.1f\n",
+  mean(df$pct_obesity), mean(df$pct_65plus), mean(df$food_env_index)
+))
+```
+
+```{r}
+county_shapes <- st_read("Data/US_COUNTY.shp", quiet = TRUE)
+county_shapes$FIPS <- as.integer(county_shapes$FIPS)
+# Shannon County SD (46113) was renamed Oglala Lakota (46102)
+county_shapes$FIPS[county_shapes$FIPS == 46113] <- 46102
+
+gdf <- county_shapes %>%
+  inner_join(df, by = c("FIPS" = "fips"))
+bb <- st_bbox(gdf)
+
+cat(sprintf("sf object: %d counties | CRS: %s\n", nrow(gdf), st_crs(gdf)$input))
+cat(sprintf(
+  "Bounding box (Albers metres): xmin=%.0f ymin=%.0f xmax=%.0f ymax=%.0f\n",
+  bb["xmin"], bb["ymin"], bb["xmax"], bb["ymax"]
+))
+
+# Queen contiguity listw (never a dense n×n matrix)
+nb <- poly2nb(gdf, queen = TRUE)
 lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
-COVARIATES <- c("pct_poverty", "pct_uninsured", "pm25")
-cat(sprintf("N=%d | CVD=%.1f/100k | Weights built\n", N, mean(cvd_rate)))
+n_iso <- sum(card(nb) == 0)
+cat(sprintf(
+  "Queen weights: mean neighbours = %.1f | isolated islands = %d (zero.policy = TRUE)\n",
+  mean(card(nb)), n_iso
+))
 ```
 
 ## 2. OLS Baseline and Diagnostic Tests
 
-**OLS model:** CVD_i = β₀ + β₁·Poverty_i + β₂·Uninsured_i + β₃·PM25_i + ε_i
+**OLS model:** $\mathrm{diabetes}_i = \beta_0 + \beta_1 \cdot \mathrm{obesity}_i + \beta_2 \cdot (\%\ \mathrm{aged\ 65+})_i + \beta_3 \cdot \mathrm{uninsured}_i + \varepsilon_i$
+
+Obesity is the focal behavioural risk factor. Percent aged 65+ adjusts for age structure. Uninsured count is a County Health Rankings access/size proxy. (Do not put SPR on the right-hand side: SPR is diabetes / national mean, a rescaling of the outcome.)
 
 **Spatial diagnostics:**
 - **Moran's I on residuals**: global test for residual autocorrelation
-- **Lagrange Multiplier (LM) Lag test**: tests if spatial lag of Y belongs in model
+- **Lagrange Multiplier (LM) Lag test**: tests if spatial lag of $Y$ belongs in the model
 - **LM Error test**: tests if spatial error structure is needed
 - **Robust LM tests**: account for presence of the other spatial effect
 
 ```{r}
-ols <- lm(cvd_rate ~ pct_poverty + pct_uninsured + pm25, data = df)
-print(tidy(ols))
+ols <- lm(diabetes_prev ~ pct_obesity + pct_65plus + n_uninsured, data = gdf)
+print(tidy(ols, conf.int = TRUE))
 cat(sprintf("\nAIC: %.2f | Log-L: %.2f | R²: %.4f\n",
             AIC(ols), logLik(ols), summary(ols)$r.squared))
 ```
 
 ```{r}
-# Moran's I on residuals
-mt_ols <- moran.test(residuals(ols), lw, zero.policy = TRUE)
-mc_ols <- moran.mc(residuals(ols), lw, nsim = 499, zero.policy = TRUE)
+mt_ols <- moran.test(residuals(ols), lw, zero.policy = TRUE, alternative = "two.sided")
 I_ols <- unname(mt_ols$estimate["Moran I statistic"])
-p_ols <- mc_ols$p.value
-cat(sprintf("Moran's I (OLS residuals): %.4f, p=%.4f\n", I_ols, p_ols))
+p_ols <- mt_ols$p.value
+cat(sprintf("Moran's I (OLS residuals): %.4f, p=%.4g\n", I_ols, p_ols))
 if (p_ols < 0.05) {
   cat("-> Significant residual spatial autocorrelation: spatial model needed\n")
 }
 
-# LM tests (Anselin) via spdep
-lm_tests <- lm.LMtests(ols, lw, test = c("LMerr", "LMlag", "RLMerr", "RLMlag", "SARMA"))
+# Anselin LM / Rao score tests (spdep 1.3-2 renamed LM → RS)
+lm_tests <- lm.LMtests(ols, lw, test = "all", zero.policy = TRUE)
 print(lm_tests)
 
-LM_lag <- as.numeric(lm_tests$RSlag$statistic)
-LM_err <- as.numeric(lm_tests$RSerr$statistic)
-p_lag  <- lm_tests$RSlag$p.value
-p_err  <- lm_tests$RSerr$p.value
-cat(sprintf("LM Lag test: %.4f (p=%.4f)\n", LM_lag, p_lag))
-cat(sprintf("LM Err test: %.4f (p=%.4f)\n", LM_err, p_err))
+# Extract lag vs error (names differ by spdep version)
+nm <- names(lm_tests)
+lag_comp <- if ("LMlag" %in% nm) lm_tests$LMlag else lm_tests$RSlag
+err_comp <- if ("LMerr" %in% nm) lm_tests$LMerr else lm_tests$RSerr
+LM_lag <- as.numeric(lag_comp$statistic)
+LM_err <- as.numeric(err_comp$statistic)
+p_lag  <- lag_comp$p.value
+p_err  <- err_comp$p.value
+
+cat(sprintf("LM Lag test: %.4f (p=%.4g)\n", LM_lag, p_lag))
+cat(sprintf("LM Err test: %.4f (p=%.4g)\n", LM_err, p_err))
 cat("\nDecision rule: If both significant, choose the one with larger test statistic\n")
 if (LM_lag > LM_err) {
   cat("  -> Spatial Lag Model preferred\n")
@@ -147,130 +172,384 @@ if (LM_lag > LM_err) {
 }
 ```
 
-## 3. Spatial Lag Model (SLM)
+**Decision rule (Anselin 1988; Anselin *et al.* 1996):**
+
+- If **only** the LM lag test is significant → fit a **Spatial Lag Model**.
+- If **only** the LM error test is significant → fit a **Spatial Error Model**.
+- If **both** are significant, compare the *robust* LM statistics and choose the larger one.
+- If neither is significant, OLS is adequate (no residual spatial structure after covariates).
+
+## 3. Spatial Regression
+
+Sometimes, data from nearby locations are similar just because they are close to each other. Ordinary regression ($y = X\beta + \mathrm{error}$) assumes observations are independent. With maps and spatial data, that is often not true.
+
+**Spatial regression** methods fix this by adding geography into the regression model.
+
+There are two main types:
+
+1. **Spatial Lag Model (SLM)**
+   - This model assumes your outcome ($y$) depends not just on your own characteristics ($X$), but also on the outcome in nearby areas.
+
+2. **Spatial Error Model (SEM)**
+   - Instead of $y$ depending on neighbours, this model says the *errors* are spatially correlated. If the regression misses something in one area, it probably misses it nearby too.
+
+So, spatial regression makes sure you're not ignoring geography, and tries to avoid the problem of "neighbours being similar just because they're neighbours".
+
+(In simple terms, imagine house prices: your house value depends on your house's properties *and* on the prices of houses nearby. The same logic applies to county diabetes rates.)
+
+We fit both models with `spatialreg` (maximum likelihood). Do **not** grid-search $\rho$ or $\lambda$ by forming dense $|I - \rho W|$ determinants on 3,108 counties — that is $O(n^3)$ per candidate and is exactly what `lagsarlm()` / `errorsarlm()` already do efficiently.
+
+### 3.1 Spatial Lag Model (SLM)
+
+The Spatial Lag Model (SLM) understands that things nearby tend to influence each other.
+
+Imagine you want to predict diabetes prevalence in different counties. In normal regression, we assume each county is independent. But what if nearby counties' rates affect each other?
+
+The SLM makes your prediction depend on both the usual factors **and** the values in surrounding places. Think: a county's diabetes rate depends not only on its own obesity and age structure, but also on diabetes in neighbouring counties (spillover, shared culture, shared food environment).
+
+The SLM equation:
+
+$$
+y = \rho\, W y + X\beta + \varepsilon
+$$
+
+Where:
+
+- $y$ = outcome (diabetes prevalence)
+- $X$ = predictors (obesity, % aged 65+, uninsured)
+- $\beta$ = regression coefficients
+- $W$ = spatial weights (who is a neighbour)
+- $\rho$ (rho) = how much neighbours' values matter
+- $Wy$ = spatial lag ("neighbourhood average" of $y$)
+- $\varepsilon$ = residual noise
+
+In plain language: "My value is influenced by my neighbours' values, plus my own characteristics, plus some randomness."
 
 ```{r}
-# SLM: Y = rho*W*Y + X*beta + e  — spatialreg::lagsarlm
-slm <- lagsarlm(cvd_rate ~ pct_poverty + pct_uninsured + pm25,
-                data = df, listw = lw, zero.policy = TRUE)
+# SLM: y = rho W y + X beta + e  — spatialreg::lagsarlm
+# method = "Matrix" avoids a dense eigen-decomposition of the 3108 × 3108 weights
+slm <- lagsarlm(
+  diabetes_prev ~ pct_obesity + pct_65plus + n_uninsured,
+  data = gdf, listw = lw, zero.policy = TRUE, method = "Matrix", quiet = TRUE
+)
 print(summary(slm, Nagelkerke = TRUE))
-cat(sprintf("Spatial Lag Model:\n"))
+cat(sprintf("\nSpatial Lag Model:\n"))
 cat(sprintf("  rho (spatial lag)  : %.4f\n", slm$rho))
 cat(sprintf("  Log-likelihood     : %.4f\n", slm$LL))
 cat(sprintf("  AIC                : %.4f\n", AIC(slm)))
 cat(sprintf("  OLS AIC            : %.4f\n", AIC(ols)))
 slm_beta <- coef(slm)
+cat(sprintf("  beta (obesity)     : %.4f  (OLS: %.4f)\n",
+            slm_beta["pct_obesity"], coef(ols)["pct_obesity"]))
 ```
 
-## 4. Spatial Error Model (SEM)
+A positive $\rho$ means diabetes in neighbouring counties is associated with diabetes here, *beyond* what obesity, age, and uninsured count explain. Comparing AIC with OLS tells you whether that extra spatial lag is worth the parameter.
+
+### 3.2 Spatial Error Model (SEM)
+
+The Spatial Error Model (SEM) accounts for **spatial autocorrelation in the errors** — when the unexplained parts of your model (the residuals) look similar for nearby locations.
+
+The basic regression model is:
+
+$$
+Y = X\beta + u
+$$
+
+where:
+
+- $Y$ is your outcome
+- $X\beta$ is the effect of your predictors
+- $u$ is the error (what's left unexplained)
+
+In regular regression, we assume $u$ is just random noise. With spatial data, errors in one place are often similar to errors nearby.
+
+SEM models this by letting:
+
+$$
+u = \lambda W u + e
+$$
+
+where:
+
+- $\lambda$ is the spatial error parameter (how much errors "spread" across space)
+- $W$ is the spatial weights matrix
+- $e$ is well-behaved noise, but now the composite error depends on neighbouring errors
+
+In other words, the error for each location is "contagious" — if your neighbours have high residuals, yours probably will too. SEM helps so that estimates of $\beta$ (the effect of obesity, age, uninsured) are not biased by that spatial leftover.
+
+**Math for dummies:**
+
+- If $\lambda = 0$: no spatial effect; it is just regular regression.
+- If $|\lambda|$ is big: there is a lot of "spatial noise", and we need to correct for it.
+- The computer searches for the $\lambda$ that makes the observed data most likely (maximum likelihood).
 
 ```{r}
-# SEM: Y = X*beta + u, u = lambda*W*u + e  — spatialreg::errorsarlm
-sem <- errorsarlm(cvd_rate ~ pct_poverty + pct_uninsured + pm25,
-                  data = df, listw = lw, zero.policy = TRUE)
+# SEM: Y = X beta + u, u = lambda W u + e  — spatialreg::errorsarlm
+sem <- errorsarlm(
+  diabetes_prev ~ pct_obesity + pct_65plus + n_uninsured,
+  data = gdf, listw = lw, zero.policy = TRUE, method = "Matrix", quiet = TRUE
+)
 print(summary(sem, Nagelkerke = TRUE))
-cat(sprintf("Spatial Error Model:\n"))
+cat(sprintf("\nSpatial Error Model:\n"))
 cat(sprintf("  lambda (spatial error): %.4f\n", sem$lambda))
 cat(sprintf("  Log-likelihood: %.4f\n", sem$LL))
 cat(sprintf("  AIC           : %.4f\n", AIC(sem)))
-cat("\nModel comparison:\n")
-cat(sprintf("  OLS AIC: %.2f | SLM AIC: %.2f | SEM AIC: %.2f\n",
-            AIC(ols), AIC(slm), AIC(sem)))
-cat(sprintf(
-  "  True poverty coefficient: 1.20 | OLS: %.3f | SLM: %.3f | SEM: %.3f\n",
-  coef(ols)["pct_poverty"], slm_beta["pct_poverty"], coef(sem)["pct_poverty"]
-))
+cat(sprintf("  beta (obesity): %.4f\n", coef(sem)["pct_obesity"]))
+
+cat("\nModel comparison (lower AIC is better):\n")
+cmp <- tibble(
+  model = c("OLS", "SLM", "SEM"),
+  AIC   = c(AIC(ols), AIC(slm), AIC(sem)),
+  obesity_beta = c(
+    unname(coef(ols)["pct_obesity"]),
+    unname(slm_beta["pct_obesity"]),
+    unname(coef(sem)["pct_obesity"])
+  )
+)
+print(cmp)
+best <- cmp$model[which.min(cmp$AIC)]
+cat(sprintf("Preferred by AIC: %s\n", best))
 ```
 
-## 5. Geographically Weighted Regression (GWR)
+Unlike a simulated data-generating process, there is no "true" coefficient to recover here. Compare the *obesity* coefficient across OLS / SLM / SEM: if OLS is larger in magnitude, part of what it attributed to obesity was shared spatial structure (omitted regional factors, spillover). SLM and SEM partition that spatial dependence out of $\beta$.
+
+## 5. Geographically Weighted Correlation Analysis
+
+Geographically Weighted Correlation (GW Correlation) helps us understand how the relationship between two variables (diabetes and obesity rates) changes from place to place.
+
+For each location (a county), we:
+
+1. **Look at nearby places:** We give more weight to locations that are "close" and less to those that are "far" using a smooth weighting function (usually a Gaussian, or bell-shaped, curve).
+   - The weight for each location depends on its distance to our location of interest.
+   - For distance $d$ between locations, weight:
+     $$
+     w = \exp\left( -\frac{d^2}{2h^2} \right)
+     $$
+   - Here, $h$ controls how quickly the weight drops off with distance (the **bandwidth**).
+
+2. **Use these weights to get a "local" Pearson correlation:**
+   - The normal (global) Pearson correlation measures how two variables change together everywhere.
+   - The "local" version uses our calculated weights, so it pays more attention to nearby points:
+     - **Local mean for variable 1:**
+       $$
+       \mu_1 = \sum w_i x_i
+       $$
+     - **Local mean for variable 2:**
+       $$
+       \mu_2 = \sum w_i y_i
+       $$
+     - **Local correlation:**
+       $$
+       r = \frac{ \sum w_i (x_i - \mu_1)(y_i - \mu_2) }
+                { \sqrt{ \sum w_i (x_i - \mu_1)^2 } \cdot \sqrt{ \sum w_i (y_i - \mu_2)^2 } }
+       $$
+
+For every location, we get a local correlation that tells us how strongly the two variables move together around that spot. This can reveal spatial patterns hidden by the overall (global) correlation.
+
+We use an **adaptive Gaussian kernel** with $k = 50$ nearest neighbours on Albers centroids. A $3108 \times 3108$ distance matrix is about 77 MB — acceptable. (`bw.gwr` / `gwss` AICc search on all counties is much slower, so we fix $k$ rather than optimise it.)
+
+```{r, fig.width = 10, fig.height = 6}
+# Adaptive Gaussian GW correlation (k = 50); one n×n distance matrix, then matrix products
+xy <- cbind(gdf$x_m, gdf$y_m)
+d  <- as.matrix(dist(xy))
+k_nn <- 50
+bw <- apply(d, 1, function(row) sort.int(row, partial = k_nn)[k_nn])
+bw <- pmax(bw, .Machine$double.eps)
+
+Wker <- exp(-0.5 * sweep(d, 1, bw, "/")^2)
+x <- gdf$pct_obesity
+y <- gdf$diabetes_prev
+Wsum <- rowSums(Wker)
+mx <- as.vector(Wker %*% x) / Wsum
+my <- as.vector(Wker %*% y) / Wsum
+cov_w <- as.vector(Wker %*% (x * y)) / Wsum - mx * my
+vx <- pmax(as.vector(Wker %*% (x^2)) / Wsum - mx^2, 0)
+vy <- pmax(as.vector(Wker %*% (y^2)) / Wsum - my^2, 0)
+r_local <- cov_w / sqrt(vx * vy)
+r_local <- pmax(pmin(r_local, 1), -1)
+
+# Parametric p-values using Kish effective sample size (anti-conservative under residual SA)
+n_eff <- Wsum^2 / rowSums(Wker^2)
+df_loc <- n_eff - 2
+t_loc <- r_local * sqrt(df_loc / pmax(1 - r_local^2, 1e-12))
+p_local <- 2 * pt(-abs(t_loc), df = pmax(df_loc, 1))
+
+r_glob <- cor(x, y)
+gdf$gw_corr  <- r_local
+gdf$gw_logp  <- -log10(pmax(p_local, 1e-12))
+gdf$gw_dev   <- r_local - r_glob
+
+cat(sprintf("Global Pearson r : %+.3f\n", r_glob))
+cat(sprintf("Local r          : mean %+.3f, range [%+.3f, %+.3f]\n",
+            mean(r_local, na.rm = TRUE), min(r_local, na.rm = TRUE),
+            max(r_local, na.rm = TRUE)))
+cat(sprintf("Significant (p<.05): %.1f%% of counties (%d / %d)\n",
+            mean(p_local < 0.05, na.rm = TRUE) * 100,
+            sum(p_local < 0.05, na.rm = TRUE), length(p_local)))
+cat(sprintf("Significant & negative: %d counties\n",
+            sum(p_local < 0.05 & r_local < 0, na.rm = TRUE)))
+
+# Free the large matrices before GWR
+rm(d, Wker)
+invisible(gc())
+```
 
 ```{r}
-# GWR: estimates local coefficients at each location
-# Gaussian kernel: k_ij = exp(-d_ij^2 / (2*h^2))
-spdf <- df
-coordinates(spdf) <- ~ lon + lat
-proj4string(spdf) <- CRS("+proj=longlat +datum=WGS84")
+p_r <- ggplot(gdf) +
+  geom_sf(aes(fill = gw_corr), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "Local r", palette = "RdBu", direction = 1) +
+  labs(title = "Local correlation r_i", subtitle = "Diabetes vs obesity") +
+  theme_map()
 
-cat("Fitting GWR ...\n")
+p_p <- ggplot(gdf) +
+  geom_sf(aes(fill = gw_logp), colour = "white", linewidth = 0.05) +
+  scale_fill_viridis_c(name = "-log10(p)", option = "magma") +
+  labs(title = "Local significance", subtitle = "-log10(p_i); ~1.3 = p=0.05") +
+  theme_map()
+
+p_dev <- ggplot(gdf) +
+  geom_sf(aes(fill = gw_dev), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "r_i - r", palette = "PuOr", direction = 1) +
+  labs(
+    title = sprintf("Local r minus global r (%.2f)", r_glob),
+    subtitle = "orange/purple: stronger/weaker than US average"
+  ) +
+  theme_map()
+
+p_gwc <- (p_r | p_p | p_dev) +
+  plot_annotation(
+    title = sprintf(
+      "Geographically weighted correlation — diabetes vs obesity (adaptive Gaussian, k=%d)",
+      k_nn
+    )
+  )
+print(p_gwc)
+ggsave(file.path(out_dir, "gwc_diabetes_obesity.png"), p_gwc,
+       width = 16, height = 5.5, dpi = 150)
+```
+
+If local $r$ is high in the Mississippi Delta but weaker in the Mountain West, a single national correlation is hiding regional structure — which is exactly the motivation for GWR next.
+
+## 6. Geographically Weighted Regression (GWR)
+
+**Geographically Weighted Regression (GWR)** is a way to see how the relationship between two things (like diabetes and obesity) changes from place to place.
+
+Imagine you want to know, *"Does living in different counties change how much one thing affects another?"*
+
+GWR works by doing a separate regression for every location, but when looking at each place, it gives more importance ("weight") to data points that are nearby, and less weight to far-away points.
+
+In regular regression, we try to find the best line to predict $y$ using $x$ (like: $y = a + b \cdot x$).
+In GWR, we let the slope and intercept ($a$ and $b$) be different in every location.
+
+**The main idea:**
+- For each place (county $i$), we fit a regression using all the data, but give the most weight to data closest to county $i$.
+- We do this for every place, so every location gets its own "local" regression line.
+
+**The math part (for dummies):**
+- At each spot $i$, we find the line: $y = a_i + b_i x$
+    - $a_i$ and $b_i$ are special to spot $i$ (they change from place to place).
+- To make $a_i$ and $b_i$ focus on county $i$, we use weights: nearby counties get high weights, far ones low weights.
+- These weights are often made using a **Gaussian** (bell curve). So two counties close together matter a lot; two far apart, barely matter at all.
+
+**In symbols:**
+For each location $i$:
+$$
+y_j \approx a_i + b_i x_j
+$$
+(for all $j$, but with weights based on distance from $i$)
+
+- The weights $w_{ij}$ get smaller as the distance between $i$ and $j$ grows:
+  $$
+  w_{ij} = \exp\left(-\frac{d_{ij}^2}{2h^2}\right)
+  $$
+  where $d_{ij}$ is the distance between $i$ and $j$, and $h$ controls "how local" you want to be.
+
+The full GWR model with several covariates is:
+
+$$
+y_i = \beta_0(u_i, v_i) + \sum_{j=1}^{p} \beta_j(u_i, v_i)\, X_{ij} + \varepsilon_i
+$$
+
+**Bandwidth.** `GWmodel::bw.gwr(..., approach = "AIC")` searches for the AICc-optimal adaptive bandwidth. On 3,108 counties that search is very slow, so we **fix an adaptive bandwidth of 50 nearest neighbours** and note the choice. Smaller $k$ → bumpier local coefficients (risk of overfitting); larger $k$ → smoother surfaces that approach global OLS.
+
+```{r, fig.width = 10, fig.height = 6}
+spdf <- as.data.frame(st_drop_geometry(gdf))
+coordinates(spdf) <- ~ x_m + y_m
+# Centroids are already NAD83 Albers metres; GWR uses Euclidean distances
+
+# Adaptive k = 50; skip bw.gwr() AICc search (too slow at this n)
+gwr_bw <- 50
+cat(sprintf("Fitting GWR (adaptive Gaussian, k = %d) ...\n", gwr_bw))
 gwr_res <- gwr.basic(
-  cvd_rate ~ pct_poverty + pct_uninsured + pm25,
+  diabetes_prev ~ pct_obesity + pct_65plus + n_uninsured,
   data = spdf,
-  bw = 8.0,
+  bw = gwr_bw,
   kernel = "gaussian",
-  adaptive = FALSE
+  adaptive = TRUE
 )
 print(gwr_res)
 
 local_b <- as.data.frame(gwr_res$SDF)
-gdf$gwr_beta_Intercept     <- local_b$Intercept
-gdf$gwr_beta_pct_poverty   <- local_b$pct_poverty
-gdf$gwr_beta_pct_uninsured <- local_b$pct_uninsured
-gdf$gwr_beta_pm25          <- local_b$pm25
-gdf$gwr_pred  <- local_b$yhat
-gdf$gwr_resid <- local_b$residual
+# GWmodel names the intercept "Intercept"
+gdf$gwr_intercept <- local_b$Intercept
+gdf$gwr_obesity   <- local_b$pct_obesity
+gdf$gwr_pred      <- local_b$yhat
+gdf$gwr_resid     <- local_b$residual
+if ("Local_R2" %in% names(local_b)) gdf$gwr_localR2 <- local_b$Local_R2
 
-sse_gwr <- sum(gdf$gwr_resid^2)
-sse_ols <- sum(residuals(ols)^2)
-cat(sprintf("GWR bandwidth: 8.0 degrees\n"))
-cat(sprintf("SSE improvement: OLS=%.0f -> GWR=%.0f (%.1f%% reduction)\n",
-            sse_ols, sse_gwr, (1 - sse_gwr / sse_ols) * 100))
-```
-
-```{r}
-# Map spatially varying coefficients from GWR
-covariate_plot <- c("pct_poverty", "pct_uninsured", "pm25")
-beta_true <- c(1.2, 0.8, 0.5)
 ols_b <- coef(ols)
-
-map_beta <- function(cov, true_b) {
-  col <- paste0("gwr_beta_", cov)
-  ggplot(gdf) +
-    geom_sf(aes(fill = .data[[col]]), colour = "white", linewidth = 0.15) +
-    scale_fill_distiller(name = "Local coefficient", palette = "RdBu", direction = -1) +
-    labs(
-      title = sprintf("GWR: Local β for %s", cov),
-      subtitle = sprintf("Global OLS β=%.3f | True β=%.1f", ols_b[cov], true_b),
-      x = "Lon", y = "Lat"
-    )
-}
-
-p_gwr <- map_beta("pct_poverty", 1.2) | map_beta("pct_uninsured", 0.8) | map_beta("pm25", 0.5)
-p_gwr <- p_gwr + plot_annotation(title = "GWR Spatially Varying Coefficients")
-print(p_gwr)
-ggsave(file.path(out_dir, "gwr_coefficients.png"), p_gwr, width = 18, height = 5, dpi = 150)
-
-cat("GWR coefficient statistics:\n")
-for (cov in covariate_plot) {
-  b <- gdf[[paste0("gwr_beta_", cov)]]
-  cat(sprintf("  %-20s: mean=%.3f | SD=%.3f | range=[%.2f,%.2f]\n",
-              cov, mean(b), sd(b), min(b), max(b)))
-}
+cat("\nGlobal OLS vs GWR local coefficients:\n")
+cat(sprintf("  Intercept  OLS = %.3f | GWR mean = %.3f range = [%.2f, %.2f]\n",
+            ols_b["(Intercept)"], mean(gdf$gwr_intercept, na.rm = TRUE),
+            min(gdf$gwr_intercept, na.rm = TRUE), max(gdf$gwr_intercept, na.rm = TRUE)))
+cat(sprintf("  Obesity    OLS = %.3f | GWR mean = %.3f range = [%.2f, %.2f]\n",
+            ols_b["pct_obesity"], mean(gdf$gwr_obesity, na.rm = TRUE),
+            min(gdf$gwr_obesity, na.rm = TRUE), max(gdf$gwr_obesity, na.rm = TRUE)))
+cat(sprintf("  SSE OLS = %.1f | SSE GWR = %.1f (%.1f%% reduction)\n",
+            sum(residuals(ols)^2), sum(gdf$gwr_resid^2, na.rm = TRUE),
+            (1 - sum(gdf$gwr_resid^2, na.rm = TRUE) / sum(residuals(ols)^2)) * 100))
 ```
-
-## 6. Knowledge Check
-1. Spatial lag model rho = 0.38. Interpret this parameter in clinical terms.
-2. SEM has lower AIC than SLM. Under what conceptual assumption should you prefer SEM?
-3. GWR shows poverty coefficient varying from 0.4 to 2.8 across counties. Is this capturing true heterogeneity or spatial artefact?
-4. OLS coefficient for poverty = 1.42, SLM = 0.95. Why does controlling for spatial autocorrelation reduce the poverty coefficient?
-5. Run GWR with two different bandwidths (h=5 and h=15). How does bandwidth affect the spatial smoothness of local coefficients?
 
 ```{r}
-# Exercise 5 — GWR bandwidth sensitivity
-cat("GWR bandwidth sensitivity (small sample, fast demo):\n")
-sp_sub <- spdf[1:50, ]
-for (bw in c(4.0, 8.0, 15.0)) {
-  gwr_bw <- gwr.basic(
-    cvd_rate ~ pct_poverty + pct_uninsured + pm25,
-    data = sp_sub, bw = bw, kernel = "gaussian", adaptive = FALSE
+p_int <- ggplot(gdf) +
+  geom_sf(aes(fill = gwr_intercept), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "Local β0", palette = "PuOr", direction = 1) +
+  labs(
+    title = "GWR local intercept",
+    subtitle = sprintf("Global OLS intercept = %.2f", ols_b["(Intercept)"])
+  ) +
+  theme_map()
+
+p_ob <- ggplot(gdf) +
+  geom_sf(aes(fill = gwr_obesity), colour = "white", linewidth = 0.05) +
+  scale_fill_distiller(name = "Local β", palette = "RdBu", direction = -1) +
+  labs(
+    title = "GWR local obesity coefficient",
+    subtitle = sprintf("Global OLS β = %.3f", ols_b["pct_obesity"])
+  ) +
+  theme_map()
+
+p_gwr <- (p_int | p_ob) +
+  plot_annotation(
+    title = sprintf(
+      "GWR coefficient surfaces — diabetes ~ obesity + age 65+ + uninsured (adaptive k = %d)",
+      gwr_bw
+    )
   )
-  beta_pov <- gwr_bw$SDF$pct_poverty
-  sse_bw <- sum(gwr_bw$SDF$residual^2)
-  cat(sprintf("  bandwidth=%.0f: poverty β range=[%.2f,%.2f] SD=%.3f SSE=%.1f\n",
-              bw, min(beta_pov), max(beta_pov), sd(beta_pov), sse_bw))
-}
-cat("\nSmaller bandwidth -> more local variation, higher risk of overfitting\n")
-cat("Larger bandwidth  -> smoother coefficients, approaches global OLS\n")
+print(p_gwr)
+ggsave(file.path(out_dir, "gwr_coefficients.png"), p_gwr,
+       width = 14, height = 5.5, dpi = 150)
 ```
+
+A wide range in the local obesity coefficient can reflect genuine regional differences in how obesity relates to diabetes (food systems, health-care access, age mixing) — or it can be a spatial artefact of noisy local fits. Always read GWR maps against the global OLS value and against whether the pattern is geographically coherent.
+
+## 7. Knowledge Check
+
+1. The spatial lag model's $\rho$ parameter quantifies the extent to which diabetes prevalence in one county is associated with values in neighbouring counties, beyond what is explained by covariates. How would you interpret a $\rho$ of about 0.4 clinically?
+2. When should you prefer the Spatial Error Model (SEM) over the Spatial Lag Model (SLM)?
+3. GWR shows the obesity coefficient varying widely across counties (for example from near 0 to well above the global OLS value). How would you decide whether this is true effect modification or a spatial artefact?
+4. Why can the obesity coefficient shrink when you move from OLS to SLM?
+5. Bandwidth acts as a smoothing parameter. What happens to local GWR coefficients if you use $k = 20$ nearest neighbours versus $k = 150$?
 
 ***
 **Next → NB-04: Disease Mapping & Bayesian Smoothing**

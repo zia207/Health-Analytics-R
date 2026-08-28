@@ -7,9 +7,9 @@ project:
 
 website:
   title: "Health Analytics with R"
-  site-url: https://zia207.github.io/Health-Analytics-with-Python/
+  site-url: https://zia207.github.io/Health-Analytics-R/
   description: "From raw EHR data to production-ready clinical models — 8 modules, 62 notebooks in R."
-  repo-url: https://github.com/zia207/Health-Analytics-with-Python
+  repo-url: https://github.com/zia207/Health-Analytics-R
   repo-actions: [edit, issue]
   page-navigation: true
   search:
@@ -24,7 +24,7 @@ website:
         text: Home
     right:
       - icon: github
-        href: https://github.com/zia207/Health-Analytics-with-Python
+        href: https://github.com/zia207/Health-Analytics-R
       - icon: linkedin
         href: https://www.linkedin.com/in/zia-ahmed207
       - text: "zia207@gmail.com"
@@ -43,141 +43,141 @@ website:
       - section: "**Module 01 - R Foundations** (Track A)"
         contents:
           - href: MOD01_NB01_R_Foundations_Health_Data.qmd
-            text: NB-01 · R Foundations for Health Data
+            text: "NB-01 \u00b7 R Foundations for Health Data"
           - href: MOD01_NB02_Descriptive_Statistics_Health_Metrics.qmd
-            text: "NB-02 · Descriptive Statistics & Health Metrics"
+            text: "NB-02 \u00b7 Descriptive Statistics & Health Metrics"
           - href: MOD01_NB03_Health_Data_Ecosystem_Codes.qmd
-            text: "NB-03 · Health Data Ecosystem & Codes"
+            text: "NB-03 \u00b7 Health Data Ecosystem & Codes"
       - section: "**Module 02 - Exploratory Data Analysis** (Track A)"
         contents:
           - href: MOD02_NB01_Data_Loading_Profiling.qmd
-            text: "Data Loading & Automated Profiling"
+            text: "NB-01 \u00b7 Data Loading & Automated Profiling"
           - href: MOD02_NB02_Descriptive_Statistics.qmd
-            text: Descriptive Statistics for Clinical Variables
+            text: "NB-02 \u00b7 Descriptive Statistics for Clinical Variables"
           - href: MOD02_NB03_Clinical_Visualisation.qmd
-            text: Visualising Clinical Distributions
+            text: "NB-03 \u00b7 Visualising Clinical Distributions"
           - href: MOD02_NB04_TimeSeries_Admissions.qmd
-            text: "Time-Series of Admissions & Clinical Events"
+            text: "NB-04 \u00b7 Time-Series of Admissions & Clinical Events"
           - href: MOD02_NB05_Missingness_Imputation.qmd
-            text: "Missingness Analysis & Imputation"
+            text: "NB-05 \u00b7 Missingness Analysis & Imputation"
           - href: MOD02_NB06_Comorbidity_Heatmap.qmd
-            text: Comorbidity Co-occurrence Heatmap
+            text: "NB-06 \u00b7 Comorbidity Co-occurrence Heatmap"
           - href: MOD02_NB07_Geospatial_Disparities.qmd
-            text: Geospatial Health Disparities Map
+            text: "NB-07 \u00b7 Geospatial Health Disparities Map"
           - href: MOD02_NB08_Capstone_Readmission_EDA.qmd
-            text: Capstone · End-to-End EDA on Readmission Risk
+            text: "NB-08 \u00b7 Capstone \u00b7 End-to-End EDA on Readmission Risk"
       - section: "**Module 03 - Statistical Inference** (Track A)"
         contents:
           - href: MOD03_NB01_Hypothesis_Testing.qmd
-            text: Hypothesis Testing for Health Outcomes
+            text: "NB-01 \u00b7 Hypothesis Testing for Health Outcomes"
           - href: MOD03_NB02_RR_OR_CI.qmd
-            text: "Relative Risk, Odds Ratios & Confidence Intervals"
+            text: "NB-02 \u00b7 Relative Risk, Odds Ratios & Confidence Intervals"
           - href: MOD03_NB03_Survival_Analysis.qmd
-            text: "Survival Analysis (Kaplan-Meier & Log-Rank)"
+            text: "NB-03 \u00b7 Survival Analysis (Kaplan-Meier & Log-Rank)"
           - href: MOD03_NB04_Linear_Regression.qmd
-            text: Linear Regression for Continuous Outcomes
+            text: "NB-04 \u00b7 Linear Regression for Continuous Outcomes"
           - href: MOD03_NB05_Logistic_Regression.qmd
-            text: Logistic Regression for Binary Outcomes
+            text: "NB-05 \u00b7 Logistic Regression for Binary Outcomes"
           - href: MOD03_NB06_Count_Regression.qmd
-            text: "Poisson & Negative Binomial Regression"
+            text: "NB-06 \u00b7 Poisson & Negative Binomial Regression"
           - href: MOD03_NB07_Confounding_EffectModification.qmd
-            text: "Confounding & Effect Modification"
+            text: "NB-07 \u00b7 Confounding & Effect Modification"
           - href: MOD03_NB08_Capstone_Inference.qmd
-            text: Capstone · Multivariable Inference Pipeline
+            text: "NB-08 \u00b7 Capstone \u00b7 Multivariable Inference Pipeline"
       - section: "**Module 04 - Machine Learning** (Track A)"
         contents:
           - href: MOD04_NB01_Pipeline_Splits.qmd
-            text: "ML Pipeline Setup & Train/Test Splits"
+            text: "NB-01 \u00b7 ML Pipeline Setup & Train/Test Splits"
           - href: MOD04_NB02_DecisionTree_RandomForest.qmd
-            text: "Decision Trees & Random Forest"
+            text: "NB-02 \u00b7 Decision Trees & Random Forest"
           - href: MOD04_NB03_XGBoost_LightGBM.qmd
-            text: "XGBoost & LightGBM"
+            text: "NB-03 \u00b7 XGBoost & LightGBM"
           - href: MOD04_NB04_Clinical_Model_Evaluation.qmd
-            text: Clinical Model Evaluation
+            text: "NB-04 \u00b7 Clinical Model Evaluation"
           - href: MOD04_NB05_Hyperparameter_Tuning.qmd
-            text: "Hyperparameter Tuning & Cross-Validation"
+            text: "NB-05 \u00b7 Hyperparameter Tuning & Cross-Validation"
           - href: MOD04_NB06_SHAP_Explainability.qmd
-            text: SHAP Explainability
+            text: "NB-06 \u00b7 SHAP Explainability"
           - href: MOD04_NB07_Clinical_Prediction_Models.qmd
-            text: Three Clinical Prediction Models
+            text: "NB-07 \u00b7 Three Clinical Prediction Models"
           - href: MOD04_NB08_Capstone_ML_Pipeline.qmd
-            text: Capstone · End-to-End Clinical ML Pipeline
+            text: "NB-08 \u00b7 Capstone \u00b7 End-to-End Clinical ML Pipeline"
       - section: "**Module 05 - NLP for Clinical Text** (Track A)"
         contents:
           - href: MOD05_NB01_Clinical_Text_Preprocessing.qmd
-            text: Clinical Text Preprocessing
+            text: "NB-01 \u00b7 Clinical Text Preprocessing"
           - href: MOD05_NB02_Clinical_NER.qmd
-            text: Clinical Named Entity Recognition
+            text: "NB-02 \u00b7 Clinical Named Entity Recognition"
           - href: MOD05_NB03_TF_IDF_Classification.qmd
-            text: "TF-IDF & Clinical Text Classification"
+            text: "NB-03 \u00b7 TF-IDF & Clinical Text Classification"
           - href: MOD05_NB04_Word_Embeddings.qmd
-            text: "Word Embeddings & Word2Vec"
+            text: "NB-04 \u00b7 Word Embeddings & Word2Vec"
           - href: MOD05_NB05_Clinical_BERT.qmd
-            text: "Clinical BERT (BioBERT & ClinicalBERT)"
+            text: "NB-05 \u00b7 Clinical BERT (BioBERT & ClinicalBERT)"
           - href: MOD05_NB06_ICD_Coding_Medications.qmd
-            text: "ICD Coding & Medication Extraction"
+            text: "NB-06 \u00b7 ICD Coding & Medication Extraction"
           - href: MOD05_NB07_Summarisation_ZeroShot.qmd
-            text: "Summarisation & Zero-Shot NLP"
+            text: "NB-07 \u00b7 Summarisation & Zero-Shot NLP"
           - href: MOD05_NB08_Capstone_Clinical_NLP.qmd
-            text: Capstone · End-to-End Clinical NLP Pipeline
+            text: "NB-08 \u00b7 Capstone \u00b7 End-to-End Clinical NLP Pipeline"
       - section: "**Module 06 - Causal Inference** (Track B)"
         contents:
           - href: MOD06_NB01_DAGs_Confounding.qmd
-            text: "DAGs, Confounding & Identification"
+            text: "NB-01 \u00b7 DAGs, Confounding & Identification"
           - href: MOD06_NB02_Propensity_Scores.qmd
-            text: Propensity Score Methods
+            text: "NB-02 \u00b7 Propensity Score Methods"
           - href: MOD06_NB03_DiD_EventStudy.qmd
-            text: "Difference-in-Differences & Event Studies"
+            text: "NB-03 \u00b7 Difference-in-Differences & Event Studies"
           - href: MOD06_NB04_ITS_SyntheticControl.qmd
-            text: "Interrupted Time Series & Synthetic Control"
+            text: "NB-04 \u00b7 Interrupted Time Series & Synthetic Control"
           - href: MOD06_NB05_IV_RDD.qmd
-            text: "Instrumental Variables & RDD"
+            text: "NB-05 \u00b7 Instrumental Variables & RDD"
           - href: MOD06_NB06_GComp_TMLE.qmd
-            text: "G-Computation, TMLE & Mediation"
+            text: "NB-06 \u00b7 G-Computation, TMLE & Mediation"
           - href: MOD06_NB07_Sensitivity_Reporting.qmd
-            text: "Sensitivity Analysis & Reporting"
+            text: "NB-07 \u00b7 Sensitivity Analysis & Reporting"
           - href: MOD06_NB08_Capstone_Causal_Pipeline.qmd
-            text: Capstone · Causal Inference Pipeline
-      - section: "**Module 07 - Geospatial Epidemiology** (Track B)"
+            text: "NB-08 \u00b7 Capstone \u00b7 Causal Inference Pipeline"
+      - section: "**Module 07 - Spatial Epidemiology** (Track B)"
         contents:
           - href: MOD07_NB01_Spatial_Data_Choropleth.qmd
-            text: "Spatial Data & Choropleth Mapping"
+            text: "NB-01 \u00b7 Spatial Data & Choropleth Mapping"
           - href: MOD07_NB02_Spatial_Autocorrelation.qmd
-            text: "Spatial Autocorrelation & Moran's I"
+            text: "NB-02 \u00b7 Spatial Autocorrelation & Moran's I"
           - href: MOD07_NB03_Spatial_Regression_GWR.qmd
-            text: "Spatial Regression: Lag, Error & GWR"
+            text: "NB-03 \u00b7 Spatial Regression: Lag, Error & GWR"
           - href: MOD07_NB04_Disease_Mapping_Bayes.qmd
-            text: "Disease Mapping & Bayesian Smoothing"
+            text: "NB-04 \u00b7 Disease Mapping & Bayesian Smoothing"
           - href: MOD07_NB05_Cluster_Detection.qmd
-            text: Spatial Cluster Detection
+            text: "NB-05 \u00b7 Spatial Cluster Detection"
           - href: MOD07_NB06_Environmental_Epidemiology.qmd
-            text: Environmental Epidemiology
+            text: "NB-06 \u00b7 Environmental Epidemiology"
           - href: MOD07_NB07_Health_Service_Access.qmd
-            text: "Health Service Area & Access Metrics"
+            text: "NB-07 \u00b7 Health Service Area & Access Metrics"
           - href: MOD07_NB08_Capstone_Spatial_Atlas.qmd
-            text: Capstone - Spatial Health Inequity Atlas
+            text: "NB-08 \u00b7 Capstone \u00b7 Spatial Health Inequity Atlas"
           - href: MOD07_NB09_Spatial_ML_LBC_Northeast.qmd
-            text: "Spatial ML - LBC Mortality (Northeast)"
+            text: "NB-09 \u00b7 Spatial ML \u2014 LBC Mortality (Northeast)"
           - href: MOD07_NB10_Geostatistical_Risk_Analysis.qmd
-            text: "Geostatistical Risk Analysis"
+            text: "NB-10 \u00b7 Geostatistical Risk Analysis"
       - section: "**Module 08 - Reproducible Research & Deployment** (Track B)"
         contents:
           - href: MOD08_NB01_Reproducible_Foundations.qmd
-            text: Reproducible Research Foundations
+            text: "NB-01 \u00b7 Reproducible Research Foundations"
           - href: MOD08_NB02_Quarto_Reports.qmd
-            text: Quarto Documents for Health Reports
+            text: "NB-02 \u00b7 Quarto Documents for Health Reports"
           - href: MOD08_NB03_Shiny_Dashboards.qmd
-            text: Shiny Dashboards
+            text: "NB-03 \u00b7 Shiny Dashboards"
           - href: MOD08_NB04_MLflow_Tracking.qmd
-            text: "MLflow Model Tracking & Registry"
+            text: "NB-04 \u00b7 MLflow Model Tracking & Registry"
           - href: MOD08_NB05_Plumber_Serving.qmd
-            text: Plumber for Clinical Model Serving
+            text: "NB-05 \u00b7 Plumber for Clinical Model Serving"
           - href: MOD08_NB06_Testing_CICD.qmd
-            text: "Testing, CI/CD & Code Quality"
+            text: "NB-06 \u00b7 Testing, CI/CD & Code Quality"
           - href: MOD08_NB07_ModelCards_Governance.qmd
-            text: "Model Cards & Clinical AI Governance"
+            text: "NB-07 \u00b7 Model Cards & Clinical AI Governance"
           - href: MOD08_NB08_Capstone_Deployment.qmd
-            text: Capstone · Full Deployment Pipeline
+            text: "NB-08 \u00b7 Capstone \u00b7 Full Deployment Pipeline"
   page-footer:
     left: "© CC-By Zia Ahmed, Upatta Analytics, 2026"
     right: "Built with [Quarto](https://quarto.org/)"

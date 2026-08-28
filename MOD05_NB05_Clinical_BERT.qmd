@@ -1,11 +1,9 @@
----
-title: "Clinical BERT (BioBERT & ClinicalBERT)"
-subtitle: "Module 05 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 05: NLP for Clinical Text
+### Module 05 — Clinical Text Preprocessing
+
+# Clinical BERT (BioBERT & ClinicalBERT)
+
 ***
 **Learning objectives**
 - Understand BERT bidirectional attention architecture

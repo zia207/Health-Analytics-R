@@ -1,11 +1,9 @@
----
-title: "MLflow Model Tracking & Registry"
-subtitle: "Module 08 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 08: Reproducible Research & Deployment
+### Module 08 - Reproducible Research & Deployment
+
+# MLflow Model Tracking & Registry
+
 ***
 **Learning objectives**
 - Understand MLflow's four core concepts: tracking, models, registry, projects
@@ -360,7 +358,7 @@ cat("Production model RDS:", file.path(mod08_dir, "artifacts", "production_model
 
 ## 6. Experiment Visualisation
 
-```{r}
+```{r, fig.width = 12, fig.height = 6}
 metrics_to_plot <- c("metric.auc_roc", "metric.avg_precision", "metric.brier_score")
 metric_labels   <- c("AUC-ROC", "Average Precision", "Brier Score")
 better          <- c("higher", "higher", "lower")

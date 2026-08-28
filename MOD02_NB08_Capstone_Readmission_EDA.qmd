@@ -1,11 +1,9 @@
----
-title: "Capstone · End-to-End EDA on Readmission Risk"
-subtitle: "Module 02 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 02: EDA in Healthcare
+### Module 02 — Capstone · End-to-End EDA on Readmission Risk
+
+# Capstone · End-to-End EDA on Readmission Risk
+
 ***
 **This capstone integrates NB-01 through NB-07 into a single reproducible EDA pipeline.**
 
@@ -491,7 +489,8 @@ print(
 
 ## 8. Step 7 — Multi-Panel EDA Summary Figure
 
-```{r}
+
+```{r, fig.width=22, fig.height=15}
 # Panel A — Age distribution by readmission
 p_a <- df %>%
   mutate(grp = if_else(readmitted_30 == 1, "Readmitted", "Not readmitted")) %>%

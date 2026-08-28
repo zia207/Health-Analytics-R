@@ -1,11 +1,9 @@
----
-title: "Three Clinical Prediction Models"
-subtitle: "Module 04 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 04: Machine Learning for Clinical Prediction
+### Module 04 — Machine Learning for Clinical Prediction
+
+# Three Clinical Prediction Models
+
 ***
 **Learning objectives**
 - Adapt the ML pipeline for three distinct clinical prediction tasks
@@ -100,6 +98,24 @@ cat(sprintf("Readmission rate: %.1f%%\n", mean(readmitted) * 100))
 
 ## 2. Model 1 — Sepsis Early Warning (High-Recall Classifier)
 
+**What does this section do?**
+
+This section introduces and explains the first example clinical prediction model: an early warning system for hospital sepsis built to prioritize high sensitivity. The goal is to develop a binary classifier that reliably identifies (predicts) patients who are developing or at risk for sepsis—an acute and potentially fatal medical condition. 
+
+**Key points explained:**
+- **Why high recall?**  
+  In clinical workflows, missing a true case of sepsis (false negative) can have severe consequences for the patient. Thus, the model is tuned to maximize recall (sensitivity), meaning it will catch as many cases as possible, even if that produces more false positives (unnecessary alerts).
+- **Features used:**  
+  The prediction is based on a combination of demographics, comorbidities, and real-time vital signs (like temperature, heart rate, blood pressure, labs).
+- **Model and technical steps:**  
+  The workflow includes data preprocessing, imputation for missing values, normalization, and uses XGBoost for classification. The model's decision threshold is specifically chosen to achieve at least 90% sensitivity on the validation data, ensuring most sepsis cases trigger an alert.
+- **Metrics:**  
+  The explanation covers how AUC (a broad discrimination measure), average precision (helpful in imbalanced settings), and clinical-threshold sensitivity/specificity/PPV are reported. Special attention is given to the practical meaning of sensitivity (recall) for real-world deployment.
+- **Clinical relevance:**  
+  The section underscores why such an approach—accepting more false alarms to reduce missed cases—is appropriate in high-stakes settings like sepsis detection. It helps learners appreciate the tradeoffs in applying ML to critical care, preparing them to set model thresholds according to actual clinical priorities and not just statistical optimization.
+
+In summary, this model exemplifies how to align a machine learning classifier to critical clinical goals—here, minimizing missed sepsis by maximizing recall, and understanding the tradeoffs involved.
+
 ```{r}
 VITALS <- c("temp", "hr", "sbp", "resp", "wbc", "lactate", "creatinine", "age")
 COMORB <- c("diabetes", "hf", "copd", "ckd", "immunocomp", "n_comorb")
@@ -151,7 +167,7 @@ cat(sprintf("  Alerts per 100 pts  : %.1f (NNAlert=%.1f)\n",
             (tp + fp) / length(ys_te) * 100, length(ys_te) / max(tp + fp, 1)))
 ```
 
-```{r}
+```{r, fig.width=10, fig.height=6}
 # Sepsis model evaluation figure
 imp_raw <- xgb.importance(model = gb_sepsis)
 feat_imp <- tibble(feature = imp_raw$Feature, importance = imp_raw$Gain) %>%
@@ -189,7 +205,11 @@ ggsave(file.path(mod04_dir, "sepsis_model.png"), width = 16, height = 5, dpi = 1
 
 ## 3. Model 2 — ICU Length-of-Stay Forecasting (Regression)
 
-```{r}
+This section focuses on building a model to predict the length of stay (LOS) for patients in the Intensive Care Unit (ICU), a numerical outcome best approached as a regression problem. Unlike classification (e.g., sepsis detection), here we estimate a continuous value—how many days a patient is likely to remain in the ICU—using clinical features such as vital signs, comorbidities, and indicators like sepsis.
+
+We train an XGBoost regression model using these features, evaluate its performance with standard regression metrics (MAE, RMSE, R²), and examine the predictions and their errors. Additionally, we estimate approximate prediction intervals to understand the uncertainty of the model's forecasts.
+
+```{r, fig.width=10, fig.height=6}
 LOS_FEATURES <- c(VITALS, COMORB, "sepsis")
 set.seed(42)
 df_l <- df %>% select(all_of(c(LOS_FEATURES, "icu_los")))
@@ -244,7 +264,11 @@ ggsave(file.path(mod04_dir, "los_model.png"), width = 13, height = 5, dpi = 120)
 
 ## 4. Model 3 — 30-Day Readmission Risk Score (Calibrated)
 
-```{r}
+This section introduces the third clinical prediction model: a 30-day readmission risk score built to provide a calibrated probability estimate for each patient. Unlike the previous models which focused on early warning or forecasting, this model estimates the probability of readmission within 30 days based on clinical features such as demographics, comorbidities, and hospital course (e.g., sepsis, ICU length of stay).
+
+We train an XGBoost classifier with a binary logistic objective, evaluate its performance using AUC (area under the ROC curve) and Brier score (which measures calibration), and perform risk stratification into four tiers based on the predicted probability. Additionally, we apply Platt scaling to calibrate the raw model probabilities, improving their clinical interpretability and reliability.
+
+```{r, fig.width=10, fig.height=6}
 RE_FEATURES <- c(VITALS, COMORB, "icu_los")
 set.seed(42)
 df_r <- df %>%
@@ -296,7 +320,20 @@ print(tier_summ)
 
 ## 5. Three-Model Deployment Summary
 
-```{r}
+This section summarizes the three clinical prediction models built in previous sections: sepsis early warning, ICU length-of-stay forecasting, and 30-day readmission risk scoring. It provides a comprehensive overview of how these models were developed, evaluated, and deployed in a real-world clinical setting.
+
+**Key points explained:**
+- **Model 1: Sepsis Early Warning**  
+  This model is designed to alert healthcare professionals when a patient is at high risk of developing sepsis, a severe and potentially life-threatening condition. It uses a high-sensitivity threshold to minimize missed cases, even at the cost of increased false alarms.
+- **Model 2: ICU Length-of-Stay Forecasting**  
+  This model estimates how many days a patient is likely to remain in the ICU, useful for bed management and resource allocation. It provides a continuous prediction rather than a binary alert.
+- **Model 3: 30-Day Readmission Risk Score**  
+  This model estimates the probability of readmission within 30 days, helping identify patients who may benefit from early intervention programs. It uses Platt scaling to improve calibration and risk stratification.
+
+**Deployment checklist:**  
+  The section includes a checklist of key considerations for deploying these models in a clinical setting, including threshold selection, model calibration, and risk stratification guidelines.
+
+```{r, fig.width=10, fig.height=6}
 pr_s <- yardstick::pr_curve(
   tibble(truth = factor(ys_te, levels = c(0, 1)), .pred = prob_sepsis),
   truth, .pred, event_level = "second"

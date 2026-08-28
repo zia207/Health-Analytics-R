@@ -15,6 +15,8 @@ R remains the language of choice for many epidemiologists and biostatisticians b
 **Dataset:** Synthetic (MIMIC-III inspired) · seed = 42 throughout  
 **Author:** Dr. Zia U. Ahmed · [Upatta Analytics](https://github.com/zia207)
 
+Companion series: [Health Analytics with Python](https://zia207.github.io/Health-Analytics-with-Python/)
+
 ## Why Health Analytics with R?
 
 Healthcare generates more data per person than almost any other industry — electronic health records, claims databases, imaging, genomics, wearables, and administrative files — yet much of it remains under-analysed. **This series bridges three gaps that most textbooks leave open:**
@@ -30,21 +32,35 @@ The eight modules form two learning tracks that can be taken independently or se
 | Track | Modules | Focus |
 |-------|---------|-------|
 | **Track A — Pharmacy & Clinical Analytics** | 01–05 | R foundations → EDA → statistical inference → machine learning → clinical NLP |
-| **Track B — Population Health & Deployment** | 06–08 | Causal inference → geospatial epidemiology → reproducible research and deployment |
+| **Track B — Population Health & Deployment** | 06–08 | Causal inference → spatial epidemiology → reproducible research and deployment |
 
 Each module contains multiple notebooks following a consistent arc: **Concepts → Core method → Case study → Extension → Capstone**.
+
+| # | Module | Clinical Focus | Notebooks |
+|---|--------|----------------|-----------|
+| 01 | **R Foundations** | EHR data structures, HIPAA-safe workflows | 3 |
+| 02 | **Exploratory Data Analysis** | Readmission cohort, missingness, comorbidity heatmaps | 8 |
+| 03 | **Statistical Inference** | RR/OR/CI, survival analysis, confounding | 8 |
+| 04 | **Machine Learning** | Clinical prediction, SHAP, calibration, DCA | 8 |
+| 05 | **NLP for Clinical Text** | De-identification, ICD coding, BERT, summarisation | 8 |
+| 06 | **Causal Inference** | DAGs, PS matching, DiD, ITS, TMLE, mediation | 8 |
+| 07 | **Spatial Epidemiology** | Cluster detection, BYM smoothing, 2SFCA, GWR, kriging | 10 |
+| 08 | **Reproducible Research** | Quarto reports, Shiny, MLflow, plumber, CI/CD | 8 |
 
 ## Getting Started
 
 1. Browse notebooks using the **sidebar** on the left — modules are organised by track.
 2. Clone the repository and install packages with `source("packages.R")`.
 3. Start with the [Series Overview](MOD00_NTRO_HealthR_Tutorial_Series.qmd) notebook for the full module guide.
-4. **Module 07 applied case study:** [NB-09 · Spatial ML — LBC Mortality (Northeast)](MOD07_NB09_Spatial_ML_LBC_Northeast.qmd) — real county data, hot-spot analysis, GWR, and GW-RF.
+4. **Module 07 applied case studies:**
+   - [NB-09 · Spatial ML — LBC Mortality (Northeast)](MOD07_NB09_Spatial_ML_LBC_Northeast.qmd) — real county data, hot-spot analysis, GWR, and GW-RF
+   - [NB-10 · Geostatistical Risk Analysis](MOD07_NB10_Geostatistical_Risk_Analysis.qmd) — indicator kriging of groundwater arsenic exceedance risk
 
 ```bash
-git clone https://github.com/zia207/Health-Analytics-with-Python.git
-cd Health-Analytics-with-Python/Health-Analytics-R
+git clone https://github.com/zia207/Health-Analytics-R.git
+cd Health-Analytics-R
 Rscript packages.R
+quarto preview
 ```
 
 Open any `.qmd` file in RStudio or VS Code and render with Quarto.

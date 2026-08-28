@@ -1,24 +1,25 @@
----
-title: "Spatial Autocorrelation & Moran's I"
-subtitle: "Module 07 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
+### Module 07: Spatial Epidemiology
+
+# Spatial Autocorrelation & Moran's I
+
 ***
 **Learning objectives**
 - Understand spatial autocorrelation: Tobler's First Law of Geography
 - Build spatial weights matrices (queen contiguity, rook, distance-based, k-NN)
-- Compute Global Moran's I and its significance via permutation
+- Compute Global Moran's I and its significance via analytic tests
 - Calculate Local Moran's I (LISA) to identify spatial clusters
 - Produce cluster maps: High-High, Low-Low, High-Low, Low-High quadrants
 - Interpret Moran scatterplots for health outcomes
+- Compare LISA with Getis-Ord G* hot-spot analysis
 
+**Data:** `Data/usa_data.csv` — CDC adult diabetes prevalence and County Health Rankings covariates for 3,108 US counties (CONUS + DC)  
+**Geometries:** `Data/US_COUNTY.shp` — county polygons in NAD83 Albers (EPSG:5070)  
 **Estimated time:** 3 hours | **Level:** Advanced  
 **Libraries:** `sf`, `spdep`, `ggplot2`, `dplyr`, `patchwork`
 
-## 1. Setup & Dataset
+## 1. Setup & US County Health Dataset
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -29,6 +30,7 @@ library(patchwork)
 set.seed(42)
 out_dir <- file.path(tempdir(), "mod07")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
 theme_set(
   theme_minimal(base_size = 11) +
     theme(
@@ -38,57 +40,77 @@ theme_set(
     )
 )
 
-spatial_smooth <- function(values, row_idx, col_idx, nrow, ncol, sigma = 2) {
-  grid <- matrix(0, nrow = nrow, ncol = ncol)
-  for (i in seq_along(values)) grid[row_idx[i], col_idx[i]] <- values[i]
-  k <- ceiling(3 * sigma)
-  xs <- (-k):k
-  kern <- outer(dnorm(xs, sd = sigma), dnorm(xs, sd = sigma))
-  kern <- kern / sum(kern)
-  pad <- k
-  gp <- matrix(0, nrow + 2 * pad, ncol + 2 * pad)
-  gp[(pad + 1):(pad + nrow), (pad + 1):(pad + ncol)] <- grid
-  out <- matrix(0, nrow, ncol)
-  for (r in seq_len(nrow)) {
-    for (c in seq_len(ncol)) {
-      out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
-    }
-  }
-  mapply(function(r, c) out[r, c], row_idx, col_idx)
+theme_map <- function() {
+  theme_void(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
+      plot.subtitle = element_text(size = 9, hjust = 0.5),
+      legend.position = "right"
+    )
 }
 
-NROW <- 10; NCOL <- 20; N <- NROW * NCOL
-row_idx <- rep(seq_len(NROW), each = NCOL)
-col_idx <- rep(seq_len(NCOL), times = NROW)
-lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
-lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
-pct_poverty   <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
-pct_uninsured <- 8 + 6 * rbeta(N, 2, 4) + 0.3 * pct_poverty
-pm25          <- 8 + 4 * rgamma(N, shape = 2, scale = 1)
-population    <- as.integer(rlnorm(N, 10.5, 1.0))
-spatial_risk  <- spatial_smooth(rnorm(N), row_idx, col_idx, NROW, NCOL, sigma = 2)
-cvd_rate <- (180 + 1.2 * pct_poverty + 0.8 * pct_uninsured + 0.5 * pm25 +
-               15 * spatial_risk + rnorm(N, 0, 12))
-expected <- (cvd_rate / 100000) * population * 5
-observed <- rpois(N, expected)
-smr <- observed / pmax(expected, 1)
+# County Health Rankings + CDC diabetes prevalence (CONUS + DC)
+raw <- read_csv("Data/usa_data.csv", show_col_types = FALSE)
+
+# Centroids stored as NAD83 Albers metres (EPSG:5070) — convert to WGS84 lon/lat
+pts <- st_as_sf(raw, coords = c("centroid_x_m", "centroid_y_m"), crs = 5070, remove = FALSE)
+pts_ll <- st_transform(pts, 4326)
+xy <- st_coordinates(pts_ll)
 
 df <- tibble(
-  county_id = sprintf("C%03d", seq_len(N) - 1),
-  lon, lat, row = row_idx, col = col_idx,
-  pct_poverty, pct_uninsured, pm25, population, cvd_rate,
-  observed, expected, smr, spatial_risk
+  county_id       = sprintf("%05d", as.integer(raw$fips)),
+  fips            = as.integer(raw$fips),
+  county          = raw$county,
+  state_abbr      = raw$state_abbr,
+  state_name      = raw$state_name,
+  lon             = xy[, 1],
+  lat             = xy[, 2],
+  x_m             = raw$centroid_x_m,
+  y_m             = raw$centroid_y_m,
+  diabetes_prev   = raw$y_diabetes_prevalence_adults_with_diabetes,
+  pct_65plus      = raw$chr_65_and_older_65_and_over,
+  pct_exercise    = raw$chr_access_to_exercise_opportunities,
+  pct_obesity     = raw$chr_adult_obesity,
+  food_env_index  = raw$chr_food_environment_index,
+  n_pcp           = raw$chr_primary_care_physicians,
+  rural_pop       = raw$chr_rural,
+  n_unemployed    = raw$chr_unemployment,
+  n_uninsured     = raw$chr_uninsured
 )
-geoms <- Map(function(lo, la) {
-  st_polygon(list(matrix(
-    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
-      lo - 1.25, la + 1, lo - 1.25, la - 1),
-    ncol = 2, byrow = TRUE
-  )))
-}, df$lon, df$lat)
-gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
-cat(sprintf("N=%d counties | CVD=%.1f/100k | Poverty=%.1f%%\n",
-            N, mean(cvd_rate), mean(pct_poverty)))
+
+# Standardised prevalence ratio: county rate / national mean (SMR analogue)
+df$smr <- df$diabetes_prev / mean(df$diabetes_prev, na.rm = TRUE)
+
+N_COUNTIES <- nrow(df)
+cat(sprintf(
+  "County dataset: N=%d | Diabetes: %.1f%% (SD=%.1f)\n",
+  N_COUNTIES, mean(df$diabetes_prev), sd(df$diabetes_prev)
+))
+cat(sprintf(
+  "Obesity: %.1f%% | 65+: %.1f%% | Food env. index: %.1f\n",
+  mean(df$pct_obesity), mean(df$pct_65plus), mean(df$food_env_index)
+))
+```
+
+Join tabular health data with US county polygons. Shannon County, SD (FIPS 46113) was renamed Oglala Lakota County (46102); recode before the join so the geometries match current FIPS.
+
+```{r}
+county_shapes <- st_read("Data/US_COUNTY.shp", quiet = TRUE)
+county_shapes$FIPS <- as.integer(county_shapes$FIPS)
+# Shannon County SD (46113) was renamed Oglala Lakota (46102)
+county_shapes$FIPS[county_shapes$FIPS == 46113] <- 46102
+
+gdf <- county_shapes %>%
+  inner_join(df, by = c("FIPS" = "fips"))
+bb <- st_bbox(gdf)
+
+cat(sprintf("sf object: %d counties | CRS: %s\n", nrow(gdf), st_crs(gdf)$input))
+cat(sprintf(
+  "Bounding box (Albers metres): xmin=%.0f ymin=%.0f xmax=%.0f ymax=%.0f\n",
+  bb["xmin"], bb["ymin"], bb["xmax"], bb["ymax"]
+))
 ```
 
 ## 2. Spatial Weights Matrix
@@ -96,140 +118,214 @@ cat(sprintf("N=%d counties | CVD=%.1f/100k | Poverty=%.1f%%\n",
 A **spatial weights matrix W** encodes the neighbourhood structure:
 - **Queen contiguity**: shares any boundary point or corner
 - **Rook contiguity**: shares an edge only
-- **Distance-based**: w_ij = 1 if distance < threshold
-- **k-NN**: each unit connected to its k nearest neighbours
-- **Inverse distance**: w_ij = 1/d_ij (continuous)
+- **Distance-based**: $w_{ij} = 1$ if distance $<$ threshold
+- **k-NN**: each unit connected to its $k$ nearest neighbours
+- **Inverse distance**: $w_{ij} = 1/d_{ij}$ (continuous)
 
-Row-standardisation: W* where each row sums to 1 (so W*x = spatial lag of x)
+Row-standardisation: $W^*$ where each row sums to 1 (so $W^*x$ = spatial lag of $x$).
+
+With 3,108 counties we **never** materialise a dense $n \times n$ matrix. `spdep` stores neighbours as an `nb` list and row-standardised weights as a `listw` object. Isolated island counties (no contiguous neighbour) are retained with `zero.policy = TRUE`: their spatial lag is set to 0 rather than `NA`.
 
 ```{r}
-# Queen / rook from the regular grid indices
-build_grid_nb <- function(row_idx, col_idx, type = c("queen", "rook")) {
-  type <- match.arg(type)
-  n <- length(row_idx)
-  nb <- vector("list", n)
-  for (i in seq_len(n)) {
-    dr <- abs(row_idx - row_idx[i])
-    dc <- abs(col_idx - col_idx[i])
-    if (type == "queen") {
-      nbrs <- which(dr <= 1 & dc <= 1 & !(dr == 0 & dc == 0))
-    } else {
-      nbrs <- which(((dr == 1 & dc == 0) | (dr == 0 & dc == 1)))
-    }
-    nb[[i]] <- if (length(nbrs)) as.integer(nbrs) else 0L
-  }
-  class(nb) <- "nb"
-  attr(nb, "region.id") <- as.character(seq_len(n))
-  attr(nb, "type") <- type
-  nb
-}
-
-nb_queen <- build_grid_nb(df$row, df$col, "queen")
+# Queen contiguity from county polygons
+nb_queen <- poly2nb(gdf, queen = TRUE)
 lw_queen <- nb2listw(nb_queen, style = "W", zero.policy = TRUE)
 
-coords <- cbind(df$lon, df$lat)
-nb_knn  <- knn2nb(knearneigh(coords, k = 6))
-lw_knn  <- nb2listw(nb_knn, style = "W")
+# k-nearest neighbours (k = 6) from Albers centroids (metres)
+coords <- cbind(gdf$x_m, gdf$y_m)
+nb_knn <- knn2nb(knearneigh(coords, k = 6))
+lw_knn <- nb2listw(nb_knn, style = "W", zero.policy = TRUE)
 
-# Distance threshold: twice the 90th percentile of nearest-neighbour distance
-nn1 <- knn2nb(knearneigh(coords, k = 1))
+# Distance band: twice the 90th percentile of nearest-neighbour distance
+nn1  <- knn2nb(knearneigh(coords, k = 1))
 nn_d <- unlist(nbdists(nn1, coords))
-thr  <- 2 * quantile(nn_d, 0.90)
+thr  <- as.numeric(2 * quantile(nn_d, 0.90))
 nb_dist <- dnearneigh(coords, 0, thr)
 lw_dist <- nb2listw(nb_dist, style = "W", zero.policy = TRUE)
 
-cat(sprintf("Queen W: %dx%d | Mean neighbours: %.1f\n",
-            N, N, mean(card(nb_queen))))
+n <- nrow(gdf)
+n_iso <- sum(card(nb_queen) == 0)
+cat(sprintf("Queen W: %dx%d | Mean neighbours: %.1f | Isolated islands: %d\n",
+            n, n, mean(card(nb_queen)), n_iso))
 cat(sprintf("KNN W  : %dx%d | Mean neighbours: %.1f\n",
-            N, N, mean(card(nb_knn))))
-cat(sprintf("Dist W : %dx%d | Mean neighbours: %.1f\n",
-            N, N, mean(card(nb_dist))))
+            n, n, mean(card(nb_knn))))
+cat(sprintf("Dist W : %dx%d | Mean neighbours: %.1f | threshold = %.0f m\n",
+            n, n, mean(card(nb_dist)), thr))
+if (n_iso > 0) {
+  cat("Island counties have zero queen neighbours; lags use zero.policy = TRUE.\n")
+}
 ```
+
+Queen contiguity is the default for the rest of this notebook (and for NB-03). k-NN and distance-band weights are useful sensitivity checks: k-NN guarantees every county has neighbours (no islands), while a distance band can leave remote counties unconnected.
 
 ## 3. Global Moran's I
 
+### What is Global Moran's I? (Math for Dummies)
+
+Global Moran's I is a single number that tells you whether places on a map with high (or low) values are clustered together, or scattered randomly.
+
+#### Math intuition (for dummies!):
+- Imagine you have values for every county, like the adult diabetes prevalence.
+- For each county, look at its value and the values of its neighbours (using a weights matrix $W$).
+- Moran's I compares:
+  - Are high values near other high values, and low near low? (clustering, Moran's I $> 0$)
+  - Are high and low values mixed up? (random, Moran's I $\approx 0$)
+  - Are high values near low, and vice versa? (checkerboard, Moran's I $< 0$)
+
+**The "for dummies" math:**
+
+1. First, for each county, subtract the average rate from its value. This gives you "how much above or below average is this county?" Call this $z$.
+2. Do the same for all counties so you have a list of $z$'s.
+3. Look up the neighbours for each county (using $W$), and see if a county's $z$ is similar to its neighbours' $z$'s.
+4. Moran's I formula looks like:
+
+$$
+I = \frac{N}{\sum W} \times \frac{\sum_i z_i \left( \sum_j W_{ij} z_j \right)}{\sum_i z_i^2}
+$$
+
+- **$N$**: Number of counties
+- **$W$**: The matrix showing who's neighbours with whom
+- **$z$**: Values after subtracting the mean
+
+- If "like is near like" a lot, $I$ is positive and big.
+- If there's no pattern, $I$ is close to zero.
+- If opposites are neighbours, $I$ is negative.
+
+**In short:** Moran's I = "Do neighbours tend to be similar, or not?"
+
+We use `spdep::moran.test()` (analytic randomisation moments) for the multi-variable table. A permutation histogram for diabetes uses `moran.mc()` with `nsim = 199` — 999 draws are more precise but slow on 3,108 counties; 199 is enough to see that the observed $I$ sits far in the tail.
+
 ```{r}
-print_moran <- function(x, lw, label) {
+moran_one <- function(x, lw, label) {
   mt <- moran.test(x, lw, zero.policy = TRUE, alternative = "two.sided")
-  mp <- moran.mc(x, lw, nsim = 999, zero.policy = TRUE, alternative = "two.sided")
   tibble(
     variable = label,
     I        = unname(mt$estimate["Moran I statistic"]),
     E_I      = unname(mt$estimate["Expectation"]),
     z_score  = unname(mt$statistic),
-    p_value  = mp$p.value
+    p_value  = mt$p.value
   )
 }
 
 moran_tab <- bind_rows(
-  print_moran(df$cvd_rate, lw_queen, "CVD rate"),
-  print_moran(df$pct_poverty, lw_queen, "Poverty (%)"),
-  print_moran(df$smr, lw_queen, "SMR"),
-  print_moran(df$pm25, lw_queen, "PM2.5")
+  moran_one(gdf$diabetes_prev,  lw_queen, "Diabetes (%)"),
+  moran_one(gdf$pct_obesity,    lw_queen, "Obesity (%)"),
+  moran_one(gdf$pct_65plus,     lw_queen, "Population 65+ (%)"),
+  moran_one(gdf$food_env_index, lw_queen, "Food env. index"),
+  moran_one(gdf$n_pcp,          lw_queen, "PCP count"),
+  moran_one(gdf$n_uninsured,    lw_queen, "Uninsured (count)"),
+  moran_one(gdf$smr,            lw_queen, "SPR")
 )
-print(moran_tab)
+print(moran_tab, n = Inf)
 
-# Moran I for CVD rate (main analysis)
-res_cvd <- moran.test(df$cvd_rate, lw_queen, zero.policy = TRUE, alternative = "two.sided")
-mc_cvd  <- moran.mc(df$cvd_rate, lw_queen, nsim = 999, zero.policy = TRUE)
-I_cvd   <- unname(res_cvd$estimate["Moran I statistic"])
-p_cvd   <- mc_cvd$p.value
-e_cvd   <- unname(res_cvd$estimate["Expectation"])
+res_diab <- moran.test(gdf$diabetes_prev, lw_queen,
+                       zero.policy = TRUE, alternative = "two.sided")
+mc_diab  <- moran.mc(gdf$diabetes_prev, lw_queen, nsim = 199,
+                     zero.policy = TRUE, alternative = "greater")
+I_diab   <- unname(res_diab$estimate["Moran I statistic"])
+e_diab   <- unname(res_diab$estimate["Expectation"])
+p_diab   <- res_diab$p.value
+cat(sprintf(
+  "\nDiabetes Moran's I = %.4f (E[I]=%.4f, z=%.2f, analytic p=%.4g; MC nsim=199 p=%.4g)\n",
+  I_diab, e_diab, unname(res_diab$statistic), p_diab, mc_diab$p.value
+))
 ```
 
-```{r}
-# Moran scatterplot (spdep::moran.plot) plus permutation histogram
-z_cvd  <- as.numeric(scale(df$cvd_rate))
-Wz_cvd <- lag.listw(lw_queen, z_cvd, zero.policy = TRUE)
+The Global Moran's I statistic quantifies the overall spatial autocorrelation of the variable across the study area.
+
+- A **positive** and significant Moran's I ($p < 0.05$) indicates that areas with high (or low) values cluster together — there is spatial clustering of similar values (either hot spots or cold spots).
+- A **negative** Moran's I suggests spatial dispersion — neighbouring areas tend to have dissimilar values.
+- A value near zero (and a non-significant $p$-value) indicates a random spatial pattern, with no evidence of spatial autocorrelation.
+
+In the results above, several variables — diabetes prevalence, obesity, percent aged 65+, food environment index, PCP count, uninsured count, and SPR — typically show a positive and statistically significant Moran's I. Counties with high values tend to sit next to other high-value counties (and low next to low). Large $z$-scores confirm that this clustering is unlikely to be chance. This is the quantitative version of Tobler's First Law applied to county health data.
+
+```{r, fig.width = 10, fig.height = 5}
+# Moran scatterplot: standardised diabetes vs its spatial lag
+z_diab  <- as.numeric(scale(gdf$diabetes_prev))
+Wz_diab <- lag.listw(lw_queen, z_diab, zero.policy = TRUE)
 quadrant <- case_when(
-  z_cvd > 0 & Wz_cvd > 0 ~ "High-High",
-  z_cvd < 0 & Wz_cvd < 0 ~ "Low-Low",
-  z_cvd > 0 & Wz_cvd < 0 ~ "High-Low",
-  TRUE                   ~ "Low-High"
+  z_diab > 0 & Wz_diab > 0 ~ "High-High",
+  z_diab < 0 & Wz_diab < 0 ~ "Low-Low",
+  z_diab > 0 & Wz_diab < 0 ~ "High-Low",
+  TRUE                     ~ "Low-High"
 )
 quad_colors <- c(
-  "High-High" = "#DC2626", "Low-Low" = "#2563EB",
-  "High-Low" = "#AEC6CF", "Low-High" = "#F4A582"
+  "High-High" = "#D65F5F", "Low-Low" = "#4878CF",
+  "High-Low"  = "#AEC6CF",  "Low-High" = "#F4A582"
 )
 
-p_scatter <- ggplot(tibble(z = z_cvd, Wz = Wz_cvd, q = quadrant), aes(z, Wz, colour = q)) +
-  geom_point(alpha = 0.75, size = 2) +
-  geom_smooth(method = "lm", se = FALSE, colour = "black", linewidth = 1, inherit.aes = FALSE,
-              mapping = aes(z, Wz)) +
+p_scatter <- ggplot(tibble(z = z_diab, Wz = Wz_diab, q = quadrant),
+                    aes(z, Wz, colour = q)) +
+  geom_point(alpha = 0.55, size = 0.9, stroke = 0) +
+  geom_smooth(aes(z, Wz), method = "lm", se = FALSE, colour = "black",
+              linewidth = 0.9, inherit.aes = FALSE) +
   geom_hline(yintercept = 0, colour = "grey50", linewidth = 0.4) +
   geom_vline(xintercept = 0, colour = "grey50", linewidth = 0.4) +
   scale_colour_manual(values = quad_colors) +
   labs(
-    x = "Standardised CVD rate (z)", y = "Spatial lag (W*z)", colour = NULL,
-    title = sprintf("Moran Scatterplot: CVD Rate\n(I=%.3f, p=%.4f)", I_cvd, p_cvd)
+    x = "Standardised diabetes prevalence (z)",
+    y = "Spatial lag (W*z)",
+    colour = NULL,
+    title = sprintf("Moran Scatterplot: Diabetes (%%)\n(I=%.3f, p=%.4g)", I_diab, p_diab)
   )
 
-p_perm <- ggplot(tibble(I = as.numeric(mc_cvd$res)), aes(I)) +
+I_perm <- as.numeric(mc_diab$res[-length(mc_diab$res)])
+p_perm <- ggplot(tibble(I = I_perm), aes(I)) +
   geom_histogram(bins = 40, fill = "#AEC6CF", colour = "white") +
-  geom_vline(xintercept = I_cvd, colour = "#DC2626", linewidth = 1.2) +
-  geom_vline(xintercept = e_cvd, colour = "grey40", linetype = "dashed") +
+  geom_vline(xintercept = I_diab, colour = "#D65F5F", linewidth = 1.2) +
+  geom_vline(xintercept = e_diab, colour = "grey40", linetype = "dashed") +
   labs(
     x = "Moran's I (permuted)", y = "Count",
-    title = sprintf("Permutation Distribution (B=999)\np=%.4f", p_cvd)
+    title = sprintf("Permutation distribution (B=199)\nMC p=%.4g", mc_diab$p.value)
   )
 
 p_moran <- p_scatter | p_perm
 print(p_moran)
-ggsave(file.path(out_dir, "morans_i.png"), p_moran, width = 14, height = 5, dpi = 150)
-
-# Official Moran scatterplot from spdep
-moran.plot(df$cvd_rate, lw_queen, labels = FALSE,
-           xlab = "CVD rate", ylab = "Spatial lag of CVD rate",
-           main = "spdep::moran.plot")
+ggsave(file.path(out_dir, "morans_i_diabetes.png"), p_moran,
+       width = 14, height = 5, dpi = 150)
 ```
+
+The slope of the Moran scatterplot equals (approximately) Moran's I: counties in the high-high and low-low quadrants pull $I$ up; high-low and low-high outliers pull it down.
 
 ## 4. Local Moran's I (LISA)
 
+Local Moran's I (LISA) helps us find out *where* on the map we have clusters of high or low values — for example, groups of counties with similarly high diabetes prevalence (hot spots) or low rates (cold spots).
+
+In simplest terms:
+
+- For each county, LISA compares its value (diabetes prevalence) to its neighbours.
+- It tells us if a county is surrounded by similar values ("cluster") or very different ones ("outlier").
+- We can map these results to *see* local hot/cold spots.
+
+The math, made simple. For each county $i$:
+
+$$
+I_i = \dfrac{(x_i - \bar{x})}{s^2} \sum_j w_{ij}(x_j - \bar{x})
+$$
+
+- $x_i$ = value at county $i$
+- $\bar{x}$ = average value across all counties
+- $w_{ij}$ = weight between county $i$ and neighbour $j$ (1 if neighbour, 0 if not, then row-standardised)
+- $s^2$ = variance of all values
+
+Interpretation:
+
+- **High-High (HH)**: County and neighbours have high values (hot spot)
+- **Low-Low (LL)**: County and neighbours have low values (cold spot)
+- **High-Low (HL)**: High-value county among low-value neighbours (outlier)
+- **Low-High (LH)**: Low-value county among high-value neighbours (outlier)
+- **NS**: Not significant (no clear cluster/outlier)
+
+In practical terms, LISA tells us not just *if* spatial clustering exists (like Moran's I), but *where* those clusters or outliers are on the map.
+
 ```{r}
-lisa <- localmoran(df$cvd_rate, lw_queen, zero.policy = TRUE)
+lisa <- localmoran(gdf$diabetes_prev, lw_queen, zero.policy = TRUE)
 gdf$lisa_i <- lisa[, "Ii"]
-gdf$lisa_p <- lisa[, "Pr(z != E(Ii))"]
-z_std <- as.numeric(scale(df$cvd_rate))
+# Column name is stable across recent spdep versions
+pcol <- grep("^Pr\\(", colnames(lisa), value = TRUE)[1]
+gdf$lisa_p <- lisa[, pcol]
+
+z_std <- as.numeric(scale(gdf$diabetes_prev))
 z_lag <- lag.listw(lw_queen, z_std, zero.policy = TRUE)
 quadrant_loc <- case_when(
   z_std > 0 & z_lag > 0 ~ "HH",
@@ -237,97 +333,299 @@ quadrant_loc <- case_when(
   z_std > 0 & z_lag < 0 ~ "HL",
   TRUE                  ~ "LH"
 )
-gdf$lisa_cluster <- ifelse(gdf$lisa_p < 0.05, quadrant_loc, "NS")
+gdf$lisa_cluster <- factor(
+  ifelse(gdf$lisa_p < 0.05, quadrant_loc, "NS"),
+  levels = c("HH", "LL", "HL", "LH", "NS")
+)
 
 cluster_colors <- c(
-  HH = "#DC2626", LL = "#2563EB", HL = "#F4A582", LH = "#92C5DE", NS = "#E0E0E0"
+  HH = "#D65F5F", LL = "#4878CF", HL = "#F4A582", LH = "#92C5DE", NS = "#E0E0E0"
 )
 
 p_lisa <- ggplot(gdf) +
-  geom_sf(aes(fill = lisa_cluster), colour = "white", linewidth = 0.15) +
-  scale_fill_manual(values = cluster_colors) +
+  geom_sf(aes(fill = lisa_cluster), colour = "white", linewidth = 0.05) +
+  scale_fill_manual(values = cluster_colors, drop = FALSE) +
   labs(
-    title = "LISA Cluster Map: CVD Mortality",
-    subtitle = "HH=hot spots, LL=cold spots, HL/LH=outliers",
-    fill = NULL, x = "Longitude", y = "Latitude"
-  )
+    title = "LISA cluster map: adult diabetes (%)",
+    subtitle = "HH = hot spots, LL = cold spots, HL/LH = outliers",
+    fill = NULL
+  ) +
+  theme_map()
 
-sig_lab <- ifelse(gdf$lisa_p < 0.05, "p < 0.05", "NS")
+sig_lab <- factor(ifelse(gdf$lisa_p < 0.05, "p < 0.05", "NS"),
+                  levels = c("p < 0.05", "NS"))
 p_sig <- ggplot(gdf) +
-  geom_sf(aes(fill = sig_lab), colour = "white", linewidth = 0.15) +
-  scale_fill_manual(values = c("p < 0.05" = "#DC2626", NS = "#E0E0E0")) +
+  geom_sf(aes(fill = sig_lab), colour = "white", linewidth = 0.05) +
+  scale_fill_manual(values = c("p < 0.05" = "#D65F5F", NS = "#E0E0E0"), drop = FALSE) +
   labs(
     title = sprintf(
-      "LISA Significance Map (p<0.05)\n%d significant counties (%.1f%%)",
-      sum(gdf$lisa_p < 0.05), mean(gdf$lisa_p < 0.05) * 100
+      "LISA significance map (p<0.05)\n%d significant counties (%.1f%%)",
+      sum(gdf$lisa_p < 0.05, na.rm = TRUE),
+      mean(gdf$lisa_p < 0.05, na.rm = TRUE) * 100
     ),
-    fill = NULL, x = "Longitude", y = "Latitude"
-  )
+    fill = NULL
+  ) +
+  theme_map()
 
 p_lisa_both <- p_lisa | p_sig
 print(p_lisa_both)
-ggsave(file.path(out_dir, "lisa_cluster_map.png"), p_lisa_both,
-       width = 16, height = 5, dpi = 150)
+ggsave(file.path(out_dir, "lisa_cluster_map_diabetes.png"), p_lisa_both,
+       width = 16, height = 6, dpi = 150)
 
-cat("LISA cluster summary:\n")
-print(gdf %>% st_drop_geometry() %>% count(lisa_cluster) %>%
-        mutate(pct = n / sum(n) * 100))
+cat("LISA cluster summary (diabetes):\n")
+print(
+  gdf %>%
+    st_drop_geometry() %>%
+    count(lisa_cluster, .drop = FALSE) %>%
+    mutate(pct = n / sum(n) * 100)
+)
 ```
 
-## 5. Getis-Ord G* Hot Spot Analysis
+The Local Indicators of Spatial Association (LISA) cluster map reveals spatial patterns in county-level diabetes prevalence:
+
+- **HH (High-High):** "Hot spot" counties with high diabetes rates surrounded by high-rate neighbours. These are potential priority regions for intervention.
+- **LL (Low-Low):** "Cold spot" counties with low rates next to other low-rate counties, indicating healthier spatial clusters.
+- **HL (High-Low):** High-rate counties surrounded by low-rate neighbours (potential spatial outliers).
+- **LH (Low-High):** Low-rate counties surrounded by high-rate neighbours (also spatial outliers).
+- **NS (Not Significant):** Counties where local Moran's I was not statistically significant ($p \ge 0.05$), indicating no strong local clustering.
+
+The left plot shows cluster type; the right plot highlights which counties were significant at $p < 0.05$. Because 3,108 tests are run at once, treat unadjusted local $p$-values as exploratory — they are not Bonferroni-corrected.
+
+## 5. Bivariate Local Moran's I
+
+The **Bivariate Local Moran's I** asks whether the value of one variable at a location (diabetes in county $i$) is related to the values of a *different* variable in neighbouring locations (obesity in nearby counties).
+
+**What does the bivariate statistic measure?**
+- Are *high* diabetes rates in county $A$ surrounded by *high* obesity rates in neighbouring counties?
+- Or are *low* diabetes rates surrounded by *low* obesity nearby?
+- Or is there a mismatch between the two variables?
+
+### Steps:
+
+1. **Choose two variables:**
+   - **$x$**: Value at the target location (diabetes prevalence in county $i$)
+   - **$y$**: Value in each neighbouring location (obesity in surrounding counties)
+
+2. **Standardise both variables:**
+   - Subtract each variable's mean and divide by its standard deviation.
+   - This gives both variables a *mean of 0* and *standard deviation of 1*.
+   - $$
+     z_{x,i} = \frac{x_i - \overline{x}}{s_x}
+     $$
+   - $$
+     z_{y,j} = \frac{y_j - \overline{y}}{s_y}
+     $$
+
+3. **For each county $i$, calculate the bivariate Local Moran's I:**
+   - $$
+     I_i = z_{x,i} \times \left( \sum_j w_{ij} \cdot z_{y,j} \right)
+     $$
+   - Where $w_{ij}$ = spatial weight between county $i$ and neighbour $j$.
+   - *Translation:* "How much is diabetes in county $i$ related to the (weighted) average obesity in its neighbours?"
+
+4. **What does the value mean?**
+   - **Large positive $I_i$**:
+     - County $i$ has high diabetes, surrounded by neighbours with high obesity (*High-High cluster*), or
+     - County $i$ has low diabetes, surrounded by low-obesity neighbours (*Low-Low cluster*).
+   - **Large negative $I_i$**:
+     - County $i$ is an *outlier*: for example, low diabetes in county $i$, but high obesity in neighbours (or vice versa).
+
+5. **Easy analogy:**
+   - Think of checking whether a high-diabetes county sits in a high-obesity neighbourhood — or whether it stands out as an exception among its neighbours.
+
+> Bivariate Local Moran's I shows whether *the value of one variable* at a location (diabetes) is spatially associated with *the value of a different variable* nearby (obesity). It also reveals *where* these connections or mismatches occur on your map.
+
+`spdep::localmoran_bv()` requires every county to have at least one neighbour, but two CONUS island counties have none under queen contiguity. We therefore compute $I_i = z_{x,i} \cdot (W z_y)$ with `lag.listw(..., zero.policy = TRUE)` and a local permutation of $z_y$ (`nsim = 199`). Island counties get lag 0.
+
+```{r, fig.width = 10, fig.height = 5}
+zx  <- as.numeric(scale(gdf$diabetes_prev))
+zy  <- as.numeric(scale(gdf$pct_obesity))
+Wzy <- lag.listw(lw_queen, zy, zero.policy = TRUE)
+Ii  <- zx * Wzy
+
+set.seed(42)
+nsim_bv <- 199
+count_ext <- integer(length(Ii))
+abs_Ii <- abs(Ii)
+for (b in seq_len(nsim_bv)) {
+  Wzy_p <- lag.listw(lw_queen, sample(zy), zero.policy = TRUE)
+  count_ext <- count_ext + as.integer(abs(zx * Wzy_p) >= abs_Ii)
+}
+bv_p <- (count_ext + 1) / (nsim_bv + 1)
+
+bv_quad <- case_when(
+  zx > 0 & Wzy > 0 ~ "HH",
+  zx < 0 & Wzy < 0 ~ "LL",
+  zx > 0 & Wzy < 0 ~ "HL",
+  TRUE             ~ "LH"
+)
+gdf$bivar_cluster <- factor(
+  ifelse(!is.na(bv_p) & bv_p < 0.05, bv_quad, "NS"),
+  levels = c("HH", "LL", "HL", "LH", "NS")
+)
+
+bv_colors <- c(
+  HH = "#d73027", LL = "#4575b4", HL = "#fdae61", LH = "#abd9e9", NS = "#ffffbf"
+)
+
+p_bv <- ggplot(gdf) +
+  geom_sf(aes(fill = bivar_cluster), colour = "white", linewidth = 0.05) +
+  scale_fill_manual(values = bv_colors, drop = FALSE) +
+  labs(
+    title = "Bivariate LISA: diabetes prevalence × obesity (neighbours)",
+    subtitle = "I_i = z_diabetes,i × lag(z_obesity); permutation p from 199 draws",
+    fill = NULL
+  ) +
+  theme_map()
+
+print(p_bv)
+ggsave(file.path(out_dir, "bivariate_lisa_diabetes_obesity.png"), p_bv,
+       width = 10, height = 6, dpi = 150)
+
+cat("Bivariate LISA cluster counts:\n")
+print(
+  gdf %>%
+    st_drop_geometry() %>%
+    count(bivar_cluster, .drop = FALSE) %>%
+    mutate(pct = n / sum(n) * 100)
+)
+```
+
+The bivariate Local Moran's I map colours each county by cluster type:
+
+- **HH (High-High):** Counties with high diabetes surrounded by neighbours with high obesity — spatial "hot spots" for both variables.
+- **LL (Low-Low):** Counties with low diabetes surrounded by low-obesity neighbours — "cold spots."
+- **HL (High-Low):** High diabetes but neighbours with low obesity — spatial outliers.
+- **LH (Low-High):** Low diabetes but neighbours with high obesity — the reverse outlier.
+- **NS (Not Significant):** No significant spatial association at $p < 0.05$.
+
+These clusters highlight places where diabetes and obesity reinforce each other geographically, and places that mismatch — useful for targeting interventions or investigating unusual regions.
+
+## 6. Getis-Ord G* Hot Spot Analysis
+
+The **Getis-Ord G\*** statistic finds "hot spots" (areas surrounded by other high-value areas) and "cold spots" (areas surrounded by other low-value areas).
+
+### How does it work?
+
+Imagine you want to know if a county with high diabetes is part of a hot spot (a cluster of high rates) or just a single high county in a sea of lower neighbours.
+
+**Step-by-step:**
+
+1. **Pick your variable:** diabetes prevalence in each county.
+
+2. **For each county ($i$):**
+   - Add up the rates in its "neighbourhood": itself **plus** all its neighbours.
+   - (This is different from Moran's I, which skips itself!)
+
+3. **Compare this local sum to the overall average:**
+   - If the total for that area is **much higher than average**, it's a **hot spot**.
+   - If it's **much lower**, it's a **cold spot**.
+
+4. **The actual G\* statistic:**
+   - It tells you (in standard-deviation units) how far above or below average this area's sum is compared to chance.
+   - Big positive G\* = hot spot (lots of high values together).
+   - Big negative G\* = cold spot (lots of low values together).
+
+**Key idea:** G\* finds places where clusters of high or low values occur more often than you'd expect just by chance.
+
+**Example:** "If my county plus my neighbours have much higher diabetes *together* than most, I show up as a hot spot."
+
+**Getis-Ord G\* vs LISA (Local Moran's I):**
+
+- **LISA:** Looks for spots where a place is "like its neighbours" (clusters) *and* places that are "unlike their neighbours" (outliers). The neighbourhood **excludes** the county itself.
+- **Getis-Ord G\*:** Pinpoints hot spots or cold spots — but not outliers. The neighbourhood **includes** the county itself (`include.self()`).
+- **LISA asks:** "Is my county's value surprisingly high/low *compared to* my neighbours? Am I part of a cluster, or an outlier?"
+- **G\* asks:** "Do my county and its neighbours *together* have a sum much bigger/smaller than average?" Outliers (a high surrounded by lows) are not flagged.
+
+Use LISA when you want clusters *and* outliers; use G\* when you want a simple hot/cold targeting map.
 
 ```{r}
-# G* includes self in the neighbourhood
-lw_gstar <- nb2listw(include.self(nb_queen), style = "B", zero.policy = TRUE)
-g_star <- localG(df$cvd_rate, lw_gstar, zero.policy = TRUE)
+# G* includes self; binary (non-standardised) weights
+nb_gstar <- include.self(nb_queen)
+lw_gstar <- nb2listw(nb_gstar, style = "B", zero.policy = TRUE)
+g_star <- localG(gdf$diabetes_prev, lw_gstar, zero.policy = TRUE)
+
 gdf$g_star   <- as.numeric(g_star)
 gdf$g_star_p <- 2 * pnorm(-abs(gdf$g_star))
 
-gdf$hotspot_class <- case_when(
-  gdf$g_star >  2.58 & gdf$g_star_p < 0.01 ~ "Hot spot 99%",
-  gdf$g_star >  1.96 & gdf$g_star_p < 0.05 ~ "Hot spot 95%",
-  gdf$g_star < -2.58 & gdf$g_star_p < 0.01 ~ "Cold spot 99%",
-  gdf$g_star < -1.96 & gdf$g_star_p < 0.05 ~ "Cold spot 95%",
-  TRUE                                     ~ "Not significant"
+gdf$hotspot_class <- factor(
+  case_when(
+    gdf$g_star >  2.58 ~ "Hot spot 99%",
+    gdf$g_star >  1.96 ~ "Hot spot 95%",
+    gdf$g_star < -2.58 ~ "Cold spot 99%",
+    gdf$g_star < -1.96 ~ "Cold spot 95%",
+    TRUE               ~ "Not significant"
+  ),
+  levels = c("Hot spot 99%", "Hot spot 95%", "Cold spot 95%",
+             "Cold spot 99%", "Not significant")
 )
 hs_colors <- c(
-  "Hot spot 99%" = "#D73027", "Hot spot 95%" = "#FC8D59",
-  "Cold spot 99%" = "#4575B4", "Cold spot 95%" = "#91BFDB",
-  "Not significant" = "#E0E0E0"
+  "Hot spot 99%"     = "#D73027",
+  "Hot spot 95%"     = "#FC8D59",
+  "Cold spot 95%"    = "#91BFDB",
+  "Cold spot 99%"    = "#4575B4",
+  "Not significant"  = "#E0E0E0"
 )
 
 p_hs <- ggplot(gdf) +
-  geom_sf(aes(fill = hotspot_class), colour = "white", linewidth = 0.15) +
-  scale_fill_manual(values = hs_colors) +
+  geom_sf(aes(fill = hotspot_class), colour = "white", linewidth = 0.05) +
+  scale_fill_manual(values = hs_colors, drop = FALSE) +
   labs(
-    title = "Getis-Ord G* Hot Spot Analysis: CVD Mortality",
-    fill = NULL, x = "Longitude", y = "Latitude"
-  )
+    title = "Getis-Ord G* hot spot analysis: adult diabetes prevalence",
+    fill = NULL
+  ) +
+  theme_map()
+
 print(p_hs)
-ggsave(file.path(out_dir, "getis_ord_gstar.png"), p_hs, width = 10, height = 6, dpi = 150)
-print(table(gdf$hotspot_class))
+ggsave(file.path(out_dir, "getis_ord_gstar_diabetes.png"), p_hs,
+       width = 10, height = 6, dpi = 150)
+
+cat("G* class counts:\n")
+print(
+  gdf %>%
+    st_drop_geometry() %>%
+    count(hotspot_class, .drop = FALSE) %>%
+    mutate(pct = n / sum(n) * 100)
+)
 ```
 
-## 6. Knowledge Check
-1. Global Moran's I = 0.42 (p<0.001). Does this tell us *where* the spatial clusters are?
-2. A LISA map shows an HL outlier (High-Low): a high CVD county surrounded by low-CVD counties. List three explanations.
-3. You used queen contiguity weights. How would switching to k-NN (k=8) change the Moran's I estimate?
-4. Why should LISA p-values be interpreted cautiously given that you're running 200 local tests?
-5. Compute Moran's I for the *residuals* from an OLS regression of CVD on poverty. Interpret the result.
+## 7. Knowledge Check
+
+1. Global Moran's I $= 0.42$ ($p < 0.001$). Does this statistic inform us about the *location* of spatial clusters? Explain.
+2. A LISA map identifies an HL (High-Low) outlier — a county with high diabetes surrounded by counties with low diabetes. List three plausible reasons for such a spatial outlier:
+   - (a) __
+   - (b) __
+   - (c) __
+3. If you switched from queen contiguity weights to k-nearest neighbour ($k = 8$) spatial weights, how would you expect the calculated Moran's I to change? Why?
+4. When interpreting LISA $p$-values, why is it important to be cautious given that 3,108 local tests are conducted simultaneously?
+5. Calculate Moran's I for the *residuals* from an OLS regression of diabetes on obesity, SPR, and uninsured count. What does the result tell you about spatial dependence after adjustment?
 
 ```{r}
-# Exercise 5 — Moran's I on OLS residuals
-ols <- lm(cvd_rate ~ pct_poverty + pct_uninsured + pm25, data = df)
-mt_ols <- moran.test(residuals(ols), lw_queen, zero.policy = TRUE)
-mc_ols <- moran.mc(residuals(ols), lw_queen, nsim = 499, zero.policy = TRUE)
-cat(sprintf("Moran's I on CVD rate           : %.4f (p=%.4f)\n", I_cvd, p_cvd))
-cat(sprintf("Moran's I on OLS residuals      : %.4f (p=%.4f)\n",
-            unname(mt_ols$estimate["Moran I statistic"]), mc_ols$p.value))
-if (mc_ols$p.value < 0.05) {
-  cat("Significant residual spatial autocorrelation -> OLS is biased!\n")
-  cat("Need spatial regression models (spatial lag or spatial error).\n")
+# Exercise 5 — Moran's I on OLS residuals vs raw diabetes
+ols <- lm(diabetes_prev ~ pct_obesity + smr + n_uninsured, data = gdf)
+mt_raw  <- moran.test(gdf$diabetes_prev, lw_queen,
+                      zero.policy = TRUE, alternative = "two.sided")
+mt_ols  <- moran.test(residuals(ols), lw_queen,
+                      zero.policy = TRUE, alternative = "two.sided")
+
+cat(sprintf("OLS R-squared: %.4f\n", summary(ols)$r.squared))
+cat(sprintf(
+  "Moran's I on diabetes prevalence : %.4f (p=%.4g)\n",
+  unname(mt_raw$estimate["Moran I statistic"]), mt_raw$p.value
+))
+cat(sprintf(
+  "Moran's I on OLS residuals       : %.4f (p=%.4g)\n",
+  unname(mt_ols$estimate["Moran I statistic"]), mt_ols$p.value
+))
+cat("Note: SPR (smr) is diabetes / national mean, so it is a rescaling of the outcome;\n")
+cat("residual Moran's I will drop sharply. Compare with a non-circular specification\n")
+cat("in NB-03 (diabetes ~ obesity + % aged 65+ + uninsured).\n")
+
+if (mt_ols$p.value < 0.05) {
+  cat("Significant residual spatial autocorrelation -> OLS inference is suspect.\n")
+  cat("Need spatial regression models (spatial lag or spatial error) — see NB-03.\n")
 } else {
-  cat("Residual spatial autocorrelation removed by covariate adjustment.\n")
+  cat("Residual spatial autocorrelation is not significant after this adjustment.\n")
 }
 ```
 

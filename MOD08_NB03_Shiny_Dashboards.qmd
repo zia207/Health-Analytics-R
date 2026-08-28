@@ -1,11 +1,9 @@
----
-title: "Shiny Dashboards"
-subtitle: "Module 08 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 08: Reproducible Research & Deployment
+### Module 08 - Reproducible Research & Deployment
+
+# Shiny Dashboards
+
 ***
 **Learning objectives**
 - Build a multi-tab clinical analytics Shiny dashboard
@@ -359,7 +357,7 @@ cat(" ", file.path(app_dir, "server.R"), "\n")
 
 ## 4. Dashboard Preview (ggplot2 simulation)
 
-```{r}
+```{r, fig.width = 12, fig.height = 8}
 # Demonstrate Shiny component patterns without running the server
 set.seed(42)
 split <- initial_split(df, prop = 0.8, strata = readmitted)

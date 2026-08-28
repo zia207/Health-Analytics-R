@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Spatial Data &amp; Choropleth Mapping – Health Analytics with R</title>
+<title>mod07_nb01_spatial_data_choropleth – Health Analytics with R</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -132,7 +132,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-with-Python"> <i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/zia207/Health-Analytics-R"> <i class="bi bi-github" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -156,7 +156,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html">Spatial Data &amp; Choropleth Mapping</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html">NB-01 · Spatial Data &amp; Choropleth Mapping</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -166,24 +166,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-body"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html">Spatial Data &amp; Choropleth Mapping</a></li></ol></nav>
-      <h1 class="title">Spatial Data &amp; Choropleth Mapping</h1>
-            <p class="subtitle lead">Module 07 — Health Analytics with R</p>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</a></li><li class="breadcrumb-item"><a href="./MOD07_NB01_Spatial_Data_Choropleth.html">NB-01 · Spatial Data &amp; Choropleth Mapping</a></li></ol></nav></header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
@@ -263,49 +246,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB01_Data_Loading_Profiling.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Loading &amp; Automated Profiling</span></a>
+ <span class="menu-text">NB-01 · Data Loading &amp; Automated Profiling</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB02_Descriptive_Statistics.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Descriptive Statistics for Clinical Variables</span></a>
+ <span class="menu-text">NB-02 · Descriptive Statistics for Clinical Variables</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB03_Clinical_Visualisation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Visualising Clinical Distributions</span></a>
+ <span class="menu-text">NB-03 · Visualising Clinical Distributions</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB04_TimeSeries_Admissions.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Time-Series of Admissions &amp; Clinical Events</span></a>
+ <span class="menu-text">NB-04 · Time-Series of Admissions &amp; Clinical Events</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB05_Missingness_Imputation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Missingness Analysis &amp; Imputation</span></a>
+ <span class="menu-text">NB-05 · Missingness Analysis &amp; Imputation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB06_Comorbidity_Heatmap.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Comorbidity Co-occurrence Heatmap</span></a>
+ <span class="menu-text">NB-06 · Comorbidity Co-occurrence Heatmap</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB07_Geospatial_Disparities.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Geospatial Health Disparities Map</span></a>
+ <span class="menu-text">NB-07 · Geospatial Health Disparities Map</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD02_NB08_Capstone_Readmission_EDA.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End EDA on Readmission Risk</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End EDA on Readmission Risk</span></a>
   </div>
 </li>
       </ul>
@@ -322,49 +305,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB01_Hypothesis_Testing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hypothesis Testing for Health Outcomes</span></a>
+ <span class="menu-text">NB-01 · Hypothesis Testing for Health Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB02_RR_OR_CI.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
+ <span class="menu-text">NB-02 · Relative Risk, Odds Ratios &amp; Confidence Intervals</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB03_Survival_Analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
+ <span class="menu-text">NB-03 · Survival Analysis (Kaplan-Meier &amp; Log-Rank)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB04_Linear_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Linear Regression for Continuous Outcomes</span></a>
+ <span class="menu-text">NB-04 · Linear Regression for Continuous Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB05_Logistic_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Logistic Regression for Binary Outcomes</span></a>
+ <span class="menu-text">NB-05 · Logistic Regression for Binary Outcomes</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB06_Count_Regression.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Poisson &amp; Negative Binomial Regression</span></a>
+ <span class="menu-text">NB-06 · Poisson &amp; Negative Binomial Regression</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB07_Confounding_EffectModification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Confounding &amp; Effect Modification</span></a>
+ <span class="menu-text">NB-07 · Confounding &amp; Effect Modification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD03_NB08_Capstone_Inference.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Multivariable Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Multivariable Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -381,49 +364,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB01_Pipeline_Splits.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ML Pipeline Setup &amp; Train/Test Splits</span></a>
+ <span class="menu-text">NB-01 · ML Pipeline Setup &amp; Train/Test Splits</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB02_DecisionTree_RandomForest.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Decision Trees &amp; Random Forest</span></a>
+ <span class="menu-text">NB-02 · Decision Trees &amp; Random Forest</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB03_XGBoost_LightGBM.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">XGBoost &amp; LightGBM</span></a>
+ <span class="menu-text">NB-03 · XGBoost &amp; LightGBM</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB04_Clinical_Model_Evaluation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Model Evaluation</span></a>
+ <span class="menu-text">NB-04 · Clinical Model Evaluation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB05_Hyperparameter_Tuning.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Hyperparameter Tuning &amp; Cross-Validation</span></a>
+ <span class="menu-text">NB-05 · Hyperparameter Tuning &amp; Cross-Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB06_SHAP_Explainability.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">SHAP Explainability</span></a>
+ <span class="menu-text">NB-06 · SHAP Explainability</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB07_Clinical_Prediction_Models.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Three Clinical Prediction Models</span></a>
+ <span class="menu-text">NB-07 · Three Clinical Prediction Models</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD04_NB08_Capstone_ML_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical ML Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical ML Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -440,49 +423,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB01_Clinical_Text_Preprocessing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Text Preprocessing</span></a>
+ <span class="menu-text">NB-01 · Clinical Text Preprocessing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB02_Clinical_NER.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical Named Entity Recognition</span></a>
+ <span class="menu-text">NB-02 · Clinical Named Entity Recognition</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB03_TF_IDF_Classification.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">TF-IDF &amp; Clinical Text Classification</span></a>
+ <span class="menu-text">NB-03 · TF-IDF &amp; Clinical Text Classification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB04_Word_Embeddings.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Word Embeddings &amp; Word2Vec</span></a>
+ <span class="menu-text">NB-04 · Word Embeddings &amp; Word2Vec</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB05_Clinical_BERT.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
+ <span class="menu-text">NB-05 · Clinical BERT (BioBERT &amp; ClinicalBERT)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB06_ICD_Coding_Medications.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">ICD Coding &amp; Medication Extraction</span></a>
+ <span class="menu-text">NB-06 · ICD Coding &amp; Medication Extraction</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB07_Summarisation_ZeroShot.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Summarisation &amp; Zero-Shot NLP</span></a>
+ <span class="menu-text">NB-07 · Summarisation &amp; Zero-Shot NLP</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD05_NB08_Capstone_Clinical_NLP.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · End-to-End Clinical NLP Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · End-to-End Clinical NLP Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -499,49 +482,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB01_DAGs_Confounding.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">DAGs, Confounding &amp; Identification</span></a>
+ <span class="menu-text">NB-01 · DAGs, Confounding &amp; Identification</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB02_Propensity_Scores.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Propensity Score Methods</span></a>
+ <span class="menu-text">NB-02 · Propensity Score Methods</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB03_DiD_EventStudy.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Difference-in-Differences &amp; Event Studies</span></a>
+ <span class="menu-text">NB-03 · Difference-in-Differences &amp; Event Studies</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB04_ITS_SyntheticControl.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Interrupted Time Series &amp; Synthetic Control</span></a>
+ <span class="menu-text">NB-04 · Interrupted Time Series &amp; Synthetic Control</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB05_IV_RDD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Instrumental Variables &amp; RDD</span></a>
+ <span class="menu-text">NB-05 · Instrumental Variables &amp; RDD</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB06_GComp_TMLE.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">G-Computation, TMLE &amp; Mediation</span></a>
+ <span class="menu-text">NB-06 · G-Computation, TMLE &amp; Mediation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB07_Sensitivity_Reporting.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Sensitivity Analysis &amp; Reporting</span></a>
+ <span class="menu-text">NB-07 · Sensitivity Analysis &amp; Reporting</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Causal Inference Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Causal Inference Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -549,7 +532,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
- <span class="menu-text"><strong>Module 07 - Geospatial Epidemiology</strong> (Track B)</span></a>
+ <span class="menu-text"><strong>Module 07 - Spatial Epidemiology</strong> (Track B)</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -558,61 +541,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB01_Spatial_Data_Choropleth.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Spatial Data &amp; Choropleth Mapping</span></a>
+ <span class="menu-text">NB-01 · Spatial Data &amp; Choropleth Mapping</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Autocorrelation &amp; Moran's I</span></a>
+ <span class="menu-text">NB-02 · Spatial Autocorrelation &amp; Moran's I</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB03_Spatial_Regression_GWR.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Regression: Lag, Error &amp; GWR</span></a>
+ <span class="menu-text">NB-03 · Spatial Regression: Lag, Error &amp; GWR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB04_Disease_Mapping_Bayes.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Disease Mapping &amp; Bayesian Smoothing</span></a>
+ <span class="menu-text">NB-04 · Disease Mapping &amp; Bayesian Smoothing</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB05_Cluster_Detection.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial Cluster Detection</span></a>
+ <span class="menu-text">NB-05 · Spatial Cluster Detection</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB06_Environmental_Epidemiology.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Environmental Epidemiology</span></a>
+ <span class="menu-text">NB-06 · Environmental Epidemiology</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB07_Health_Service_Access.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Health Service Area &amp; Access Metrics</span></a>
+ <span class="menu-text">NB-07 · Health Service Area &amp; Access Metrics</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB08_Capstone_Spatial_Atlas.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone - Spatial Health Inequity Atlas</span></a>
+ <span class="menu-text">NB-08 · Capstone · Spatial Health Inequity Atlas</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB09_Spatial_ML_LBC_Northeast.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Spatial ML - LBC Mortality (Northeast)</span></a>
+ <span class="menu-text">NB-09 · Spatial ML — LBC Mortality (Northeast)</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD07_NB10_Geostatistical_Risk_Analysis.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Geostatistical Risk Analysis</span></a>
+ <span class="menu-text">NB-10 · Geostatistical Risk Analysis</span></a>
   </div>
 </li>
       </ul>
@@ -629,49 +612,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB01_Reproducible_Foundations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Reproducible Research Foundations</span></a>
+ <span class="menu-text">NB-01 · Reproducible Research Foundations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB02_Quarto_Reports.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Quarto Documents for Health Reports</span></a>
+ <span class="menu-text">NB-02 · Quarto Documents for Health Reports</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB03_Shiny_Dashboards.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Shiny Dashboards</span></a>
+ <span class="menu-text">NB-03 · Shiny Dashboards</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB04_MLflow_Tracking.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">MLflow Model Tracking &amp; Registry</span></a>
+ <span class="menu-text">NB-04 · MLflow Model Tracking &amp; Registry</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB05_Plumber_Serving.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Plumber for Clinical Model Serving</span></a>
+ <span class="menu-text">NB-05 · Plumber for Clinical Model Serving</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB06_Testing_CICD.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Testing, CI/CD &amp; Code Quality</span></a>
+ <span class="menu-text">NB-06 · Testing, CI/CD &amp; Code Quality</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB07_ModelCards_Governance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Model Cards &amp; Clinical AI Governance</span></a>
+ <span class="menu-text">NB-07 · Model Cards &amp; Clinical AI Governance</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./MOD08_NB08_Capstone_Deployment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Capstone · Full Deployment Pipeline</span></a>
+ <span class="menu-text">NB-08 · Capstone · Full Deployment Pipeline</span></a>
   </div>
 </li>
       </ul>
@@ -686,20 +669,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology" id="toc-health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="nav-link active" data-scroll-target="#health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</a></li>
-  <li><a href="#setup-synthetic-county-health-dataset" id="toc-setup-synthetic-county-health-dataset" class="nav-link" data-scroll-target="#setup-synthetic-county-health-dataset">1. Setup &amp; Synthetic County Health Dataset</a></li>
+  <li><a href="#module-07-spatial-epidemiology" id="toc-module-07-spatial-epidemiology" class="nav-link active" data-scroll-target="#module-07-spatial-epidemiology">Module 07: Spatial Epidemiology</a></li>
+  <li><a href="#choropleth-mapping" id="toc-choropleth-mapping" class="nav-link" data-scroll-target="#choropleth-mapping">Choropleth Mapping</a>
+  <ul class="collapse">
+  <li><a href="#setup-us-county-health-dataset" id="toc-setup-us-county-health-dataset" class="nav-link" data-scroll-target="#setup-us-county-health-dataset">1. Setup &amp; US County Health Dataset</a></li>
   <li><a href="#spatial-data-structures-in-health-analytics" id="toc-spatial-data-structures-in-health-analytics" class="nav-link" data-scroll-target="#spatial-data-structures-in-health-analytics">2. Spatial Data Structures in Health Analytics</a></li>
-  <li><a href="#choropleth-map-cvd-mortality-rate" id="toc-choropleth-map-cvd-mortality-rate" class="nav-link" data-scroll-target="#choropleth-map-cvd-mortality-rate">3. Choropleth Map — CVD Mortality Rate</a></li>
+  <li><a href="#choropleth-map-diabetes-prevalence-risk-factors" id="toc-choropleth-map-diabetes-prevalence-risk-factors" class="nav-link" data-scroll-target="#choropleth-map-diabetes-prevalence-risk-factors">3. Choropleth Map — Diabetes Prevalence &amp; Risk Factors</a></li>
   <li><a href="#classification-schemes-for-health-maps" id="toc-classification-schemes-for-health-maps" class="nav-link" data-scroll-target="#classification-schemes-for-health-maps">4. Classification Schemes for Health Maps</a></li>
-  <li><a href="#age-standardised-rate-computation" id="toc-age-standardised-rate-computation" class="nav-link" data-scroll-target="#age-standardised-rate-computation">5. Age-Standardised Rate Computation</a></li>
+  <li><a href="#age-structure-crude-vs-adjusted-prevalence" id="toc-age-structure-crude-vs-adjusted-prevalence" class="nav-link" data-scroll-target="#age-structure-crude-vs-adjusted-prevalence">5. Age Structure — Crude vs Adjusted Prevalence</a></li>
   <li><a href="#spatial-join-linking-point-data-to-polygons" id="toc-spatial-join-linking-point-data-to-polygons" class="nav-link" data-scroll-target="#spatial-join-linking-point-data-to-polygons">6. Spatial Join — Linking Point Data to Polygons</a></li>
   <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">7. Knowledge Check</a></li>
+  </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB01_Spatial_Data_Choropleth.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB01_Spatial_Data_Choropleth.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
-
 
 
 
@@ -709,15 +694,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><img src="Images/banner_health_analytics.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
-<section id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology" class="level3">
-<h3 class="anchored" data-anchor-id="health-analytics-with-r-module-07-geospatial-spatial-epidemiology">Health Analytics with R · Module 07: Geospatial &amp; Spatial Epidemiology</h3>
-<hr>
-<p><strong>Learning objectives</strong> - Understand spatial data types: points, polygons, rasters, and their health applications - Work with <code>sf</code> for spatial data manipulation - Create publication-quality choropleth maps with quintile and Jenks classification - Apply coordinate reference systems (CRS) and spatial joins - Map health outcomes with appropriate colour schemes and legends - Compute and visualise age-standardised mortality rates (SMR)</p>
-<p><strong>Estimated time:</strong> 2.5 hours | <strong>Level:</strong> Intermediate<br>
-<strong>Libraries:</strong> <code>sf</code>, <code>ggplot2</code>, <code>dplyr</code>, <code>classInt</code>, <code>patchwork</code></p>
+<section id="module-07-spatial-epidemiology" class="level3">
+<h3 class="anchored" data-anchor-id="module-07-spatial-epidemiology">Module 07: Spatial Epidemiology</h3>
 </section>
-<section id="setup-synthetic-county-health-dataset" class="level2">
-<h2 class="anchored" data-anchor-id="setup-synthetic-county-health-dataset">1. Setup &amp; Synthetic County Health Dataset</h2>
+<section id="choropleth-mapping" class="level1">
+<h1>Choropleth Mapping</h1>
+<hr>
+<p><strong>Learning objectives</strong> - Understand spatial data types: points, polygons, rasters, and their health applications - Work with <code>sf</code> for spatial data manipulation - Create publication-quality choropleth maps with quintile and Jenks classification - Apply coordinate reference systems (CRS) and spatial joins - Map health outcomes with appropriate colour schemes and legends - Compute and visualise standardised prevalence ratios (SMR analogue)</p>
+<p><strong>Data:</strong> <code>Data/usa_data.csv</code> — CDC adult diabetes prevalence and County Health Rankings covariates for 3,108 US counties (CONUS + DC)<br>
+<strong>Geometries:</strong> <code>Data/US_COUNTY.shp</code> — county polygons in NAD83 Albers (EPSG:5070)<br>
+<strong>Estimated time:</strong> 2.5 hours | <strong>Level:</strong> Intermediate<br>
+<strong>Libraries:</strong> <code>sf</code>, <code>ggplot2</code>, <code>dplyr</code>, <code>classInt</code>, <code>patchwork</code></p>
+<section id="setup-us-county-health-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="setup-us-county-health-dataset">1. Setup &amp; US County Health Dataset</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
@@ -737,94 +726,63 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>spatial_smooth <span class="ot">&lt;-</span> <span class="cf">function</span>(values, row_idx, col_idx, nrow, ncol, <span class="at">sigma =</span> <span class="fl">1.5</span>) {</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> nrow, <span class="at">ncol =</span> ncol)</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(values)) {</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    grid[row_idx[i], col_idx[i]] <span class="ot">&lt;-</span> values[i]</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  k <span class="ot">&lt;-</span> <span class="fu">ceiling</span>(<span class="dv">3</span> <span class="sc">*</span> sigma)</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  xs <span class="ot">&lt;-</span> (<span class="sc">-</span>k)<span class="sc">:</span>k</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  kern <span class="ot">&lt;-</span> <span class="fu">outer</span>(<span class="fu">dnorm</span>(xs, <span class="at">sd =</span> sigma), <span class="fu">dnorm</span>(xs, <span class="at">sd =</span> sigma))</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  kern <span class="ot">&lt;-</span> kern <span class="sc">/</span> <span class="fu">sum</span>(kern)</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  pad <span class="ot">&lt;-</span> k</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  gp <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, nrow <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> pad, ncol <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> pad)</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  gp[(pad <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span>(pad <span class="sc">+</span> nrow), (pad <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span>(pad <span class="sc">+</span> ncol)] <span class="ot">&lt;-</span> grid</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, nrow, ncol)</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (r <span class="cf">in</span> <span class="fu">seq_len</span>(nrow)) {</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (c <span class="cf">in</span> <span class="fu">seq_len</span>(ncol)) {</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>      out[r, c] <span class="ot">&lt;-</span> <span class="fu">sum</span>(gp[r<span class="sc">:</span>(r <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> k), c<span class="sc">:</span>(c <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> k)] <span class="sc">*</span> kern)</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mapply</span>(<span class="cf">function</span>(r, c) out[r, c], row_idx, col_idx)</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>NROW <span class="ot">&lt;-</span> <span class="dv">10</span></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>NCOL <span class="ot">&lt;-</span> <span class="dv">20</span></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>N_COUNTIES <span class="ot">&lt;-</span> NROW <span class="sc">*</span> NCOL</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>row_idx <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(NROW), <span class="at">each =</span> NCOL)</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>col_idx <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(NCOL), <span class="at">times =</span> NROW)</span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Geographic coordinates (lon/lat-like)</span></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>lon <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">120</span> <span class="sc">+</span> (col_idx <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="fl">2.5</span> <span class="sc">+</span> <span class="fu">rnorm</span>(N_COUNTIES, <span class="dv">0</span>, <span class="fl">0.3</span>)</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>lat <span class="ot">&lt;-</span> <span class="dv">28</span> <span class="sc">+</span> (row_idx <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">*</span> <span class="fl">2.0</span> <span class="sc">+</span> <span class="fu">rnorm</span>(N_COUNTIES, <span class="dv">0</span>, <span class="fl">0.2</span>)</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Socioeconomic and demographic covariates</span></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>pct_poverty   <span class="ot">&lt;-</span> <span class="dv">10</span> <span class="sc">+</span> <span class="dv">8</span> <span class="sc">*</span> <span class="fu">rbeta</span>(N_COUNTIES, <span class="dv">2</span>, <span class="dv">5</span>) <span class="sc">+</span> <span class="dv">3</span> <span class="sc">*</span> <span class="fu">sin</span>(lon <span class="sc">/</span> <span class="dv">20</span>)</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>pct_uninsured <span class="ot">&lt;-</span> <span class="dv">8</span> <span class="sc">+</span> <span class="dv">6</span> <span class="sc">*</span> <span class="fu">rbeta</span>(N_COUNTIES, <span class="dv">2</span>, <span class="dv">4</span>) <span class="sc">+</span> <span class="fl">0.3</span> <span class="sc">*</span> pct_poverty</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>pct_black     <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">+</span> <span class="dv">20</span> <span class="sc">*</span> <span class="fu">rbeta</span>(N_COUNTIES, <span class="dv">1</span>, <span class="dv">4</span>)</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>pct_rural     <span class="ot">&lt;-</span> <span class="dv">30</span> <span class="sc">+</span> <span class="dv">40</span> <span class="sc">*</span> <span class="fu">rbeta</span>(N_COUNTIES, <span class="dv">3</span>, <span class="dv">3</span>)</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>pm25          <span class="ot">&lt;-</span> <span class="dv">8</span> <span class="sc">+</span> <span class="dv">4</span> <span class="sc">*</span> <span class="fu">rgamma</span>(N_COUNTIES, <span class="at">shape =</span> <span class="dv">2</span>, <span class="at">scale =</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fl">0.05</span> <span class="sc">*</span> pct_rural</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>median_income <span class="ot">&lt;-</span> <span class="dv">45000</span> <span class="sc">-</span> <span class="dv">800</span> <span class="sc">*</span> pct_poverty <span class="sc">+</span> <span class="fu">rnorm</span>(N_COUNTIES, <span class="dv">0</span>, <span class="dv">3000</span>)</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>population    <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">rlnorm</span>(N_COUNTIES, <span class="fl">10.5</span>, <span class="fl">1.0</span>))</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>theme_map <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"white"</span>, <span class="at">colour =</span> <span class="cn">NA</span>),</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">11</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>      <span class="at">legend.position =</span> <span class="st">"right"</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co"># County Health Rankings + CDC diabetes prevalence (CONUS + DC)</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"Data/usa_data.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Centroids stored as NAD83 Albers metres (EPSG:5070) — convert to WGS84 lon/lat</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(raw, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"centroid_x_m"</span>, <span class="st">"centroid_y_m"</span>), <span class="at">crs =</span> <span class="dv">5070</span>, <span class="at">remove =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>pts_ll <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(pts, <span class="dv">4326</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>xy <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(pts_ll)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">county_id       =</span> <span class="fu">sprintf</span>(<span class="st">"%05d"</span>, <span class="fu">as.integer</span>(raw<span class="sc">$</span>fips)),</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">fips            =</span> <span class="fu">as.integer</span>(raw<span class="sc">$</span>fips),</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">county          =</span> raw<span class="sc">$</span>county,</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">state_abbr      =</span> raw<span class="sc">$</span>state_abbr,</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">state_name      =</span> raw<span class="sc">$</span>state_name,</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">lon             =</span> xy[, <span class="dv">1</span>],</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">lat             =</span> xy[, <span class="dv">2</span>],</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">x_m             =</span> raw<span class="sc">$</span>centroid_x_m,</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">y_m             =</span> raw<span class="sc">$</span>centroid_y_m,</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">diabetes_prev   =</span> raw<span class="sc">$</span>y_diabetes_prevalence_adults_with_diabetes,</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_65plus      =</span> raw<span class="sc">$</span>chr_65_and_older_65_and_over,</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_exercise    =</span> raw<span class="sc">$</span>chr_access_to_exercise_opportunities,</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_obesity     =</span> raw<span class="sc">$</span>chr_adult_obesity,</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">food_env_index  =</span> raw<span class="sc">$</span>chr_food_environment_index,</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_pcp           =</span> raw<span class="sc">$</span>chr_primary_care_physicians,</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">rural_pop       =</span> raw<span class="sc">$</span>chr_rural,</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_unemployed    =</span> raw<span class="sc">$</span>chr_unemployment,</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_uninsured     =</span> raw<span class="sc">$</span>chr_uninsured</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Spatially autocorrelated latent risk factor</span></span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>spatial_risk <span class="ot">&lt;-</span> <span class="fu">spatial_smooth</span>(<span class="fu">rnorm</span>(N_COUNTIES), row_idx, col_idx, NROW, NCOL, <span class="at">sigma =</span> <span class="dv">2</span>)</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardised prevalence ratio: county rate / national mean (SMR analogue)</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>smr <span class="ot">&lt;-</span> df<span class="sc">$</span>diabetes_prev <span class="sc">/</span> <span class="fu">mean</span>(df<span class="sc">$</span>diabetes_prev, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="co"># Outcome: age-adjusted CVD mortality rate (per 100k)</span></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>TRUE_POVERTY_EFFECT <span class="ot">&lt;-</span> <span class="fl">1.2</span>  <span class="co"># each 1pp poverty -&gt; 1.2 extra deaths per 100k</span></span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>cvd_rate <span class="ot">&lt;-</span> (<span class="dv">180</span> <span class="sc">+</span> TRUE_POVERTY_EFFECT <span class="sc">*</span> pct_poverty <span class="sc">+</span> <span class="fl">0.8</span> <span class="sc">*</span> pct_uninsured <span class="sc">+</span></span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>               <span class="fl">0.5</span> <span class="sc">*</span> pm25 <span class="sc">+</span> <span class="dv">15</span> <span class="sc">*</span> spatial_risk <span class="sc">+</span> <span class="fu">rnorm</span>(N_COUNTIES, <span class="dv">0</span>, <span class="dv">12</span>))</span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a><span class="co"># Observed deaths and expected (for SMR/SIR)</span></span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>expected_deaths <span class="ot">&lt;-</span> (cvd_rate <span class="sc">/</span> <span class="dv">100000</span>) <span class="sc">*</span> population <span class="sc">*</span> <span class="dv">5</span>  <span class="co"># 5-year count</span></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>observed_deaths <span class="ot">&lt;-</span> <span class="fu">rpois</span>(N_COUNTIES, expected_deaths)</span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>national_rate   <span class="ot">&lt;-</span> <span class="fu">mean</span>(cvd_rate) <span class="sc">/</span> <span class="dv">100000</span></span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>expected_std    <span class="ot">&lt;-</span> national_rate <span class="sc">*</span> population <span class="sc">*</span> <span class="dv">5</span></span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>smr             <span class="ot">&lt;-</span> observed_deaths <span class="sc">/</span> <span class="fu">pmax</span>(expected_std, <span class="dv">1</span>)</span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>  <span class="at">county_id       =</span> <span class="fu">sprintf</span>(<span class="st">"C%03d"</span>, <span class="fu">seq_len</span>(N_COUNTIES) <span class="sc">-</span> <span class="dv">1</span>),</span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>  <span class="at">lon             =</span> lon,</span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>  <span class="at">lat             =</span> lat,</span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>  <span class="at">row             =</span> row_idx,</span>
-<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>  <span class="at">col             =</span> col_idx,</span>
-<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_poverty     =</span> pct_poverty,</span>
-<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_uninsured   =</span> pct_uninsured,</span>
-<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_black       =</span> pct_black,</span>
-<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>  <span class="at">pct_rural       =</span> pct_rural,</span>
-<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>  <span class="at">pm25            =</span> pm25,</span>
-<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>  <span class="at">median_income   =</span> median_income,</span>
-<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>  <span class="at">population      =</span> population,</span>
-<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>  <span class="at">cvd_rate        =</span> cvd_rate,</span>
-<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>  <span class="at">expected_deaths =</span> expected_deaths,</span>
-<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>  <span class="at">observed_deaths =</span> observed_deaths,</span>
-<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>  <span class="at">smr             =</span> smr,</span>
-<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>  <span class="at">spatial_risk    =</span> spatial_risk</span>
-<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>  <span class="st">"County dataset: N=%d | CVD rate: %.1f/100k (SD=%.1f)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>  N_COUNTIES, <span class="fu">mean</span>(cvd_rate), <span class="fu">sd</span>(cvd_rate)</span>
-<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>N_COUNTIES <span class="ot">&lt;-</span> <span class="fu">nrow</span>(df)</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>  <span class="st">"County dataset: N=%d | Diabetes: %.1f%% (SD=%.1f)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>  N_COUNTIES, <span class="fu">mean</span>(df<span class="sc">$</span>diabetes_prev), <span class="fu">sd</span>(df<span class="sc">$</span>diabetes_prev)</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>County dataset: N=200 | CVD rate: 218.9/100k (SD=12.4)</code></pre>
+<pre><code>County dataset: N=3108 | Diabetes: 10.5% (SD=2.2)</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Poverty: %.1f%% | Uninsured: %.1f%% | PM2.5: %.1f</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(pct_poverty), <span class="fu">mean</span>(pct_uninsured), <span class="fu">mean</span>(pm25)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Obesity: %.1f%% | 65+: %.1f%% | Food env. index: %.1f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(df<span class="sc">$</span>pct_obesity), <span class="fu">mean</span>(df<span class="sc">$</span>pct_65plus), <span class="fu">mean</span>(df<span class="sc">$</span>food_env_index)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Poverty: 14.5% | Uninsured: 14.3% | PM2.5: 17.9</code></pre>
+<pre><code>Obesity: 36.2% | 65+: 20.1% | Food env. index: 7.4</code></pre>
 </div>
 </div>
 </section>
@@ -872,62 +830,58 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <p><strong>Key CRS concepts:</strong> - WGS 84 (EPSG:4326): latitude/longitude in degrees — for global data - NAD83 (EPSG:4269): North American datum — for US health data - Albers Equal Area (EPSG:5070): preserves area — for choropleth maps</p>
+<p>A choropleth map is a thematic map in which geographic regions are shaded in proportion to a statistical variable (disease rates, population density, income). In health analytics, choropleths visualise the geographic distribution of outcomes, risk factors, or access to care across counties, states, or census tracts.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create sf object with synthetic county centroids + bounding boxes</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Each county is a 2.5° x 2.0° rectangle</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>make_box <span class="ot">&lt;-</span> <span class="cf">function</span>(lo, la) {</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_polygon</span>(<span class="fu">list</span>(<span class="fu">matrix</span>(</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(lo <span class="sc">-</span> <span class="fl">1.25</span>, la <span class="sc">-</span> <span class="fl">1.0</span>,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      lo <span class="sc">+</span> <span class="fl">1.25</span>, la <span class="sc">-</span> <span class="fl">1.0</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      lo <span class="sc">+</span> <span class="fl">1.25</span>, la <span class="sc">+</span> <span class="fl">1.0</span>,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      lo <span class="sc">-</span> <span class="fl">1.25</span>, la <span class="sc">+</span> <span class="fl">1.0</span>,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      lo <span class="sc">-</span> <span class="fl">1.25</span>, la <span class="sc">-</span> <span class="fl">1.0</span>),</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  )))</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>geoms <span class="ot">&lt;-</span> <span class="fu">mapply</span>(make_box, df<span class="sc">$</span>lon, df<span class="sc">$</span>lat, <span class="at">SIMPLIFY =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> <span class="fu">st_sf</span>(df, <span class="at">geometry =</span> <span class="fu">st_sfc</span>(geoms, <span class="at">crs =</span> <span class="dv">4326</span>))</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>bb <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(gdf)</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"sf object: %d counties | CRS: %s</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">nrow</span>(gdf), <span class="fu">st_crs</span>(gdf)<span class="sc">$</span>input))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Join tabular health data with US county polygons</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>county_shapes <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"Data/US_COUNTY.shp"</span>, <span class="at">quiet =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>county_shapes<span class="sc">$</span>FIPS <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(county_shapes<span class="sc">$</span>FIPS)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Shannon County SD (46113) was renamed Oglala Lakota (46102)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>county_shapes<span class="sc">$</span>FIPS[county_shapes<span class="sc">$</span>FIPS <span class="sc">==</span> <span class="dv">46113</span>] <span class="ot">&lt;-</span> <span class="dv">46102</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> county_shapes <span class="sc">%&gt;%</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(df, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"FIPS"</span> <span class="ot">=</span> <span class="st">"fips"</span>))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>bb <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(gdf)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"sf object: %d counties | CRS: %s</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">nrow</span>(gdf), <span class="fu">st_crs</span>(gdf)<span class="sc">$</span>input))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>sf object: 200 counties | CRS: EPSG:4326</code></pre>
+<pre><code>sf object: 3108 counties | CRS: NAD_1983_Albers</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bounding box: xmin=%.2f ymin=%.2f xmax=%.2f ymax=%.2f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bounding box (Albers metres): xmin=%.0f ymin=%.0f xmax=%.0f ymax=%.0f</span><span class="sc">\n</span><span class="st">"</span>,</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  bb[<span class="st">"xmin"</span>], bb[<span class="st">"ymin"</span>], bb[<span class="st">"xmax"</span>], bb[<span class="st">"ymax"</span>]</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Bounding box: xmin=-121.70 ymin=26.60 xmax=-70.85 ymax=47.48</code></pre>
+<pre><code>Bounding box (Albers metres): xmin=-2356114 ymin=268091 xmax=2258200 ymax=3172568</code></pre>
 </div>
 </div>
 </section>
-<section id="choropleth-map-cvd-mortality-rate" class="level2">
-<h2 class="anchored" data-anchor-id="choropleth-map-cvd-mortality-rate">3. Choropleth Map — CVD Mortality Rate</h2>
+<section id="choropleth-map-diabetes-prevalence-risk-factors" class="level2">
+<h2 class="anchored" data-anchor-id="choropleth-map-diabetes-prevalence-risk-factors">3. Choropleth Map — Diabetes Prevalence &amp; Risk Factors</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>sf_choropleth <span class="ot">&lt;-</span> <span class="cf">function</span>(gdf_in, column, title, <span class="at">palette =</span> <span class="st">"RdYlGn"</span>,</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">legend =</span> <span class="st">"Rate per 100k"</span>) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">legend =</span> <span class="st">"Rate"</span>) {</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(gdf_in) <span class="sc">+</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> .data[[column]]), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> .data[[column]]), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> legend, <span class="at">palette =</span> palette, <span class="at">direction =</span> direction) <span class="sc">+</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Longitude"</span>, <span class="at">y =</span> <span class="st">"Latitude"</span>) <span class="sc">+</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title) <span class="sc">+</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_map</span>()</span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>p_cvd <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"cvd_rate"</span>, <span class="st">"CVD Mortality Rate (per 100k)"</span>,</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"RdYlGn"</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="st">"Rate/100k"</span>)</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>p_pov <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"pct_poverty"</span>, <span class="st">"Poverty Rate (%)"</span>,</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"YlOrRd"</span>, <span class="dv">1</span>, <span class="st">"Poverty (%)"</span>)</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>p_smr <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"smr"</span>, <span class="st">"SMR &gt; 1 = excess mortality | &lt; 1 = deficit"</span>,</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"RdBu"</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="st">"SMR"</span>)</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>p_pm  <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"pm25"</span>, <span class="st">"PM2.5 (µg/m³)"</span>,</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>                       <span class="st">"YlOrBr"</span>, <span class="dv">1</span>, <span class="st">"PM2.5"</span>)</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>p_atlas <span class="ot">&lt;-</span> (p_cvd <span class="sc">|</span> p_pov) <span class="sc">/</span> (p_smr <span class="sc">|</span> p_pm) <span class="sc">+</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"County-Level Health Atlas: CVD Mortality &amp; Risk Factors"</span>)</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_atlas)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>p_diab <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"diabetes_prev"</span>, <span class="st">"Adult Diabetes Prevalence (%)"</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"RdYlGn"</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="st">"Prevalence (%)"</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>p_ob   <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"pct_obesity"</span>, <span class="st">"Adult Obesity (%)"</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"Spectral"</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="st">"Obesity (%)"</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>p_smr  <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"smr"</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"SPR &gt; 1 = above-average diabetes | &lt; 1 = below average"</span>,</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"RdBu"</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="st">"SPR"</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>p_food <span class="ot">&lt;-</span> <span class="fu">sf_choropleth</span>(gdf, <span class="st">"food_env_index"</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"Food Environment Index (0–10, higher = better)"</span>,</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"YlGn"</span>, <span class="dv">1</span>, <span class="st">"Index"</span>)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>p_atlas <span class="ot">&lt;-</span> (p_diab <span class="sc">|</span> p_ob) <span class="sc">/</span> (p_smr <span class="sc">|</span> p_food) <span class="sc">+</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"US County Health Atlas: Diabetes Prevalence &amp; Risk Factors"</span>)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_atlas)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -939,51 +893,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">16</span>, <span class="at">height =</span> <span class="dv">11</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Counties with SMR &gt; 1.2 (excess mortality): %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(df<span class="sc">$</span>smr <span class="sc">&gt;</span> <span class="fl">1.2</span>), <span class="fu">mean</span>(df<span class="sc">$</span>smr <span class="sc">&gt;</span> <span class="fl">1.2</span>) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Counties with SPR &gt; 1.2 (excess prevalence): %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(gdf<span class="sc">$</span>smr <span class="sc">&gt;</span> <span class="fl">1.2</span>), <span class="fu">mean</span>(gdf<span class="sc">$</span>smr <span class="sc">&gt;</span> <span class="fl">1.2</span>) <span class="sc">*</span> <span class="dv">100</span></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Counties with SMR &gt; 1.2 (excess mortality): 3 (1.5%)</code></pre>
+<pre><code>Counties with SPR &gt; 1.2 (excess prevalence): 513 (16.5%)</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Counties with SMR &lt; 0.8 (deficit mortality): %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(df<span class="sc">$</span>smr <span class="sc">&lt;</span> <span class="fl">0.8</span>), <span class="fu">mean</span>(df<span class="sc">$</span>smr <span class="sc">&lt;</span> <span class="fl">0.8</span>) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Counties with SPR &lt; 0.8 (deficit prevalence): %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(gdf<span class="sc">$</span>smr <span class="sc">&lt;</span> <span class="fl">0.8</span>), <span class="fu">mean</span>(gdf<span class="sc">$</span>smr <span class="sc">&lt;</span> <span class="fl">0.8</span>) <span class="sc">*</span> <span class="dv">100</span></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Counties with SMR &lt; 0.8 (deficit mortality): 2 (1.0%)</code></pre>
+<pre><code>Counties with SPR &lt; 0.8 (deficit prevalence): 460 (14.8%)</code></pre>
 </div>
 </div>
 </section>
 <section id="classification-schemes-for-health-maps" class="level2">
 <h2 class="anchored" data-anchor-id="classification-schemes-for-health-maps">4. Classification Schemes for Health Maps</h2>
+<p>There are multiple ways to classify continuous values into categories for health maps:</p>
+<ul>
+<li><strong>Equal interval:</strong> Divides the range of data into categories with equal-sized intervals.</li>
+<li><strong>Quantile:</strong> Splits the data so that each class contains the same number of observations (e.g.&nbsp;quintiles).</li>
+<li><strong>Natural Breaks (Jenks):</strong> Groups values to minimise within-class variance and maximise between-class differences.</li>
+</ul>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>n_classes <span class="ot">&lt;-</span> <span class="dv">5</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>vals <span class="ot">&lt;-</span> gdf<span class="sc">$</span>cvd_rate</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>vals <span class="ot">&lt;-</span> gdf<span class="sc">$</span>diabetes_prev</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>brks_equal <span class="ot">&lt;-</span> <span class="fu">classIntervals</span>(vals, <span class="at">n =</span> n_classes, <span class="at">style =</span> <span class="st">"equal"</span>)</span>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>brks_quant <span class="ot">&lt;-</span> <span class="fu">classIntervals</span>(vals, <span class="at">n =</span> n_classes, <span class="at">style =</span> <span class="st">"quantile"</span>)</span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>brks_jenks <span class="ot">&lt;-</span> <span class="fu">classIntervals</span>(vals, <span class="at">n =</span> n_classes, <span class="at">style =</span> <span class="st">"jenks"</span>)</span>
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>classify_map <span class="ot">&lt;-</span> <span class="cf">function</span>(gdf_in, brks, title) {</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  gdf_in<span class="sc">$</span>class <span class="ot">&lt;-</span> <span class="fu">cut</span>(gdf_in<span class="sc">$</span>cvd_rate, <span class="at">breaks =</span> brks<span class="sc">$</span>brks, <span class="at">include.lowest =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  gdf_in<span class="sc">$</span>class <span class="ot">&lt;-</span> <span class="fu">cut</span>(gdf_in<span class="sc">$</span>diabetes_prev, <span class="at">breaks =</span> brks<span class="sc">$</span>brks, <span class="at">include.lowest =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(gdf_in) <span class="sc">+</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> class), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_brewer</span>(<span class="at">name =</span> <span class="st">"Rate/100k"</span>, <span class="at">palette =</span> <span class="st">"RdYlGn"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"CVD Rate:"</span>, title), <span class="at">x =</span> <span class="st">"Lon"</span>, <span class="at">y =</span> <span class="st">"Lat"</span>)</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>p_eq <span class="ot">&lt;-</span> <span class="fu">classify_map</span>(gdf, brks_equal, <span class="st">"Equal Interval"</span>)</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>p_q  <span class="ot">&lt;-</span> <span class="fu">classify_map</span>(gdf, brks_quant, <span class="st">"Quantile (quintiles)"</span>)</span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>p_j  <span class="ot">&lt;-</span> <span class="fu">classify_map</span>(gdf, brks_jenks, <span class="st">"Natural Breaks (Jenks)"</span>)</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>p_class <span class="ot">&lt;-</span> p_eq <span class="sc">|</span> p_q <span class="sc">|</span> p_j</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>p_class <span class="ot">&lt;-</span> p_class <span class="sc">+</span></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Classification Scheme Comparison — CVD Mortality"</span>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> class), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_brewer</span>(<span class="at">name =</span> <span class="st">"Prevalence (%)"</span>, <span class="at">palette =</span> <span class="st">"RdYlGn"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"Diabetes %:"</span>, title)) <span class="sc">+</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_map</span>()</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>p_eq <span class="ot">&lt;-</span> <span class="fu">classify_map</span>(gdf, brks_equal, <span class="st">"Equal Interval"</span>)</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>p_q  <span class="ot">&lt;-</span> <span class="fu">classify_map</span>(gdf, brks_quant, <span class="st">"Quantile (quintiles)"</span>)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>p_j  <span class="ot">&lt;-</span> <span class="fu">classify_map</span>(gdf, brks_jenks, <span class="st">"Natural Breaks (Jenks)"</span>)</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>p_class <span class="ot">&lt;-</span> (p_eq <span class="sc">|</span> p_q <span class="sc">|</span> p_j) <span class="sc">+</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">title =</span> <span class="st">"Classification Scheme Comparison — Adult Diabetes Prevalence"</span>)</span>
 <span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_class)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB01_Spatial_Data_Choropleth_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB01_Spatial_Data_Choropleth_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="1152"></p>
 </figure>
 </div>
 </div>
@@ -991,132 +951,155 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">18</span>, <span class="at">height =</span> <span class="dv">5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="age-standardised-rate-computation" class="level2">
-<h2 class="anchored" data-anchor-id="age-standardised-rate-computation">5. Age-Standardised Rate Computation</h2>
+<section id="age-structure-crude-vs-adjusted-prevalence" class="level2">
+<h2 class="anchored" data-anchor-id="age-structure-crude-vs-adjusted-prevalence">5. Age Structure — Crude vs Adjusted Prevalence</h2>
+<p>The published county diabetes rate is a crude prevalence. Age structure (<code>% aged 65+</code>) is observed, not simulated: older counties tend to show higher diabetes even if age-specific risk is the same. Residualising on <code>% aged 65+</code> produces an age-adjusted analogue.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate age-stratified deaths for direct standardisation</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>age_groups <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"&lt;45"</span>, <span class="st">"45-64"</span>, <span class="st">"65-74"</span>, <span class="st">"75+"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>std_pop    <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.35</span>, <span class="fl">0.30</span>, <span class="fl">0.20</span>, <span class="fl">0.15</span>)  <span class="co"># 2000 US standard population weights</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">7</span>)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># True age-specific rates by county</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>base_rates <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">50</span>, <span class="dv">200</span>, <span class="dv">600</span>, <span class="dv">1800</span>)  <span class="co"># per 100k per age group</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>age_specific_rates <span class="ot">&lt;-</span> <span class="fu">outer</span>(df<span class="sc">$</span>cvd_rate <span class="sc">/</span> <span class="dv">200</span>, base_rates)</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>age_specific_rates <span class="ot">&lt;-</span> age_specific_rates <span class="sc">+</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(N_COUNTIES <span class="sc">*</span> <span class="dv">4</span>, <span class="dv">0</span>, <span class="dv">20</span>), <span class="at">ncol =</span> <span class="dv">4</span>)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>age_specific_rates <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(age_specific_rates, <span class="dv">10</span>), <span class="dv">3000</span>)</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Direct standardisation: apply standard pop weights to age-specific rates</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>asmr <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(age_specific_rates <span class="sc">%*%</span> std_pop)</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>asmr <span class="ot">&lt;-</span> asmr</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>asmr  <span class="ot">&lt;-</span> asmr</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>p_asmr <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df, <span class="fu">aes</span>(cvd_rate, asmr)) <span class="sc">+</span></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">size =</span> <span class="dv">2</span>, <span class="at">colour =</span> <span class="st">"#2563EB"</span>) <span class="sc">+</span></span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">colour =</span> <span class="st">"#DC2626"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Crude CVD rate (per 100k)"</span>,</span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"ASMR (per 100k, direct std)"</span>,</span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Crude vs Age-Standardised Mortality Rate (Correlation reflects confounding by age structure)"</span>,</span>
-<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"r = %.3f"</span>, <span class="fu">cor</span>(df<span class="sc">$</span>cvd_rate, df<span class="sc">$</span>asmr))</span>
-<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_asmr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>fit_age <span class="ot">&lt;-</span> <span class="fu">lm</span>(diabetes_prev <span class="sc">~</span> pct_65plus, <span class="at">data =</span> gdf)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>diabetes_age_adj <span class="ot">&lt;-</span> <span class="fu">residuals</span>(fit_age) <span class="sc">+</span> <span class="fu">mean</span>(gdf<span class="sc">$</span>diabetes_prev)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>p_age <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">st_drop_geometry</span>(gdf), <span class="fu">aes</span>(pct_65plus, diabetes_prev)) <span class="sc">+</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.25</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">colour =</span> <span class="st">"#2563EB"</span>) <span class="sc">+</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">colour =</span> <span class="st">"#DC2626"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"% aged 65+"</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Adult diabetes prevalence (%)"</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Crude diabetes vs age structure"</span>,</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">sprintf</span>(<span class="st">"r = %.3f"</span>, <span class="fu">cor</span>(gdf<span class="sc">$</span>pct_65plus, gdf<span class="sc">$</span>diabetes_prev))</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>p_adj <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">st_drop_geometry</span>(gdf), <span class="fu">aes</span>(diabetes_prev, diabetes_age_adj)) <span class="sc">+</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.25</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">colour =</span> <span class="st">"#DC2626"</span>) <span class="sc">+</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Crude diabetes (%)"</span>,</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Age-residualised diabetes (%)"</span>,</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">sprintf</span>(</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Crude vs age-adjusted prevalence (r = %.3f)"</span>,</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">cor</span>(gdf<span class="sc">$</span>diabetes_prev, gdf<span class="sc">$</span>diabetes_age_adj)</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>p_age_adj <span class="ot">&lt;-</span> p_age <span class="sc">|</span> p_adj</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_age_adj)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB01_Spatial_Data_Choropleth_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB01_Spatial_Data_Choropleth_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"crude_vs_asmr.png"</span>), p_asmr,</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="dv">5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"crude_vs_asmr.png"</span>), p_age_adj,</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">14</span>, <span class="at">height =</span> <span class="dv">5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>diff <span class="ot">&lt;-</span> df<span class="sc">$</span>asmr <span class="sc">-</span> df<span class="sc">$</span>cvd_rate</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>diff <span class="ot">&lt;-</span> gdf<span class="sc">$</span>diabetes_age_adj <span class="sc">-</span> gdf<span class="sc">$</span>diabetes_prev</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Counties where ASMR &gt; crude rate (older age structure): %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Counties where age-adjusted &gt; crude (younger than expected for their rate): %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(diff <span class="sc">&gt;</span> <span class="dv">0</span>), <span class="fu">mean</span>(diff <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">*</span> <span class="dv">100</span></span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Counties where ASMR &gt; crude rate (older age structure): 200 (100.0%)</code></pre>
+<pre><code>Counties where age-adjusted &gt; crude (younger than expected for their rate): 1431 (46.0%)</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Mean difference (ASMR - crude): %.1f per 100k</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">mean</span>(diff)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Mean difference (age-adjusted − crude): %.2f pp</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">mean</span>(diff)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Mean difference (ASMR - crude): 293.5 per 100k</code></pre>
+<pre><code>Mean difference (age-adjusted − crude): 0.00 pp</code></pre>
 </div>
 </div>
 </section>
 <section id="spatial-join-linking-point-data-to-polygons" class="level2">
 <h2 class="anchored" data-anchor-id="spatial-join-linking-point-data-to-polygons">6. Spatial Join — Linking Point Data to Polygons</h2>
+<p>Simulate hospital locations as points, place them inside county polygons (weighted by uninsured count as a population-size proxy), then join each hospital to the containing county. Overlay hospitals on a PCP-supply map and check the ecological correlation with diabetes.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate hospital locations (point data) and join to county</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>N_HOSPITALS <span class="ot">&lt;-</span> <span class="dv">50</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>hosp <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">lon        =</span> <span class="fu">runif</span>(N_HOSPITALS, <span class="fu">min</span>(df<span class="sc">$</span>lon), <span class="fu">max</span>(df<span class="sc">$</span>lon)),</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">lat        =</span> <span class="fu">runif</span>(N_HOSPITALS, <span class="fu">min</span>(df<span class="sc">$</span>lat), <span class="fu">max</span>(df<span class="sc">$</span>lat)),</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">hosp_beds  =</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">as.integer</span>(<span class="fu">rlnorm</span>(N_HOSPITALS, <span class="dv">5</span>, <span class="fl">0.7</span>)), <span class="dv">50</span>), <span class="dv">2000</span>),</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">hosp_trauma =</span> <span class="fu">rbinom</span>(N_HOSPITALS, <span class="dv">1</span>, <span class="fl">0.3</span>)</span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"lon"</span>, <span class="st">"lat"</span>),</span>
-<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">crs =</span> <span class="dv">4326</span></span>
-<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Assign each hospital to nearest county centroid</span></span>
-<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>centroids <span class="ot">&lt;-</span> <span class="fu">st_centroid</span>(gdf)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: st_centroid assumes attributes are constant over geometries</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>nn_idx <span class="ot">&lt;-</span> <span class="fu">st_nearest_feature</span>(hosp, centroids)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>n_hospitals    <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>total_beds     <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>has_trauma_ctr <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_len</span>(N_HOSPITALS)) {</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  c_idx <span class="ot">&lt;-</span> nn_idx[i]</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  gdf<span class="sc">$</span>n_hospitals[c_idx]    <span class="ot">&lt;-</span> gdf<span class="sc">$</span>n_hospitals[c_idx] <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  gdf<span class="sc">$</span>total_beds[c_idx]     <span class="ot">&lt;-</span> gdf<span class="sc">$</span>total_beds[c_idx] <span class="sc">+</span> hosp<span class="sc">$</span>hosp_beds[i]</span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  gdf<span class="sc">$</span>has_trauma_ctr[c_idx] <span class="ot">&lt;-</span> gdf<span class="sc">$</span>has_trauma_ctr[c_idx] <span class="sc">+</span> hosp<span class="sc">$</span>hosp_trauma[i]</span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>has_trauma_ctr <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(gdf<span class="sc">$</span>has_trauma_ctr <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>beds_per_1000  <span class="ot">&lt;-</span> gdf<span class="sc">$</span>total_beds <span class="sc">/</span> gdf<span class="sc">$</span>population <span class="sc">*</span> <span class="dv">1000</span></span>
-<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>p_beds <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
-<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> beds_per_1000), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
-<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> hosp, <span class="at">shape =</span> <span class="dv">3</span>, <span class="at">size =</span> <span class="fl">2.5</span>, <span class="at">colour =</span> <span class="st">"#DC2626"</span>) <span class="sc">+</span></span>
-<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Beds per 1,000 pop"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Hospital Beds per 1,000 Population"</span>, <span class="at">x =</span> <span class="st">"Lon"</span>, <span class="at">y =</span> <span class="st">"Lat"</span>)</span>
-<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>corr_beds <span class="ot">&lt;-</span> <span class="fu">cor</span>(gdf<span class="sc">$</span>beds_per_1000, gdf<span class="sc">$</span>cvd_rate)</span>
-<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>p_corr <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">st_drop_geometry</span>(gdf), <span class="fu">aes</span>(beds_per_1000, cvd_rate)) <span class="sc">+</span></span>
-<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">size =</span> <span class="dv">2</span>, <span class="at">colour =</span> <span class="st">"#DC2626"</span>) <span class="sc">+</span></span>
-<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">colour =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Beds per 1,000"</span>, <span class="at">y =</span> <span class="st">"CVD rate per 100k"</span>,</span>
-<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">sprintf</span>(</span>
-<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Hospital Capacity vs CVD Mortality (r=%.3f — ecological correlation only!)"</span>,</span>
-<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>      corr_beds</span>
-<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>p_join <span class="ot">&lt;-</span> p_beds <span class="sc">|</span> p_corr</span>
-<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_join)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>N_HOSPITALS <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>weights <span class="ot">&lt;-</span> <span class="fu">pmax</span>(gdf<span class="sc">$</span>n_uninsured, <span class="dv">1</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>weights <span class="ot">&lt;-</span> weights <span class="sc">/</span> <span class="fu">sum</span>(weights)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>hosp_idx <span class="ot">&lt;-</span> <span class="fu">sample.int</span>(<span class="fu">nrow</span>(gdf), N_HOSPITALS, <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> weights)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Place each hospital randomly inside its assigned county polygon</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>place_in_poly <span class="ot">&lt;-</span> <span class="cf">function</span>(geom) {</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  bb <span class="ot">&lt;-</span> <span class="fu">st_bbox</span>(geom)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>) {</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    pt <span class="ot">&lt;-</span> <span class="fu">st_sfc</span>(<span class="fu">st_point</span>(<span class="fu">c</span>(<span class="fu">runif</span>(<span class="dv">1</span>, bb[<span class="st">"xmin"</span>], bb[<span class="st">"xmax"</span>]),</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">runif</span>(<span class="dv">1</span>, bb[<span class="st">"ymin"</span>], bb[<span class="st">"ymax"</span>]))),</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>                 <span class="at">crs =</span> <span class="fu">st_crs</span>(geom))</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">as.logical</span>(<span class="fu">st_within</span>(pt, geom, <span class="at">sparse =</span> <span class="cn">FALSE</span>))) <span class="fu">return</span>(pt[[<span class="dv">1</span>]])</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_centroid</span>(geom)[[<span class="dv">1</span>]]</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>hosp_geoms <span class="ot">&lt;-</span> <span class="fu">lapply</span>(hosp_idx, <span class="cf">function</span>(i) <span class="fu">place_in_poly</span>(gdf<span class="sc">$</span>geometry[i]))</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>pop_proxy <span class="ot">&lt;-</span> gdf<span class="sc">$</span>n_uninsured[hosp_idx]</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>beds_mean <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">+</span> (pop_proxy <span class="sc">/</span> <span class="fu">max</span>(pop_proxy)) <span class="sc">*</span> <span class="dv">700</span></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>hosp <span class="ot">&lt;-</span> <span class="fu">st_sf</span>(</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">hosp_beds   =</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">as.integer</span>(<span class="fu">rlnorm</span>(N_HOSPITALS, <span class="fu">log</span>(beds_mean), <span class="fl">0.4</span>)), <span class="dv">50</span>), <span class="dv">1500</span>),</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">hosp_trauma =</span> <span class="fu">rbinom</span>(N_HOSPITALS, <span class="dv">1</span>, <span class="fu">pmin</span>(<span class="fu">pmax</span>(pop_proxy <span class="sc">/</span> <span class="fu">max</span>(pop_proxy) <span class="sc">*</span> <span class="fl">0.6</span>, <span class="fl">0.2</span>), <span class="fl">0.7</span>))</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> <span class="fu">st_sfc</span>(hosp_geoms, <span class="at">crs =</span> <span class="fu">st_crs</span>(gdf))</span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>joined <span class="ot">&lt;-</span> <span class="fu">st_join</span>(hosp, gdf[<span class="st">"FIPS"</span>], <span class="at">join =</span> st_within, <span class="at">left =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Fallback: nearest county if a point missed its polygon</span></span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a>miss <span class="ot">&lt;-</span> <span class="fu">is.na</span>(joined<span class="sc">$</span>FIPS)</span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">any</span>(miss)) {</span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a>  joined<span class="sc">$</span>FIPS[miss] <span class="ot">&lt;-</span> gdf<span class="sc">$</span>FIPS[<span class="fu">st_nearest_feature</span>(hosp[miss, ], gdf)]</span>
+<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-37"><a href="#cb24-37" aria-hidden="true" tabindex="-1"></a>hosp_agg <span class="ot">&lt;-</span> joined <span class="sc">%&gt;%</span></span>
+<span id="cb24-38"><a href="#cb24-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb24-39"><a href="#cb24-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(FIPS) <span class="sc">%&gt;%</span></span>
+<span id="cb24-40"><a href="#cb24-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb24-41"><a href="#cb24-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_hospitals    =</span> <span class="fu">n</span>(),</span>
+<span id="cb24-42"><a href="#cb24-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_beds     =</span> <span class="fu">sum</span>(hosp_beds),</span>
+<span id="cb24-43"><a href="#cb24-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">has_trauma_ctr =</span> <span class="fu">as.integer</span>(<span class="fu">any</span>(hosp_trauma <span class="sc">==</span> <span class="dv">1</span>)),</span>
+<span id="cb24-44"><a href="#cb24-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb24-45"><a href="#cb24-45" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb24-46"><a href="#cb24-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-47"><a href="#cb24-47" aria-hidden="true" tabindex="-1"></a>gdf <span class="ot">&lt;-</span> gdf <span class="sc">%&gt;%</span></span>
+<span id="cb24-48"><a href="#cb24-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hosp_agg, <span class="at">by =</span> <span class="st">"FIPS"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb24-49"><a href="#cb24-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb24-50"><a href="#cb24-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_hospitals    =</span> <span class="fu">replace_na</span>(n_hospitals, <span class="dv">0</span>),</span>
+<span id="cb24-51"><a href="#cb24-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">total_beds     =</span> <span class="fu">replace_na</span>(total_beds, <span class="dv">0</span>),</span>
+<span id="cb24-52"><a href="#cb24-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">has_trauma_ctr =</span> <span class="fu">replace_na</span>(has_trauma_ctr, <span class="dv">0</span>L)</span>
+<span id="cb24-53"><a href="#cb24-53" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb24-54"><a href="#cb24-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-55"><a href="#cb24-55" aria-hidden="true" tabindex="-1"></a>p_pcp <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
+<span id="cb24-56"><a href="#cb24-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> n_pcp), <span class="at">colour =</span> <span class="cn">NA</span>, <span class="at">linewidth =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb24-57"><a href="#cb24-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> hosp, <span class="at">shape =</span> <span class="dv">3</span>, <span class="at">size =</span> <span class="fl">1.4</span>, <span class="at">colour =</span> <span class="st">"#DC2626"</span>) <span class="sc">+</span></span>
+<span id="cb24-58"><a href="#cb24-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"PCP count"</span>, <span class="at">palette =</span> <span class="st">"Blues"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb24-59"><a href="#cb24-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"PCPs (CHR) + simulated hospitals"</span>) <span class="sc">+</span></span>
+<span id="cb24-60"><a href="#cb24-60" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>()</span>
+<span id="cb24-61"><a href="#cb24-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-62"><a href="#cb24-62" aria-hidden="true" tabindex="-1"></a>corr_pcp <span class="ot">&lt;-</span> <span class="fu">cor</span>(gdf<span class="sc">$</span>n_pcp, gdf<span class="sc">$</span>diabetes_prev, <span class="at">use =</span> <span class="st">"complete.obs"</span>)</span>
+<span id="cb24-63"><a href="#cb24-63" aria-hidden="true" tabindex="-1"></a>p_corr <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="fu">st_drop_geometry</span>(gdf), <span class="fu">aes</span>(n_pcp, diabetes_prev)) <span class="sc">+</span></span>
+<span id="cb24-64"><a href="#cb24-64" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.25</span>, <span class="at">size =</span> <span class="fl">0.8</span>, <span class="at">colour =</span> <span class="st">"#DC2626"</span>) <span class="sc">+</span></span>
+<span id="cb24-65"><a href="#cb24-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">colour =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb24-66"><a href="#cb24-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb24-67"><a href="#cb24-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Primary care physicians"</span>,</span>
+<span id="cb24-68"><a href="#cb24-68" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Adult diabetes prevalence (%)"</span>,</span>
+<span id="cb24-69"><a href="#cb24-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">sprintf</span>(<span class="st">"PCP supply vs diabetes (r=%.3f — ecological correlation only!)"</span>, corr_pcp)</span>
+<span id="cb24-70"><a href="#cb24-70" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb24-71"><a href="#cb24-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-72"><a href="#cb24-72" aria-hidden="true" tabindex="-1"></a>p_join <span class="ot">&lt;-</span> p_pcp <span class="sc">|</span> p_corr</span>
+<span id="cb24-73"><a href="#cb24-73" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_join)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="MOD07_NB01_Spatial_Data_Choropleth_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="MOD07_NB01_Spatial_Data_Choropleth_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="960"></p>
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"hospital_join.png"</span>), p_join,</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">14</span>, <span class="at">height =</span> <span class="dv">5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"hospital_join.png"</span>), p_join,</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">14</span>, <span class="at">height =</span> <span class="dv">5</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
 </div>
@@ -1125,43 +1108,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="knowledge-check" class="level2">
 <h2 class="anchored" data-anchor-id="knowledge-check">7. Knowledge Check</h2>
 <ol type="1">
-<li>A choropleth map uses quantile classification and shows your county in the highest quintile. A colleague uses equal-interval and shows it in the 4th quintile. Which is “correct”?</li>
-<li>SMR = 1.45 for a rural county. What does this mean, and what information do you need to know if this is statistically significant?</li>
-<li>You want to map CVD mortality for census tracts. Your denominator (population) comes from the 2020 Census but your numerator (deaths) covers 2018-2022. What are the key assumptions?</li>
-<li>The correlation between beds/1,000 and CVD rate is -0.31. A colleague concludes “more hospitals reduce CVD deaths.” What fallacy is this?</li>
-<li>Compute a bivariate choropleth: classify counties into 3x3 cells by both poverty rate and CVD mortality, and colour-code the 9 combinations.</li>
+<li>A choropleth map uses quantile classification and shows your county in the highest quintile. A colleague uses equal-interval and shows it in the 4th class. Which is “correct”?</li>
+<li>SPR = 1.45 for a rural county (diabetes / national mean). What does this mean, and what information do you need to know if this is statistically significant?</li>
+<li>You want to map diabetes prevalence for census tracts. Your denominator (population) comes from the 2020 Census but your numerator covers 2018–2022. What are the key assumptions?</li>
+<li>The correlation between PCP count and diabetes prevalence is negative. A colleague concludes “more doctors reduce diabetes.” What fallacy is this?</li>
+<li>Compute a bivariate choropleth: classify counties into 3×3 cells by both obesity and diabetes prevalence, and colour-code the 9 combinations.</li>
 </ol>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exercise 5 — Bivariate choropleth (3x3 = 9 classes)</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>poverty_cat <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">cut</span>(gdf<span class="sc">$</span>pct_poverty, <span class="at">breaks =</span> <span class="fu">quantile</span>(gdf<span class="sc">$</span>pct_poverty, <span class="at">probs =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">3</span> <span class="sc">/</span> <span class="dv">3</span>),</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">include.lowest =</span> <span class="cn">TRUE</span>, <span class="at">labels =</span> <span class="cn">FALSE</span>)) <span class="sc">-</span> <span class="dv">1</span></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>cvd_cat     <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">cut</span>(gdf<span class="sc">$</span>cvd_rate, <span class="at">breaks =</span> <span class="fu">quantile</span>(gdf<span class="sc">$</span>cvd_rate, <span class="at">probs =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">3</span> <span class="sc">/</span> <span class="dv">3</span>),</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">include.lowest =</span> <span class="cn">TRUE</span>, <span class="at">labels =</span> <span class="cn">FALSE</span>)) <span class="sc">-</span> <span class="dv">1</span></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>bivariate_class <span class="ot">&lt;-</span> poverty_cat <span class="sc">*</span> <span class="dv">3</span> <span class="sc">+</span> cvd_cat</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>biv_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"0"</span> <span class="ot">=</span> <span class="st">"#e8e8e8"</span>, <span class="st">"1"</span> <span class="ot">=</span> <span class="st">"#dfb0d6"</span>, <span class="st">"2"</span> <span class="ot">=</span> <span class="st">"#be64ac"</span>,</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"3"</span> <span class="ot">=</span> <span class="st">"#ace4e4"</span>, <span class="st">"4"</span> <span class="ot">=</span> <span class="st">"#a5add3"</span>, <span class="st">"5"</span> <span class="ot">=</span> <span class="st">"#8c62aa"</span>,</span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"6"</span> <span class="ot">=</span> <span class="st">"#5ac8c8"</span>, <span class="st">"7"</span> <span class="ot">=</span> <span class="st">"#5698b9"</span>, <span class="st">"8"</span> <span class="ot">=</span> <span class="st">"#3b4994"</span></span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>biv_lab <span class="ot">&lt;-</span> <span class="fu">factor</span>(gdf<span class="sc">$</span>bivariate_class, <span class="at">levels =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">8</span>)</span>
-<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>pov_lbl <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Med"</span>, <span class="st">"High"</span>)</span>
-<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>cvd_lbl <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Med"</span>, <span class="st">"High"</span>)</span>
-<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>lab_map <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">"Pov:%s CVD:%s"</span>, pov_lbl[<span class="fu">floor</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">8</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">+</span> <span class="dv">1</span>], cvd_lbl[(<span class="dv">0</span><span class="sc">:</span><span class="dv">8</span>) <span class="sc">%%</span> <span class="dv">3</span> <span class="sc">+</span> <span class="dv">1</span>])</span>
-<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(biv_colors) <span class="ot">&lt;-</span> lab_map</span>
-<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>biv_lab <span class="ot">&lt;-</span> <span class="fu">factor</span>(lab_map[gdf<span class="sc">$</span>bivariate_class <span class="sc">+</span> <span class="dv">1</span>], <span class="at">levels =</span> lab_map)</span>
-<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>p_biv <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
-<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> biv_lab), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.15</span>) <span class="sc">+</span></span>
-<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">name =</span> <span class="cn">NULL</span>, <span class="at">values =</span> biv_colors) <span class="sc">+</span></span>
-<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Bivariate Choropleth: Poverty Rate × CVD Mortality"</span>,</span>
-<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"blue=low/low, red=high/high, purple=high poverty/low CVD"</span>,</span>
-<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Longitude"</span>, <span class="at">y =</span> <span class="st">"Latitude"</span></span>
-<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span>
-<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_biv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exercise 5 — Bivariate choropleth (3x3 = 9 classes)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>obesity_cat <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">cut</span>(gdf<span class="sc">$</span>pct_obesity,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                              <span class="at">breaks =</span> <span class="fu">quantile</span>(gdf<span class="sc">$</span>pct_obesity, <span class="at">probs =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">3</span> <span class="sc">/</span> <span class="dv">3</span>),</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>                              <span class="at">include.lowest =</span> <span class="cn">TRUE</span>, <span class="at">labels =</span> <span class="cn">FALSE</span>)) <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>diab_cat <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(<span class="fu">cut</span>(gdf<span class="sc">$</span>diabetes_prev,</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>                           <span class="at">breaks =</span> <span class="fu">quantile</span>(gdf<span class="sc">$</span>diabetes_prev, <span class="at">probs =</span> <span class="dv">0</span><span class="sc">:</span><span class="dv">3</span> <span class="sc">/</span> <span class="dv">3</span>),</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                           <span class="at">include.lowest =</span> <span class="cn">TRUE</span>, <span class="at">labels =</span> <span class="cn">FALSE</span>)) <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>bivariate_class <span class="ot">&lt;-</span> obesity_cat <span class="sc">*</span> <span class="dv">3</span> <span class="sc">+</span> diab_cat</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>biv_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Ob:Low Diab:Low"</span>  <span class="ot">=</span> <span class="st">"#e8e8e8"</span>, <span class="st">"Ob:Low Diab:Med"</span>  <span class="ot">=</span> <span class="st">"#dfb0d6"</span>, <span class="st">"Ob:Low Diab:High"</span>  <span class="ot">=</span> <span class="st">"#be64ac"</span>,</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Ob:Med Diab:Low"</span>  <span class="ot">=</span> <span class="st">"#ace4e4"</span>, <span class="st">"Ob:Med Diab:Med"</span>  <span class="ot">=</span> <span class="st">"#a5add3"</span>, <span class="st">"Ob:Med Diab:High"</span>  <span class="ot">=</span> <span class="st">"#8c62aa"</span>,</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Ob:High Diab:Low"</span> <span class="ot">=</span> <span class="st">"#5ac8c8"</span>, <span class="st">"Ob:High Diab:Med"</span> <span class="ot">=</span> <span class="st">"#5698b9"</span>, <span class="st">"Ob:High Diab:High"</span> <span class="ot">=</span> <span class="st">"#3b4994"</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>ob_lbl <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Med"</span>, <span class="st">"High"</span>)</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>db_lbl <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Low"</span>, <span class="st">"Med"</span>, <span class="st">"High"</span>)</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>lab_map <span class="ot">&lt;-</span> <span class="fu">sprintf</span>(<span class="st">"Ob:%s Diab:%s"</span>, ob_lbl[<span class="fu">floor</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">8</span> <span class="sc">/</span> <span class="dv">3</span>) <span class="sc">+</span> <span class="dv">1</span>], db_lbl[(<span class="dv">0</span><span class="sc">:</span><span class="dv">8</span>) <span class="sc">%%</span> <span class="dv">3</span> <span class="sc">+</span> <span class="dv">1</span>])</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>gdf<span class="sc">$</span>biv_lab <span class="ot">&lt;-</span> <span class="fu">factor</span>(lab_map[gdf<span class="sc">$</span>bivariate_class <span class="sc">+</span> <span class="dv">1</span>], <span class="at">levels =</span> <span class="fu">names</span>(biv_colors))</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>p_biv <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(gdf) <span class="sc">+</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> biv_lab), <span class="at">colour =</span> <span class="st">"white"</span>, <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">name =</span> <span class="cn">NULL</span>, <span class="at">values =</span> biv_colors) <span class="sc">+</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Bivariate Choropleth: Adult Obesity × Diabetes Prevalence"</span>,</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"light = low/low, dark = high/high"</span></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_map</span>() <span class="sc">+</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(p_biv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1169,13 +1152,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"bivariate_choropleth.png"</span>), p_biv,</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="dv">6</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="fu">file.path</span>(out_dir, <span class="st">"bivariate_choropleth.png"</span>), p_biv,</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="dv">6</span>, <span class="at">dpi =</span> <span class="dv">150</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <hr>
 <p><strong>Next → NB-02: Spatial Autocorrelation &amp; Moran’s I</strong></p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -1252,7 +1236,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-with-Python\/");
+        var filterRegex = new RegExp("https:\/\/zia207\.github\.io\/Health-Analytics-R\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1581,13 +1565,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="pagination-link" aria-label="Capstone · Causal Inference Pipeline">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Capstone · Causal Inference Pipeline</span>
+      <a href="./MOD06_NB08_Capstone_Causal_Pipeline.html" class="pagination-link" aria-label="NB-08 · Capstone · Causal Inference Pipeline">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">NB-08 · Capstone · Causal Inference Pipeline</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="pagination-link" aria-label="Spatial Autocorrelation &amp; Moran's I">
-        <span class="nav-page-text">Spatial Autocorrelation &amp; Moran’s I</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./MOD07_NB02_Spatial_Autocorrelation.html" class="pagination-link" aria-label="NB-02 · Spatial Autocorrelation &amp; Moran's I">
+        <span class="nav-page-text">NB-02 · Spatial Autocorrelation &amp; Moran’s I</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -1599,7 +1583,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-with-Python/edit/main/MOD07_NB01_Spatial_Data_Choropleth.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-with-Python/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/zia207/Health-Analytics-R/edit/main/MOD07_NB01_Spatial_Data_Choropleth.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/zia207/Health-Analytics-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>Built with <a href="https://quarto.org/">Quarto</a></p>
 </div>

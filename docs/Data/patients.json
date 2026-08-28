@@ -1,0 +1,37 @@
+[
+  {
+    "resourceType": "Patient",
+    "id": "PT-00001",
+    "gender": "m",
+    "age": 83,
+    "condition": "I50.9"
+  },
+  {
+    "resourceType": "Patient",
+    "id": "PT-00002",
+    "gender": "f",
+    "age": 52,
+    "condition": "I50.9"
+  },
+  {
+    "resourceType": "Patient",
+    "id": "PT-00003",
+    "gender": "m",
+    "age": 67,
+    "condition": "M16.11"
+  },
+  {
+    "resourceType": "Patient",
+    "id": "PT-00004",
+    "gender": "m",
+    "age": 72,
+    "condition": "J18.9"
+  },
+  {
+    "resourceType": "Patient",
+    "id": "PT-00005",
+    "gender": "f",
+    "age": 68,
+    "condition": "N39.0"
+  }
+]

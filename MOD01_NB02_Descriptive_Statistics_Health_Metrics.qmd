@@ -1,11 +1,10 @@
----
-title: "NB-02 · Descriptive Statistics & Health Metrics"
-subtitle: "Module 01 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-***
+### Module 01 — R Foundations for Health Data
+
+# Descriptive Statistics & Health Metrics
+
+
 **Learning objectives**
 - Compute prevalence and incidence rates with proper denominators
 - Produce stratified summaries by age group, sex, and payer

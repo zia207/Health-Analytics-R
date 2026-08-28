@@ -1,30 +1,31 @@
----
-title: "Capstone · Spatial Health Inequity Atlas"
-subtitle: "Module 07 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 07: Geospatial & Spatial Epidemiology
-***
-**This capstone integrates NB-01 through NB-07 into a comprehensive spatial health inequity analysis.**
+### Module 07: Spatial Epidemiology
 
-**Research Question:** Where are counties with high CVD mortality, high pollution burden, AND poor healthcare access simultaneously concentrated — and how does this geographic intersection relate to poverty?
+# Capstone - Spatial Health Inequity Atlas
+
+***
+**This capstone integrates NB-01 through NB-07 into a comprehensive spatial health inequity analysis using real US county data.**
+
+**Data:** `Data/usa_data.csv` — CDC adult diabetes prevalence and County Health Rankings covariates for 3,108 counties (CONUS + DC)  
+**Geometries:** `Data/US_COUNTY.shp` — county polygons in NAD83 Albers (EPSG:5070)
+
+**Research Question:** Where are counties with high adult diabetes prevalence, high obesity, AND a poor food environment / weak primary-care access simultaneously concentrated — and how does this geographic intersection relate to age structure and uninsurance?
 
 **Pipeline stages:**
-1. Data assembly: choropleth mapping of all key variables
-2. Spatial autocorrelation: Moran's I + LISA for CVD mortality and poverty
-3. Spatial cluster detection: scan statistic for CVD hot spots
-4. Spatial regression: OLS → spatial lag model comparing estimates
-5. Empirical Bayes disease mapping: smoothed SMR surface
-6. Environmental justice: pollution × race/income analysis
-7. Access mapping: 2SFCA + HPSA identification
-8. Compound disadvantage index: counties with multiple burdens
-9. Publication-quality 8-panel figure (300 dpi) + methods narrative
+1. Data assembly: join CHR/CDC attributes to county polygons
+2. Spatial autocorrelation: Moran's I + LISA for diabetes, obesity, and food environment
+3. Spatial cluster detection: Kulldorff scan statistic for diabetes hot spots
+4. Spatial regression: OLS → spatial lag model (diabetes on obesity, age 65+, exercise access, food environment)
+5. Empirical Bayes disease mapping: Gamma-Poisson smoothed SMR surface
+6. Access mapping: 2SFCA using PCP supply and uninsured demand
+7. Compound disadvantage index: counties carrying multiple simultaneous burdens
+8. Publication-quality 8-panel figure (150 dpi) + methods narrative
 
-**Estimated time:** 4 hours | **Level:** Advanced
+**Estimated time:** 4 hours | **Level:** Advanced  
+**Libraries:** `sf`, `spdep`, `spatialreg`, `ggplot2`, `patchwork`, `dplyr`
 
-## 0. Setup & Synthetic County Dataset
+## 0. Setup & County Dataset
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -36,8 +37,9 @@ library(patchwork)
 set.seed(42)
 out_dir <- file.path(tempdir(), "mod07")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+
 theme_set(
-  theme_minimal(base_size = 10) +
+  theme_minimal(base_size = 11) +
     theme(
       plot.background = element_rect(fill = "white", colour = NA),
       panel.background = element_rect(fill = "white", colour = NA),
@@ -45,383 +47,469 @@ theme_set(
     )
 )
 
-SEED <- 42
-NROW <- 10; NCOL <- 20; N <- NROW * NCOL
-row_idx <- rep(seq_len(NROW), each = NCOL)
-col_idx <- rep(seq_len(NCOL), times = NROW)
-
-spatial_smooth <- function(v, s = 2) {
-  g <- matrix(0, NROW, NCOL)
-  for (i in seq_along(v)) g[row_idx[i], col_idx[i]] <- v[i]
-  k <- ceiling(3 * s)
-  xs <- (-k):k
-  kern <- outer(dnorm(xs, sd = s), dnorm(xs, sd = s)); kern <- kern / sum(kern)
-  pad <- k
-  gp <- matrix(0, NROW + 2 * pad, NCOL + 2 * pad)
-  gp[(pad + 1):(pad + NROW), (pad + 1):(pad + NCOL)] <- g
-  out <- matrix(0, NROW, NCOL)
-  for (r in seq_len(NROW)) for (c in seq_len(NCOL)) {
-    out[r, c] <- sum(gp[r:(r + 2 * k), c:(c + 2 * k)] * kern)
-  }
-  mapply(function(r, c) out[r, c], row_idx, col_idx)
+theme_map <- function() {
+  theme_void(base_size = 11) +
+    theme(
+      plot.background = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA),
+      plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
+      plot.subtitle = element_text(size = 9, hjust = 0.5),
+      legend.position = "right"
+    )
 }
 
-lon <- -120 + (col_idx - 1) * 2.5 + rnorm(N, 0, 0.3)
-lat <- 28 + (row_idx - 1) * 2.0 + rnorm(N, 0, 0.2)
-pct_poverty   <- 10 + 8 * rbeta(N, 2, 5) + 3 * sin(lon / 20)
-pct_uninsured <- 8 + 6 * rbeta(N, 2, 4) + 0.3 * pct_poverty
-pct_minority  <- pmin(pmax(20 + 15 * rbeta(N, 2, 3), 0), 100)
-pct_rural     <- pmin(pmax(30 + 40 * rbeta(N, 3, 3), 0), 100)
-population    <- as.integer(rlnorm(N, 10.5, 1.0))
-pm25_base     <- 8 + 4 * (lon - min(lon)) / (max(lon) - min(lon))
-pm25 <- pmin(pmax(pm25_base + spatial_smooth(rgamma(N, 1, 1), 1.5) + rnorm(N, 0, 1), 3), 28)
-spatial_risk <- spatial_smooth(rnorm(N), 2.5)
-cluster1 <- (lon > -105) & (lon < -95) & (lat > 30) & (lat < 36)
-cluster2 <- (lon > -85) & (lon < -75) & (lat > 38) & (lat < 44)
-base_cvd <- (180 + 1.2 * pct_poverty + 0.8 * pct_uninsured + 0.5 * pm25 +
-               12 * spatial_risk + rnorm(N, 0, 10))
-cvd_rate <- base_cvd
-cvd_rate[cluster1] <- cvd_rate[cluster1] + 35
-cvd_rate[cluster2] <- cvd_rate[cluster2] + 25
-expected <- (cvd_rate / 100000) * population * 5
-observed <- rpois(N, expected)
-smr <- observed / pmax(expected, 1)
+# County Health Rankings + CDC diabetes prevalence (CONUS + DC)
+raw <- read_csv("Data/usa_data.csv", show_col_types = FALSE)
 
-set.seed(5)
-N_H <- 40
-hlon <- runif(N_H, min(lon), max(lon))
-hlat <- runif(N_H, min(lat), max(lat))
-hbeds <- sample(50:600, N_H, replace = TRUE)
-hosp <- st_as_sf(tibble(lon = hlon, lat = hlat, beds = hbeds),
-                 coords = c("lon", "lat"), crs = 4326)
+# Centroids stored as NAD83 Albers metres (EPSG:5070) — convert to WGS84 lon/lat
+pts <- st_as_sf(raw, coords = c("centroid_x_m", "centroid_y_m"), crs = 5070, remove = FALSE)
+pts_ll <- st_transform(pts, 4326)
+xy_ll <- st_coordinates(pts_ll)
 
 df <- tibble(
-  county_id = sprintf("C%03d", seq_len(N) - 1),
-  lon, lat, row = row_idx, col = col_idx,
-  pct_poverty, pct_uninsured, pct_minority, pct_rural, pm25, population,
-  cvd_rate, observed, expected, smr, cluster1, cluster2
+  county_id       = sprintf("%05d", as.integer(raw$fips)),
+  fips            = as.integer(raw$fips),
+  county          = raw$county,
+  state_abbr      = raw$state_abbr,
+  state_name      = raw$state_name,
+  lon             = xy_ll[, 1],
+  lat             = xy_ll[, 2],
+  x_m             = raw$centroid_x_m,
+  y_m             = raw$centroid_y_m,
+  diabetes_prev   = raw$y_diabetes_prevalence_adults_with_diabetes,
+  pct_65plus      = raw$chr_65_and_older_65_and_over,
+  pct_exercise    = raw$chr_access_to_exercise_opportunities,
+  pct_obesity     = raw$chr_adult_obesity,
+  food_env_index  = raw$chr_food_environment_index,
+  n_pcp           = raw$chr_primary_care_physicians,
+  rural_pop       = raw$chr_rural,
+  n_unemployed    = raw$chr_unemployment,
+  n_uninsured     = raw$chr_uninsured
 )
-geoms <- Map(function(lo, la) {
-  st_polygon(list(matrix(
-    c(lo - 1.25, la - 1, lo + 1.25, la - 1, lo + 1.25, la + 1,
-      lo - 1.25, la + 1, lo - 1.25, la - 1), ncol = 2, byrow = TRUE
-  )))
-}, df$lon, df$lat)
-gdf <- st_sf(df, geometry = st_sfc(geoms, crs = 4326))
-cat(sprintf("N=%d counties | CVD=%.1f/100k | PM2.5=%.1f µg/m³\n",
-            N, mean(cvd_rate), mean(pm25)))
+
+# Standardised prevalence ratio: county rate / national mean (SMR analogue)
+df$smr <- df$diabetes_prev / mean(df$diabetes_prev, na.rm = TRUE)
+
+N_COUNTIES <- nrow(df)
+cat(sprintf(
+  "County dataset: N=%d | Diabetes: %.1f%% (SD=%.1f)\n",
+  N_COUNTIES, mean(df$diabetes_prev), sd(df$diabetes_prev)
+))
+cat(sprintf(
+  "Obesity: %.1f%% | 65+: %.1f%% | Food env. index: %.1f\n",
+  mean(df$pct_obesity), mean(df$pct_65plus), mean(df$food_env_index)
+))
+
+# Join tabular health data with US county polygons
+county_shapes <- st_read("Data/US_COUNTY.shp", quiet = TRUE)
+county_shapes$FIPS <- as.integer(county_shapes$FIPS)
+# Shannon County SD (46113) was renamed Oglala Lakota (46102)
+county_shapes$FIPS[county_shapes$FIPS == 46113] <- 46102
+
+gdf <- county_shapes %>%
+  inner_join(df, by = c("FIPS" = "fips"))
+# Keep tabular df in the same row order as gdf (required for W · y alignment)
+df <- st_drop_geometry(gdf)
+N <- N_COUNTIES <- nrow(gdf)
+bb <- st_bbox(gdf)
+
+cat(sprintf("sf object: %d counties | CRS: %s\n", nrow(gdf), st_crs(gdf)$input))
+cat(sprintf(
+  "Bounding box (Albers metres): xmin=%.0f ymin=%.0f xmax=%.0f ymax=%.0f\n",
+  bb["xmin"], bb["ymin"], bb["xmax"], bb["ymax"]
+))
 ```
 
 ## 1. Build Spatial Weights
 
+Queen contiguity from county polygons (not a synthetic grid). Isolates (e.g. island counties) are retained with `zero.policy = TRUE`.
+
 ```{r}
-nb <- vector("list", N)
-for (i in seq_len(N)) {
-  nbrs <- which(pmax(abs(df$row - df$row[i]), abs(df$col - df$col[i])) <= 1)
-  nb[[i]] <- setdiff(nbrs, i)
-}
-class(nb) <- "nb"
-attr(nb, "region.id") <- as.character(seq_len(N))
+nb <- poly2nb(gdf, queen = TRUE)
 lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
-cat(sprintf("Spatial weights: N=%dx%d | Mean neighbours: %.1f\n",
-            N, N, mean(card(nb))))
+N <- length(nb)
+
+cat(sprintf("Spatial weights: Queen contiguity | N=%d×%d\n", N, N))
+cat(sprintf(
+  "Mean neighbours: %.1f | Isolates: %d\n",
+  mean(card(nb)), sum(card(nb) == 0)
+))
 ```
 
 ## 2. Global & Local Moran's I
 
 ```{r}
-I_cvd  <- moran.test(df$cvd_rate, lw, zero.policy = TRUE)
-I_pov  <- moran.test(df$pct_poverty, lw, zero.policy = TRUE)
-I_pm25 <- moran.test(df$pm25, lw, zero.policy = TRUE)
-mc_cvd <- moran.mc(df$cvd_rate, lw, nsim = 499, zero.policy = TRUE)
-cat("Global Moran's I:\n")
-cat(sprintf("  CVD rate : %.4f (p=%.4f)\n",
-            unname(I_cvd$estimate["Moran I statistic"]), mc_cvd$p.value))
-cat(sprintf("  Poverty  : %.4f (p=%.4f)\n",
-            unname(I_pov$estimate["Moran I statistic"]),
-            moran.mc(df$pct_poverty, lw, nsim = 499)$p.value))
-cat(sprintf("  PM2.5    : %.4f (p=%.4f)\n",
-            unname(I_pm25$estimate["Moran I statistic"]),
-            moran.mc(df$pm25, lw, nsim = 499)$p.value))
+I_diab <- moran.mc(gdf$diabetes_prev, lw, nsim = 499, zero.policy = TRUE)
+I_ob   <- moran.mc(gdf$pct_obesity,   lw, nsim = 499, zero.policy = TRUE)
+I_fe   <- moran.mc(gdf$food_env_index, lw, nsim = 499, zero.policy = TRUE)
 
-lisa <- localmoran(df$cvd_rate, lw, zero.policy = TRUE)
-z <- as.numeric(scale(df$cvd_rate))
+I_diab_val <- as.numeric(I_diab$statistic)
+p_diab_val <- I_diab$p.value
+
+cat("Global Moran's I:\n")
+cat(sprintf("  Diabetes         : %.4f (p=%.4f)\n", I_diab_val, p_diab_val))
+cat(sprintf("  Obesity          : %.4f (p=%.4f)\n",
+            as.numeric(I_ob$statistic), I_ob$p.value))
+cat(sprintf("  Food env. index  : %.4f (p=%.4f)\n",
+            as.numeric(I_fe$statistic), I_fe$p.value))
+
+lisa <- localmoran(gdf$diabetes_prev, lw, zero.policy = TRUE)
+z <- as.numeric(scale(gdf$diabetes_prev))
 zlag <- lag.listw(lw, z, zero.policy = TRUE)
-quad <- ifelse(z > 0 & zlag > 0, "HH", ifelse(z < 0 & zlag < 0, "LL", "Other"))
-gdf$lisa_cvd <- ifelse(lisa[, "Pr(z != E(Ii))"] < 0.05, quad, "NS")
-gdf$lisa_p_cvd <- lisa[, "Pr(z != E(Ii))"]
-cat(sprintf("\nLISA CVD: HH=%d LL=%d NS=%d\n",
-            sum(gdf$lisa_cvd == "HH"), sum(gdf$lisa_cvd == "LL"),
-            sum(gdf$lisa_cvd == "NS")))
-I_cvd_val <- unname(I_cvd$estimate["Moran I statistic"])
-p_cvd_val <- mc_cvd$p.value
+quad <- ifelse(z > 0 & zlag > 0, "HH",
+               ifelse(z < 0 & zlag < 0, "LL", "Other"))
+p_lisa <- lisa[, 5]
+gdf$lisa_diabetes <- ifelse(p_lisa < 0.05, quad, "NS")
+gdf$lisa_p_diabetes <- p_lisa
+df$lisa_diabetes <- gdf$lisa_diabetes
+
+cat(sprintf(
+  "\nLISA Diabetes: HH=%d  LL=%d  Other=%d  NS=%d\n",
+  sum(gdf$lisa_diabetes == "HH"),
+  sum(gdf$lisa_diabetes == "LL"),
+  sum(gdf$lisa_diabetes == "Other"),
+  sum(gdf$lisa_diabetes == "NS")
+))
 ```
 
 ## 3. Spatial Cluster Detection (Scan Statistic)
 
+Poisson scan on diabetes: this extract has no total population, so uninsured count (a CHR measure that scales with county size) is the working at-risk denominator. Observed = prevalence × n; expected is n-weighted national mean (O/E = SPR).
+
+For speed on 3,108 counties the search is limited to the **k = 150** nearest centroids and **B = 49** Monte Carlo permutations (Python used k = 500, B = 99). Windows are further capped at 15% of total expected count.
+
 ```{r}
-scan_stat <- function(df_in, max_frac = 0.4, n_perm = 99, seed = 42) {
-  coords <- cbind(df_in$lon, df_in$lat)
-  O_tot <- sum(df_in$observed); E_tot <- sum(df_in$expected)
-  n <- nrow(df_in); max_pop <- sum(df_in$population) * max_frac
-  dmat <- as.matrix(dist(coords))
-  llr <- function(Oz, Ez) {
-    if (Oz <= 0 || Ez <= 0 || Oz <= Ez) return(0)
-    Oo <- O_tot - Oz; Eo <- E_tot - Ez
-    if (Oo <= 0 || Eo <= 0 || Oo <= Eo) return(0)
-    max(0, Oz * log(Oz / Ez) + Oo * log(Oo / Eo))
+n_atrisk <- pmax(gdf$n_uninsured, 1)
+prev <- gdf$diabetes_prev / 100
+o <- prev * n_atrisk
+e <- n_atrisk * (sum(o) / sum(n_atrisk))
+e <- e * (sum(o) / sum(e))
+Otot <- sum(o); Etot <- sum(e)
+gdf$observed <- o
+gdf$expected <- e
+df$observed <- o
+df$expected <- e
+
+xy <- suppressWarnings(st_coordinates(st_centroid(gdf)))
+MAXWIN <- 150
+knn <- knearneigh(xy, k = MAXWIN - 1)
+NB <- cbind(seq_len(N), knn$nn)
+
+scan_max <- function(ovec, return_arg = FALSE) {
+  o_win <- matrix(ovec[NB], nrow = N, ncol = MAXWIN)
+  e_win <- matrix(e[NB], nrow = N, ncol = MAXWIN)
+  Oz <- o_win; Ez <- e_win
+  for (j in 2:MAXWIN) {
+    Oz[, j] <- Oz[, j - 1] + o_win[, j]
+    Ez[, j] <- Ez[, j - 1] + e_win[, j]
   }
-  best_llr <- 0; best_c <- 1; best_r <- 0; best_in <- integer(0)
-  for (ci in seq_len(n)) {
-    ord <- order(dmat[ci, ])
-    Oz <- 0; Ez <- 0; popz <- 0
-    for (k in 2:n) {
-      j <- ord[k]; popz <- popz + df_in$population[j]
-      if (popz > max_pop) break
-      Oz <- Oz + df_in$observed[j]; Ez <- Ez + df_in$expected[j]
-      l <- llr(Oz, Ez)
-      if (l > best_llr) {
-        best_llr <- l; best_c <- ci; best_r <- dmat[ci, j]; best_in <- ord[2:k]
-      }
-    }
-  }
-  set.seed(seed)
-  mc <- numeric(n_perm)
-  E_arr <- df_in$expected
-  for (b in seq_len(n_perm)) {
-    Op <- as.numeric(rmultinom(1, O_tot, E_arr / E_tot)); bl <- 0
-    for (ci in seq_len(n)) {
-      ord <- order(dmat[ci, ]); Oz <- 0; Ez <- 0; popz <- 0
-      for (k in 2:n) {
-        j <- ord[k]; popz <- popz + df_in$population[j]
-        if (popz > max_pop) break
-        Oz <- Oz + Op[j]; Ez <- Ez + E_arr[j]
-        l <- llr(Oz, Ez); if (l > bl) bl <- l
-      }
-    }
-    mc[b] <- bl
-  }
-  list(best_llr = best_llr, best_c = best_c, best_r = best_r,
-       best_in = best_in, p = mean(mc >= best_llr))
+  Oout <- Otot - Oz
+  Eout <- Etot - Ez
+  llr <- ifelse(Oz > 0, Oz * log(Oz / pmax(Ez, 1e-12)), 0) +
+    ifelse(Oout > 0, Oout * log(Oout / pmax(Eout, 1e-12)), 0)
+  keep <- is.finite(llr) & ((Oz / Ez) > (Oout / Eout)) & (Ez <= 0.15 * Etot)
+  llr[!keep] <- -Inf
+  if (!return_arg) return(max(llr))
+  f <- which.max(llr)
+  list(llr = llr[f], center = ((f - 1) %% N) + 1, k = ((f - 1) %/% N) + 1)
 }
 
 cat("Running scan statistic...\n")
-sc <- scan_stat(df)
-gdf$in_scan_cluster <- seq_len(N) %in% sc$best_in
-cat(sprintf("Primary cluster: LLR=%.2f p=%.3f n=%d counties\n",
-            sc$best_llr, sc$p, length(sc$best_in)))
+best <- scan_max(o, return_arg = TRUE)
+best_in <- NB[best$center, seq_len(best$k)]
+Oc <- sum(o[best_in]); Ec <- sum(e[best_in])
+RR <- (Oc / Ec) / ((Otot - Oc) / (Etot - Ec))
+
+n_perm <- 49
+set.seed(11)
+mc <- numeric(n_perm)
+p_mult <- e / Etot
+Otot_int <- as.integer(round(Otot))
+for (b in seq_len(n_perm)) {
+  Op <- as.numeric(rmultinom(1, Otot_int, p_mult))
+  mc[b] <- scan_max(Op, return_arg = FALSE)
+}
+p_scan <- (sum(mc >= best$llr) + 1) / (n_perm + 1)
+
+gdf$in_scan_cluster <- seq_len(N) %in% best_in
+df$in_scan_cluster <- gdf$in_scan_cluster
+cx <- xy[best$center, 1]; cy <- xy[best$center, 2]
+best_r <- sqrt(max(rowSums((xy[best_in, , drop = FALSE] -
+                              matrix(c(cx, cy), nrow = length(best_in), ncol = 2, byrow = TRUE))^2)))
+
+cat(sprintf(
+  "Primary cluster: LLR=%.1f  p=%.3f  n=%d counties  RR=%.2f\n",
+  best$llr, p_scan, length(best_in), RR
+))
+cat("Note: Monte Carlo used B=49 permutations (k=150 nearest neighbours) for notebook speed.\n")
+print(head(sort(table(gdf$state_abbr[best_in]), decreasing = TRUE), 6))
 ```
 
 ## 4. Spatial Regression
 
-```{r}
-ols <- lm(cvd_rate ~ pct_poverty + pct_uninsured + pm25, data = df)
-ols_pov <- coef(ols)["pct_poverty"]
-I_resid <- moran.test(residuals(ols), lw, zero.policy = TRUE)
-cat(sprintf("OLS: poverty β=%.3f | Moran I(resid)=%.4f (p=%.4f)\n",
-            ols_pov, unname(I_resid$estimate["Moran I statistic"]), I_resid$p.value))
+Diabetes ~ obesity + age 65+ + exercise access + food environment.
 
-slm <- lagsarlm(cvd_rate ~ pct_poverty + pct_uninsured + pm25,
-                data = df, listw = lw, zero.policy = TRUE)
-slm_pov <- coef(slm)["pct_poverty"]
-cat(sprintf("SLM: rho=%.3f | poverty β=%.3f | bias vs OLS: %+.3f\n",
-            slm$rho, slm_pov, slm_pov - ols_pov))
-cat("True poverty coefficient: 1.20\n")
+```{r}
+ols <- lm(
+  diabetes_prev ~ pct_obesity + pct_65plus + pct_exercise + food_env_index,
+  data = df
+)
+ols_ob <- coef(ols)[["pct_obesity"]]
+I_resid <- moran.test(residuals(ols), lw, zero.policy = TRUE)
+cat("OLS:\n")
+print(coef(summary(ols)))
+cat(sprintf(
+  "R²=%.3f | AIC=%.1f | Moran I(resid)=%.4f (p=%.4f)\n",
+  summary(ols)$r.squared, AIC(ols),
+  unname(I_resid$estimate["Moran I statistic"]), I_resid$p.value
+))
+
+cat("\nFitting spatial lag model (lagsarlm, LU log-det)...\n")
+slm <- lagsarlm(
+  diabetes_prev ~ pct_obesity + pct_65plus + pct_exercise + food_env_index,
+  data = df, listw = lw, zero.policy = TRUE, method = "LU"
+)
+slm_ob <- coef(slm)[["pct_obesity"]]
+cat(sprintf(
+  "SLM: rho=%.3f | obesity β=%.3f | OLS obesity β=%.3f | Δ=%+.3f\n",
+  slm$rho, slm_ob, ols_ob, slm_ob - ols_ob
+))
+cat(sprintf("AIC: OLS=%.1f | SLM=%.1f\n", AIC(ols), AIC(slm)))
 ```
 
 ## 5. Empirical Bayes Disease Mapping
 
+Gamma-Poisson EB smoothing of the diabetes SMR (O = prevalence × uninsured n).
+
 ```{r}
-smr_mean <- mean(df$smr); smr_var <- var(df$smr)
-extra_var <- max(smr_var - smr_mean / mean(df$expected), 0.01)
-alpha_hat <- smr_mean^2 / extra_var; beta_hat <- smr_mean / extra_var
-gdf$smr_eb <- (df$observed + alpha_hat) / (df$expected + beta_hat)
-cat(sprintf("EB smoothing: raw SMR SD=%.4f -> smoothed SD=%.4f\n",
-            sd(df$smr), sd(gdf$smr_eb)))
-cat(sprintf("(variance reduction: %.1f%%)\n",
-            (1 - sd(gdf$smr_eb) / sd(df$smr)) * 100))
+smr_raw <- gdf$observed / gdf$expected
+smr_mean <- mean(smr_raw)
+smr_var  <- var(smr_raw)
+extra_var <- max(smr_var - smr_mean / mean(gdf$expected), 0.01)
+alpha_hat <- smr_mean^2 / extra_var
+beta_hat  <- smr_mean / extra_var
+gdf$smr_eb <- (gdf$observed + alpha_hat) / (gdf$expected + beta_hat)
+gdf$smr_shrinkage <- 1 - (gdf$expected / (gdf$expected + beta_hat))
+df$smr_eb <- gdf$smr_eb
+
+cat(sprintf(
+  "EB hyperparameters: α=%.3f, β=%.3f (prior mean=%.3f)\n",
+  alpha_hat, beta_hat, alpha_hat / beta_hat
+))
+cat(sprintf(
+  "EB smoothing: raw SMR SD=%.4f → smoothed SD=%.4f\n",
+  sd(gdf$smr), sd(gdf$smr_eb)
+))
+cat(sprintf(
+  "Variance reduction: %.1f%%\n",
+  (1 - sd(gdf$smr_eb) / sd(gdf$smr)) * 100
+))
+cat(sprintf(
+  "Mean shrinkage: %.1f%% | high shrinkage (>50%%): %d counties\n",
+  mean(gdf$smr_shrinkage) * 100, sum(gdf$smr_shrinkage > 0.5)
+))
 ```
 
 ## 6. Access Metrics & Compound Disadvantage Index
 
+2SFCA: PCP supply at county centroids; uninsured count as need-weighted demand. Distances are in Albers metres; 100 km catchment with power-2 decay.
+
 ```{r}
-sf_use_s2(FALSE)
-centroids <- st_centroid(gdf)
-dist_m <- st_distance(centroids, hosp)
-dist_mat <- as.numeric(dist_m)
-dim(dist_mat) <- dim(dist_m)
-if (max(dist_mat, na.rm = TRUE) > 50) dist_mat <- dist_mat / 111000
-CATCH <- 4.5
-R_j <- numeric(N_H)
-for (j in seq_len(N_H)) {
-  in_z <- dist_mat[, j] <= CATCH
-  denom <- sum(df$population[in_z] / (dist_mat[in_z, j] + 0.1)^2)
-  R_j[j] <- if (denom > 0) hbeds[j] / denom else 0
-}
-A_i <- numeric(N)
-for (i in seq_len(N)) {
-  in_z <- dist_mat[i, ] <= CATCH
-  if (any(in_z)) {
-    w <- 1 / (dist_mat[i, in_z] + 0.1)^2
-    A_i[i] <- sum(R_j[in_z] * w)
-  }
-}
+county_coords <- cbind(gdf$x_m, gdf$y_m)
+CATCH_M <- 100000
+demand <- pmax(gdf$n_uninsured, 1)
+supply <- as.numeric(gdf$n_pcp)
+dmat <- as.matrix(dist(county_coords))
+w_ij <- 1 / (dmat + 1)^2
+w_ij[dmat > CATCH_M] <- 0
+denom <- as.numeric(crossprod(w_ij, demand))
+R_j <- ifelse(denom > 0, supply / denom, 0)
+A_i <- as.numeric(w_ij %*% R_j)
 gdf$access_2sfca <- A_i
+df$access_2sfca <- A_i
+
+cat(sprintf(
+  "2SFCA (PCP × uninsured demand, 100 km): mean=%.4g  SD=%.4g\n",
+  mean(A_i), sd(A_i)
+))
+cat(sprintf("  counties with zero access: %d\n", sum(A_i == 0)))
+cat(sprintf(
+  "  corr(2SFCA, Diabetes) = %+.3f\n",
+  cor(A_i, gdf$diabetes_prev)
+))
 
 quintile_score <- function(v, higher_is_worse = TRUE) {
-  q <- as.numeric(cut(v, quantile(v, 0:5 / 5), include.lowest = TRUE, labels = FALSE))
+  brks <- quantile(v, 0:5 / 5, na.rm = TRUE, type = 7)
+  q <- as.numeric(cut(v, breaks = brks, include.lowest = TRUE,
+                      labels = FALSE, duplicates = "drop"))
   if (higher_is_worse) q else 6 - q
 }
-gdf$cdi <- (quintile_score(gdf$cvd_rate) + quintile_score(gdf$pct_poverty) +
-              quintile_score(gdf$pm25) + quintile_score(gdf$pct_uninsured) +
-              quintile_score(gdf$access_2sfca, higher_is_worse = FALSE)) / 5
-gdf$cdi_cat <- cut(gdf$cdi, breaks = c(0, 2, 3, 4, 5.1),
-                   labels = c("Low", "Moderate", "High", "Very High"))
 
-cat("Compound Disadvantage Index:\n")
+gdf$cdi <- (
+  quintile_score(gdf$diabetes_prev) +
+    quintile_score(gdf$pct_obesity) +
+    quintile_score(gdf$food_env_index, higher_is_worse = FALSE) +
+    quintile_score(gdf$pct_exercise, higher_is_worse = FALSE) +
+    quintile_score(gdf$access_2sfca, higher_is_worse = FALSE)
+) / 5
+gdf$cdi_cat <- cut(
+  gdf$cdi, breaks = c(0, 2, 3, 4, 5.1),
+  labels = c("Low", "Moderate", "High", "Very High")
+)
+df$cdi <- gdf$cdi
+df$cdi_cat <- gdf$cdi_cat
+
+cat("\nCompound Disadvantage Index (diabetes + obesity + poor food env. + low exercise + poor PCP access):\n")
 for (lab in c("Low", "Moderate", "High", "Very High")) {
   n_c <- sum(gdf$cdi_cat == lab, na.rm = TRUE)
-  pop_c <- sum(gdf$population[gdf$cdi_cat == lab], na.rm = TRUE)
-  cat(sprintf("  %-12s: %3d counties | %s residents (%.1f%%)\n",
-              lab, n_c, format(pop_c, big.mark = ","),
-              pop_c / sum(gdf$population) * 100))
+  cat(sprintf("  %-12s: %4d counties (%5.1f%%)\n", lab, n_c, n_c / N * 100))
 }
 ```
 
-## 7. Publication Summary Figure (8 panels, 300 dpi)
+## 7. Publication Summary Figure (8 panels, 150 dpi)
 
-```{r}
-CLUSTER_COLORS <- c(HH = "#DC2626", LL = "#2563EB", Other = "#B3CDE3", NS = "#E0E0E0")
-CDI_COLORS <- c(Low = "#2563EB", Moderate = "#B3CDE3", High = "#FEC44F", `Very High` = "#DC2626")
+```{r, fig.width = 18, fig.height = 12}
+CLUSTER_COLORS <- c(HH = "#D65F5F", LL = "#4878CF", Other = "#B3CDE3", NS = "#E0E0E0")
+CDI_COLORS <- c(Low = "#4878CF", Moderate = "#B3CDE3", High = "#FEC44F",
+                `Very High` = "#D65F5F")
 
-p_a <- ggplot(gdf) +
-  geom_sf(aes(fill = cvd_rate), colour = NA) +
-  scale_fill_distiller(palette = "RdYlGn", direction = -1, name = "Rate/100k") +
-  labs(title = "A  CVD Mortality Rate") + theme(axis.title = element_blank())
+sf_choro <- function(gdf_in, column, title, palette = "RdYlGn",
+                     direction = -1, legend = "", limits = NULL) {
+  p <- ggplot(gdf_in) +
+    geom_sf(aes(fill = .data[[column]]), colour = NA, linewidth = 0) +
+    labs(title = title) +
+    theme_map()
+  if (is.null(limits)) {
+    p + scale_fill_distiller(name = legend, palette = palette, direction = direction)
+  } else {
+    p + scale_fill_distiller(
+      name = legend, palette = palette, direction = direction,
+      limits = limits, oob = scales::squish
+    )
+  }
+}
 
-p_b <- ggplot(gdf) +
-  geom_sf(aes(fill = smr_eb), colour = NA) +
-  scale_fill_distiller(palette = "RdBu", direction = -1, limits = c(0.6, 1.6),
-                       oob = scales::squish, name = "EB-SMR") +
-  labs(title = "B  EB-Smoothed SMR") + theme(axis.title = element_blank())
+p_a <- sf_choro(gdf, "diabetes_prev", "A  Adult Diabetes Prevalence",
+                "RdYlGn", -1, "Prevalence (%)")
+p_b <- sf_choro(gdf, "smr_eb", "B  EB-Smoothed SMR",
+                "RdBu", -1, "EB-SMR", limits = c(0.6, 1.6))
 
 p_c <- ggplot(gdf) +
-  geom_sf(aes(fill = lisa_cvd), colour = NA) +
-  scale_fill_manual(values = CLUSTER_COLORS) +
-  labs(title = "C  LISA Clusters", fill = NULL) + theme(axis.title = element_blank())
+  geom_sf(aes(fill = lisa_diabetes), colour = NA, linewidth = 0) +
+  scale_fill_manual(
+    name = NULL, values = CLUSTER_COLORS,
+    labels = sprintf(
+      "%s (n=%d)", names(CLUSTER_COLORS),
+      vapply(names(CLUSTER_COLORS), function(k) sum(gdf$lisa_diabetes == k), 1L)
+    )
+  ) +
+  labs(title = "C  LISA Clusters (Diabetes)") +
+  theme_map()
 
-circ <- {
-  sf_use_s2(FALSE)
-  st_buffer(st_sfc(st_point(c(df$lon[sc$best_c], df$lat[sc$best_c])), crs = 4326),
-            dist = sc$best_r)
-}
+circ <- st_sf(geometry = st_buffer(
+  st_sfc(st_point(c(cx, cy)), crs = st_crs(gdf)), dist = best_r
+))
 p_d <- ggplot(gdf) +
-  geom_sf(aes(fill = in_scan_cluster), colour = NA) +
-  geom_sf(data = circ, fill = NA, colour = "black", linewidth = 0.8, linetype = "dashed") +
-  scale_fill_manual(values = c("TRUE" = "#DC2626", "FALSE" = "#E0E0E0"), guide = "none") +
-  labs(title = sprintf("D  Scan Statistic (LLR=%.1f,p=%.3f)", sc$best_llr, sc$p)) +
-  theme(axis.title = element_blank())
+  geom_sf(aes(fill = in_scan_cluster), colour = NA, linewidth = 0) +
+  geom_sf(data = circ, fill = NA, colour = "black",
+          linewidth = 0.6, linetype = "dashed") +
+  scale_fill_manual(values = c("TRUE" = "#D65F5F", "FALSE" = "#E0E0E0"),
+                    guide = "none") +
+  labs(title = sprintf("D  Scan Statistic (LLR=%.0f, p=%.3f)", best$llr, p_scan)) +
+  theme_map()
 
-p_e <- ggplot(gdf) +
-  geom_sf(aes(fill = pm25), colour = NA) +
-  scale_fill_distiller(palette = "YlOrBr", direction = 1, name = "µg/m³") +
-  labs(title = "E  PM2.5 Exposure") + theme(axis.title = element_blank())
+p_e <- sf_choro(gdf, "pct_obesity", "E  Adult Obesity",
+                "YlOrBr", 1, "Obesity (%)")
 
-p_f <- ggplot(gdf) +
-  geom_sf(aes(fill = access_2sfca), colour = NA) +
-  geom_sf(data = hosp, shape = 3, size = 1.5, colour = "black") +
-  scale_fill_distiller(palette = "RdYlGn", direction = 1, name = "2SFCA") +
-  labs(title = "F  2SFCA Healthcare Access") + theme(axis.title = element_blank())
+acc_max <- as.numeric(quantile(gdf$access_2sfca, 0.95, na.rm = TRUE))
+p_f <- sf_choro(gdf, "access_2sfca", "F  2SFCA Primary-Care Access",
+                "RdYlGn", 1, "2SFCA score", limits = c(0, acc_max))
 
 p_g <- ggplot(gdf) +
-  geom_sf(aes(fill = cdi_cat), colour = NA) +
-  geom_sf(data = dplyr::filter(gdf, cluster1 | cluster2), fill = NA,
-          colour = "gold", linewidth = 0.6) +
-  scale_fill_manual(values = CDI_COLORS) +
-  labs(title = "G  Compound Disadvantage Index (CDI)", fill = NULL) +
-  theme(axis.title = element_blank())
+  geom_sf(aes(fill = cdi_cat), colour = NA, linewidth = 0) +
+  scale_fill_manual(name = NULL, values = CDI_COLORS) +
+  labs(title = "G  Compound Disadvantage Index  (Diabetes + Obesity + Poor Food Env. + Low Exercise + Poor Access)") +
+  theme_map()
 
-reg_df <- tibble(method = c("OLS", "Spatial Lag"), coef = c(ols_pov, slm_pov))
+reg_df <- tibble(method = c("OLS", "Spatial Lag"), coef = c(ols_ob, slm_ob))
 p_h <- ggplot(reg_df, aes(method, coef, fill = method)) +
-  geom_col(width = 0.5, colour = "white") +
-  geom_hline(yintercept = 1.20, linetype = "dashed", linewidth = 1) +
-  geom_text(aes(label = sprintf("%.3f", coef)), vjust = -0.4) +
-  scale_fill_manual(values = c(OLS = "#2563EB", `Spatial Lag` = "#DC2626"), guide = "none") +
-  labs(y = "Poverty coefficient (β)", title = "H  Spatial Regression: Poverty→CVD", x = NULL)
-
-z_cvd <- as.numeric(scale(df$cvd_rate))
-Wz_cvd <- lag.listw(lw, z_cvd, zero.policy = TRUE)
-p_i <- ggplot(tibble(z = z_cvd, Wz = Wz_cvd, rate = df$cvd_rate), aes(z, Wz, colour = rate)) +
-  geom_point(alpha = 0.6, size = 1.5) +
-  geom_smooth(method = "lm", se = FALSE, colour = "black", linewidth = 1) +
+  geom_col(width = 0.5, colour = "white", alpha = 0.85) +
   geom_hline(yintercept = 0, colour = "grey50", linewidth = 0.4) +
-  geom_vline(xintercept = 0, colour = "grey50", linewidth = 0.4) +
-  scale_colour_distiller(palette = "RdYlGn", direction = -1, guide = "none") +
-  labs(
-    x = "z(CVD rate)", y = "W*z (spatial lag)",
-    title = sprintf("I  Moran Scatterplot (I=%.3f, p=%.3f)", I_cvd_val, p_cvd_val)
-  )
+  geom_text(aes(label = sprintf("%.3f", coef)), vjust = -0.4, size = 3.5) +
+  scale_fill_manual(values = c(OLS = "#4878CF", `Spatial Lag` = "#D65F5F"),
+                    guide = "none") +
+  labs(x = NULL, y = "Obesity coefficient (β)",
+       title = "H  Spatial Regression: Obesity → Diabetes")
 
 p_atlas <- (p_a | p_b | p_c | p_d) /
   (p_e | p_f | p_g) /
-  (p_h | p_i) +
+  p_h +
+  plot_layout(heights = c(1.2, 1.2, 0.7)) +
   plot_annotation(
-    title = "Spatial Health Inequity Atlas — CVD Mortality, Pollution & Access (N=200 Counties)"
+    title = sprintf(
+      "Spatial Health Inequity Atlas — Adult Diabetes, Obesity & Access (N=%s Counties)",
+      format(N, big.mark = ",")
+    )
   )
+
 print(p_atlas)
 ggsave(file.path(out_dir, "capstone_spatial_atlas.png"), p_atlas,
-       width = 22, height = 16, dpi = 300)
-cat("Saved: capstone_spatial_atlas.png (300 dpi)\n")
+       width = 18, height = 12, dpi = 150)
+cat("Saved: capstone_spatial_atlas.png (150 dpi)\n")
 ```
 
 ## 8. Methods Narrative Template
 
 > **Spatial Epidemiology Methods**
 >
-> We conducted a county-level (N=200) spatial analysis of CVD mortality, environmental exposures, and healthcare access. Age-adjusted CVD mortality rates were empirical Bayes (EB) smoothed using a Gamma-Poisson conjugate model to stabilise estimates in low-population counties.
+> We conducted a county-level (N=3,108; CONUS + DC) spatial analysis of adult diabetes prevalence, metabolic and food-environment risk factors, and primary-care access. County Health Rankings and CDC diabetes prevalence were joined to NAD83 Albers county polygons (EPSG:5070). Standardised prevalence ratios (SPR) were computed as each county's rate divided by the national mean. Empirical Bayes (Gamma-Poisson) smoothing used the CHR uninsured count as a working at-risk denominator to stabilise SPR estimates in small counties.
 >
-> Spatial autocorrelation was assessed using Global Moran's I with queen contiguity weights (W), evaluated against 499 permutation-based null replicates. Local spatial clusters were identified with LISA (p<0.05), and disease hot spots confirmed with the Kulldorff circular scan statistic (B=99 Monte Carlo permutations, 40% maximum population window).
+> Spatial autocorrelation was assessed using Global Moran's I with queen-contiguity weights, evaluated against 499 permutation-based null replicates. Local spatial clusters were identified with LISA (p<0.05), and disease hot spots confirmed with the Kulldorff circular scan statistic (B=49 Monte Carlo permutations, k=150 nearest-neighbour windows, 15% maximum expected-count window).
 >
-> CVD rates were regressed on poverty, uninsured rate, and PM2.5 using OLS and a spatial lag model (SLM). PM2.5 exposure at the county level was estimated via inverse distance weighting (IDW, p=2) from point-monitor readings. Healthcare access was quantified using the Two-Step Floating Catchment Area (2SFCA) method with a 4.5° catchment and distance-decay power of 2.
+> Diabetes prevalence was regressed on obesity, share aged 65+, access to exercise opportunities, and the food environment index using OLS and a spatial lag model (SLM; `lagsarlm`). Primary-care access was quantified with the Two-Step Floating Catchment Area (2SFCA) method using PCP counts as supply, uninsured counts as need-weighted demand, a 100 km catchment, and distance-decay power of 2.
 >
-> A Compound Disadvantage Index (CDI) was constructed by averaging quintile scores across CVD mortality, poverty rate, PM2.5, uninsured rate, and 2SFCA access, identifying counties bearing multiple simultaneous burdens. All analyses used R 4.3+ (`sf`, `spdep`, `spatialreg`, `ggplot2`).
+> A Compound Disadvantage Index (CDI) was constructed by averaging quintile scores across diabetes prevalence, obesity, food environment (inverted), exercise access (inverted), and 2SFCA access, identifying counties bearing multiple simultaneous burdens. All analyses used R (`sf`, `spdep`, `spatialreg`, `ggplot2`).
 
 ## 9. Final Knowledge Check
-1. The scan statistic detects a cluster with p=0.02 but the LISA map shows only 3 HH counties overlapping. How do you reconcile these findings?
-2. SLM poverty coefficient is lower than OLS (0.95 vs 1.42). Explain conceptually why spatial adjustment reduces the estimate.
-3. CDI identifies 28 counties with "Very High" compound disadvantage. A policy maker wants to intervene in all of them. What information would you add to prioritise among them?
-4. The EB smoothing reduces SMR variance by 35%. What are the implications for mapping and for identifying outlier counties?
-5. Design a study using ITS analysis (from NB-07 Module 06) to evaluate whether a telemedicine programme in HPSA counties reduced CVD mortality rates over 5 years.
+1. The scan statistic detects a cluster with p=0.02 but the LISA map shows only a handful of HH counties overlapping that window. How do you reconcile these findings?
+2. The SLM obesity coefficient is lower than OLS. Explain conceptually why spatial adjustment can reduce the estimate.
+3. CDI identifies a set of counties with "Very High" compound disadvantage. A policy maker wants to intervene in all of them. What information would you add to prioritise among them?
+4. EB smoothing reduces SMR variance. What are the implications for mapping and for identifying outlier counties?
+5. Design a study using interrupted time-series analysis (from Module 06) to evaluate whether a telemedicine programme in low-2SFCA counties reduced diabetes prevalence over 5 years.
 
 ```{r}
 cat("CAPSTONE SUMMARY STATISTICS\n")
 cat(strrep("=", 60), "\n")
-cat(sprintf("Global Moran's I (CVD rate): %.4f (p=%.4f)\n", I_cvd_val, p_cvd_val))
+cat(sprintf("Global Moran's I (Diabetes): %.4f (p=%.4f)\n", I_diab_val, p_diab_val))
 cat(sprintf("LISA HH clusters: %d | LL: %d counties\n",
-            sum(gdf$lisa_cvd == "HH"), sum(gdf$lisa_cvd == "LL")))
-cat(sprintf("Scan cluster: LLR=%.2f | p=%.3f | n=%d counties\n",
-            sc$best_llr, sc$p, length(sc$best_in)))
-cat(sprintf("OLS poverty β=%.3f | SLM poverty β=%.3f | True β=1.20\n", ols_pov, slm_pov))
-cat(sprintf("EB smoothing: SMR SD reduced %.4f -> %.4f\n", sd(df$smr), sd(gdf$smr_eb)))
-cat(sprintf("  Variance reduction: %.1f%%\n", (1 - sd(gdf$smr_eb) / sd(df$smr)) * 100))
-cat(sprintf("Compound Disadvantage Index (Very High): %d counties\n",
-            sum(gdf$cdi_cat == "Very High", na.rm = TRUE)))
-vhigh_pop <- sum(gdf$population[gdf$cdi_cat == "Very High"], na.rm = TRUE)
-cat(sprintf("  Population in Very High CDI: %s (%.1f%%)\n",
-            format(vhigh_pop, big.mark = ","), vhigh_pop / sum(gdf$population) * 100))
+            sum(gdf$lisa_diabetes == "HH"), sum(gdf$lisa_diabetes == "LL")))
+cat(sprintf("Scan cluster: LLR=%.1f | p=%.3f | n=%d counties | RR=%.2f\n",
+            best$llr, p_scan, length(best_in), RR))
+cat(sprintf("OLS obesity β=%.3f | SLM obesity β=%.3f | ρ=%.3f\n",
+            ols_ob, slm_ob, slm$rho))
+cat(sprintf(
+  "EB smoothing: SMR SD %.4f → %.4f (%.1f%% variance reduction)\n",
+  sd(gdf$smr), sd(gdf$smr_eb),
+  (1 - sd(gdf$smr_eb) / sd(gdf$smr)) * 100
+))
+cat(sprintf(
+  "Compound Disadvantage Index (Very High): %d counties (%.1f%%)\n",
+  sum(gdf$cdi_cat == "Very High", na.rm = TRUE),
+  mean(gdf$cdi_cat == "Very High", na.rm = TRUE) * 100
+))
 cat(strrep("=", 60), "\n")
 ```
 
 ***
 ## Module 07 Complete
 
-**NB-01** Spatial data & choropleth: data types (point/polygon/raster), sf, quintile/Jenks classification, age-standardised rates, SMR computation, bivariate choropleth, hospital spatial join  
+**NB-01** Spatial data & choropleth: data types (point/polygon/raster), `sf`, quintile/Jenks classification, age-standardised rates, SMR computation, bivariate choropleth, hospital spatial join  
 **NB-02** Spatial autocorrelation: queen/rook/distance weights matrices, Global Moran's I with permutation inference, Moran scatterplot, LISA (HH/LL/HL/LH), Getis-Ord G* hot spot analysis, Moran's I on OLS residuals  
 **NB-03** Spatial regression & GWR: OLS residual diagnostics, LM lag/error tests, spatial lag model (SLM, ML estimation), spatial error model (SEM), GWR with bandwidth sensitivity, spatially varying coefficient maps  
 **NB-04** Disease mapping & Bayesian smoothing: small-area estimation problem, Gamma-Poisson empirical Bayes, BYM/ICAR model structure, Moran eigenvector spatial smoothing, KDE risk surface, brms BYM starter code  
 **NB-05** Cluster detection: Kulldorff circular scan statistic, Poisson LLR, Monte Carlo permutation inference, cluster performance evaluation (sensitivity/specificity/PPV), LISA vs scan comparison, secondary cluster detection  
 **NB-06** Environmental epidemiology: IDW/kriging exposure interpolation, ecological regression, ecological fallacy, environmental justice (quintile and concentration index), individual vs aggregate effect comparison  
 **NB-07** Health service access: PPR, nearest-distance, 2SFCA method, HPSA-style shortage area delineation, access-deprivation correlation, concentration index, Gini coefficient for access distribution  
-**NB-08** Capstone: full pipeline → EB smoothing → Moran's I → LISA → scan stat → SLM → 2SFCA → CDI → 8-panel 300 dpi atlas → methods narrative
+**NB-08** Capstone: full pipeline on 3,108 US counties → EB smoothing → Moran's I → LISA → scan stat → SLM → 2SFCA → CDI → 8-panel atlas → methods narrative
 
 **Next → Module 08: Reproducible Research & Deployment**

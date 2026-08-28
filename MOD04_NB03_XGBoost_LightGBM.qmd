@@ -1,11 +1,9 @@
----
-title: "XGBoost & LightGBM"
-subtitle: "Module 04 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 04: Machine Learning for Clinical Prediction
+### Module 04 — Machine Learning for Clinical Prediction
+
+# XGBoost & LightGBM
+
 ***
 **Learning objectives**
 - Understand gradient boosting conceptually (additive trees, residual fitting)
@@ -310,7 +308,7 @@ ggsave(file.path(mod04_dir, "tune_bayes.png"), width = 13, height = 4, dpi = 120
 
 ## 4. Model Comparison Summary
 
-```{r}
+```{r, fig.width=10, fig.height=6}
 set.seed(42)
 # Logistic regression
 lr_df <- Xtr_tbl %>% mutate(y = y_tr2)

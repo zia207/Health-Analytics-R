@@ -1,11 +1,9 @@
----
-title: "Linear Regression for Continuous Outcomes"
-subtitle: "Module 03 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 03: Statistical Inference
+### Module 03 — Linear Regression for Continuous Outcomes
+
+# Linear Regression for Continuous Outcomes
+
 ***
 **Learning objectives**
 - Fit and interpret linear regression models for LOS and charges
@@ -171,7 +169,7 @@ print(coef_df)
 
 ## 4. Regression Assumption Diagnostics
 
-```{r}
+```{r,fig.width=10, fig.height=10}
 aug_m <- broom::augment(model_multi)
 cooks_d <- cooks.distance(model_multi)
 std_resid <- rstandard(model_multi)

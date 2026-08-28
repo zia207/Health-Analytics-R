@@ -1,11 +1,9 @@
----
-title: "Logistic Regression for Binary Outcomes"
-subtitle: "Module 03 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 03: Statistical Inference
+### Module 03 — Logistic Regression for Binary Outcomes
+
+# Logistic Regression for Binary Outcomes
+
 ***
 **Learning objectives**
 - Fit and interpret logistic regression for binary outcomes (readmission, mortality)
@@ -189,7 +187,7 @@ cat("  VIF > 10 : High — consider removing or combining predictors\n")
 
 ## 5. Model Evaluation — ROC, AUC, Calibration
 
-```{r}
+```{r, fig.width=10, fig.height=5}
 # Predicted probabilities
 df$pred_prob <- predict(model_multi, type = "response")
 

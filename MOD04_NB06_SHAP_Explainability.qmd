@@ -1,11 +1,9 @@
----
-title: "SHAP Explainability"
-subtitle: "Module 04 — Health Analytics with R"
----
-
 ![](Images/banner_health_analytics.png){fig-align="center" width="100%"}
 
-### Health Analytics with R · Module 04: Machine Learning for Clinical Prediction
+### Module 04 — Machine Learning for Clinical Prediction
+
+# SHAP Explainability
+
 ***
 **Learning objectives**
 - Understand Shapley values and the SHAP framework conceptually
@@ -164,7 +162,7 @@ cat(sprintf("  Model prediction    : %.4f\n", pred_prob))
 cat(sprintf("  Base + sum(SHAP)    : %.4f\n", shap_sum))
 ```
 
-```{r}
+```{r, fig.width=10, fig.height=6}
 # ── Global summary plot ───────────────────────────────────────────────────────
 mean_abs <- colMeans(abs(shap_mat))
 top_idx  <- order(mean_abs)[(length(mean_abs) - 14):length(mean_abs)]
